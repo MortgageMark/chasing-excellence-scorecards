@@ -1,0 +1,17 @@
+{
+  "name": "Chasing Excellence Scorecards",
+  "short_name": "Scorecards",
+  "description": "Recurring self-assessment across the areas that make a whole life.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#0D1620",
+  "theme_color": "#0D1620",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "categories": ["productivity", "lifestyle"]
+}

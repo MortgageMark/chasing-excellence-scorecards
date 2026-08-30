@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Chasing Excellence Scorecards</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--ink:#0D1620;--slate:#16212D;--raise:#1E2B39;--line:#293949;--bone:#E8EDF2;--muted:#8494A3;--accent:#4C9BE0;--alert:#E0705F;--track:#3FA88F;--gold:#E0A93F;--r:14px}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{background:var(--ink);color:var(--bone);font-family:'Instrument Sans',system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+body{min-height:100vh;padding:0 0 90px}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+.wrap{max-width:460px;margin:0 auto;padding:0 18px}
+.top{position:sticky;top:0;z-index:20;background:rgba(20,24,28,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+.top-in{max-width:460px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;gap:12px}
+.brandmark{font-family:'Bricolage Grotesque';font-weight:800;font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.brandsub{font-size:11px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.top-sp{flex:1}
+.iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:15px}
+.iconbtn:hover{color:var(--bone);border-color:var(--muted)}
+.h1{font-family:'Bricolage Grotesque';font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:26px 0 4px}
+.sub{color:var(--muted);font-size:13.5px;margin-bottom:22px}
+.eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.card{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;width:100%;text-align:left;display:block;transition:border-color .16s,transform .16s}
+.card:hover{border-color:#3B5068;transform:translateY(-1px)}
+.card-top{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.pill{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:4px 9px;border-radius:100px}
+.pill.due{background:rgba(76,155,224,.14);color:var(--accent)}
+.pill.done{background:rgba(63,168,143,.14);color:var(--track)}
+.card-body{display:flex;align-items:center;gap:16px}
+.card-name{font-family:'Bricolage Grotesque';font-weight:600;font-size:19px;letter-spacing:-.01em;margin-bottom:6px}
+.bigscore{font-family:'Bricolage Grotesque';font-weight:800;font-size:38px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.delta{font-size:12.5px;color:var(--muted);margin-top:5px}
+.delta .up{color:var(--track)}.delta .down{color:var(--alert)}
+.lowest{font-size:12.5px;color:var(--muted);margin-top:7px;padding-top:9px;border-top:1px solid var(--line)}
+.lowest b{color:var(--alert);font-weight:600}
+.addbtn{width:100%;padding:15px;border:1px dashed var(--line);border-radius:var(--r);color:var(--muted);font-size:14px;font-weight:500;transition:.16s}
+.addbtn:hover{border-color:var(--accent);color:var(--accent)}
+.tabs{display:flex;gap:2px;background:var(--slate);border:1px solid var(--line);border-radius:11px;padding:3px;margin:18px 0 22px}
+.tab{flex:1;padding:9px 2px;border-radius:8px;font-size:11.5px;font-weight:500;color:var(--muted);transition:.14s;white-space:nowrap}
+.tab.on{background:var(--raise);color:var(--bone)}
+.catblock{margin-bottom:26px}
+.cathead{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
+.catname{font-family:'Bricolage Grotesque';font-weight:600;font-size:16px;flex:1}
+.catpct{font-family:'Bricolage Grotesque';font-weight:800;font-size:16px;font-variant-numeric:tabular-nums}
+.catmeta{font-size:11px;color:var(--muted);margin-bottom:10px}
+.bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:12px}
+.bar span{display:block;height:100%;background:var(--accent);transition:width .35s cubic-bezier(.4,0,.2,1)}
+.item{display:flex;align-items:flex-start;gap:11px;padding:10px 12px;border-radius:10px;width:100%;text-align:left;transition:background .14s}
+.item:hover{background:var(--slate)}
+.item.na{opacity:.5;cursor:default}.item.na:hover{background:none}
+.item.auto{cursor:default}.item.auto:hover{background:none}
+.box{width:19px;height:19px;flex:none;margin-top:1px;border:1.5px solid var(--line);border-radius:5px;display:grid;place-items:center;font-size:11px;color:var(--ink);transition:.14s}
+.item.on .box{background:var(--accent);border-color:var(--accent)}
+.item.na .box{border-style:dashed}
+.item.auto .box{border-style:dotted;background:none}
+.item.auto.on .box{background:var(--track);border-color:var(--track);border-style:solid}
+.ilabel{font-size:14px;line-height:1.35;flex:1}
+.item.on .ilabel{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.item.auto.on .ilabel{text-decoration:none;color:var(--bone)}
+.freq{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:2px 6px;border-radius:5px;flex:none;margin-top:1px}
+.freq.trk{color:var(--track);border-color:rgba(63,168,143,.4)}
+.wheelwrap{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:20px 12px 12px;margin-bottom:16px}
+.scoreline{text-align:center;margin-bottom:6px}
+.scoreline .n{font-family:'Bricolage Grotesque';font-weight:800;font-size:56px;line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.scoreline .d{font-size:13px;color:var(--muted);margin-top:2px}
+.scoreline .c{font-size:12px;color:var(--accent);margin-top:5px;font-variant-numeric:tabular-nums}
+.legend{display:flex;justify-content:center;gap:16px;font-size:11px;color:var(--muted);margin-top:4px}
+.legend i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:5px}
+.catlist{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);overflow:hidden}
+.catrow{display:flex;align-items:center;gap:11px;padding:12px 15px;border-bottom:1px solid var(--line)}
+.catrow:last-child{border-bottom:none}
+.catrow .nm{flex:1;font-size:14px}
+.catrow .ct{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums;width:42px;text-align:right}
+.catrow .tr{width:52px;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
+.catrow .tr span{display:block;height:100%;background:var(--accent)}
+.catrow .vl{font-family:'Bricolage Grotesque';font-weight:800;font-size:15px;width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.low .vl{color:var(--alert)}.low .tr span{background:var(--alert)}
+.histcard{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;margin-bottom:14px}
+.hrow{display:flex;align-items:center;gap:12px;padding:9px 0}
+.hmon{font-size:12px;color:var(--muted);width:34px;flex:none}
+.htr{flex:1;height:22px;background:var(--ink);border-radius:5px;overflow:hidden}
+.htr span{display:block;height:100%;background:linear-gradient(90deg,#2C6FA6,var(--accent));border-radius:5px}
+.hvl{font-family:'Bricolage Grotesque';font-weight:800;font-size:14px;width:32px;text-align:right;font-variant-numeric:tabular-nums}
+.hnow .hmon,.hnow .hvl{color:var(--accent)}
+.mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mcard{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:12px 8px 8px;text-align:center}
+.mcard.cur{border-color:rgba(76,155,224,.45)}
+.mcard .mn{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.mcard .ms{font-family:'Bricolage Grotesque';font-weight:800;font-size:24px;line-height:1;margin-top:3px;font-variant-numeric:tabular-nums}
+.mcard .mc{font-size:10.5px;color:var(--muted);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.selrow{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;background:var(--ink)}
+.selrow:hover{background:var(--slate)}
+.selrow.dragging{opacity:.65;background:var(--raise);box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.grip{flex:none;width:20px;color:var(--line);font-size:14px;cursor:grab;touch-action:none;text-align:center;line-height:1}
+.selrow.on .grip{color:var(--muted)}
+.tog{width:36px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
+.tog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
+.selrow.on .tog{background:rgba(76,155,224,.3)}
+.selrow.on .tog::after{transform:translateX(15px);background:var(--accent)}
+.fsel{background:var(--ink);border:1px solid var(--line);border-radius:7px;color:var(--muted);font:inherit;font-size:10.5px;padding:4px 3px;flex:none;width:80px;cursor:pointer}
+.selrow.on .fsel{color:var(--bone)}
+.trkbtn{flex:none;width:28px;height:25px;border:1px solid var(--line);border-radius:7px;font-size:11px;color:var(--muted);display:grid;place-items:center}
+.trkbtn.on{color:var(--track);border-color:rgba(63,168,143,.5);background:rgba(63,168,143,.12)}
+.addwrap{display:flex;gap:7px;margin:10px 0 4px}
+.addwrap input{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:10px 11px;color:var(--bone);font:inherit;font-size:13.5px;min-width:0}
+.addwrap select{flex:none;width:92px;background:var(--ink);border:1px solid var(--line);border-radius:9px;color:var(--bone);font:inherit;font-size:12.5px;padding:0 5px}
+.addwrap button{background:var(--accent);color:var(--ink);font-weight:600;padding:0 14px;border-radius:9px;font-size:13.5px}
+.custom-tag{font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(76,155,224,.35);padding:2px 5px;border-radius:4px;margin-left:6px}
+.libcard{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;width:100%;text-align:left}
+.libcard.have{opacity:.5}
+.libname{font-family:'Bricolage Grotesque';font-weight:600;font-size:17px;margin-bottom:5px}
+.libdesc{font-size:13px;color:var(--muted);line-height:1.45}
+.libmeta{font-size:11px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--line)}
+.note{background:rgba(76,155,224,.07);border:1px solid rgba(76,155,224,.22);border-radius:11px;padding:13px 15px;font-size:12.5px;color:var(--muted);line-height:1.5;margin-bottom:18px}
+.note b{color:var(--accent);font-weight:600}
+.back{font-size:13px;color:var(--muted);padding:14px 0 0;display:inline-block;cursor:pointer}
+.back:hover{color:var(--bone)}
+.empty{text-align:center;color:var(--muted);font-size:13.5px;padding:30px 20px;line-height:1.6}
+.today-hd{display:flex;align-items:flex-end;gap:14px;background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:16px}
+.today-n{font-family:'Bricolage Grotesque';font-weight:800;font-size:40px;line-height:1;letter-spacing:-.03em;font-variant-numeric:tabular-nums}
+.today-l{font-size:12.5px;color:var(--muted);padding-bottom:4px;line-height:1.4}
+.trow{display:flex;align-items:center;gap:11px;padding:11px 12px;border-radius:10px;width:100%;text-align:left;transition:background .14s}
+.trow:hover{background:var(--slate)}
+.trow .meta{font-size:11px;color:var(--muted);margin-top:3px}
+.trow.on .ilabel{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
+.mini{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-top:5px;max-width:150px}
+.mini span{display:block;height:100%;background:var(--track)}
+.mini span.short{background:var(--alert)}
+.streak{font-size:11px;color:var(--gold);flex:none;font-weight:600}
+.dots{display:flex;gap:3px;flex-wrap:wrap;margin-top:12px}
+.dot{width:8px;height:8px;border-radius:2px;background:var(--line)}
+.dot.hit{background:var(--track)}
+.dot.today{outline:1.5px solid var(--accent);outline-offset:1px}
+.seg{display:flex;gap:7px;margin-top:12px}
+.seg button{flex:1;padding:11px 4px;border-radius:9px;font-size:13px;font-weight:500;color:var(--muted);
+  background:#0A1119;border:1px solid var(--line);transition:.14s}
+.seg button:hover{color:var(--bone);border-color:#3B5068}
+.seg button.on{background:rgba(76,155,224,.16);border-color:var(--accent);color:var(--accent);font-weight:600}
+.seglbl{font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:22px}
+
+.statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.stat{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
+.stat .sl{font-size:10px;letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
+.stat .sv{font-family:'Bricolage Grotesque';font-weight:800;font-size:24px;line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .sm{display:block;font-family:'Instrument Sans';font-weight:400;font-size:11px;color:var(--muted);margin-top:3px}
+.ctrend{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:14px 14px 11px;margin-bottom:10px}
+.cth{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
+.ctn{font-family:'Bricolage Grotesque';font-weight:600;font-size:15px;flex:1}
+.ctd{font-size:11.5px;color:var(--muted)}
+.ctv{font-family:'Bricolage Grotesque';font-weight:800;font-size:19px;font-variant-numeric:tabular-nums}
+.ctc{margin:2px -4px 0}
+.ctvals{display:flex;justify-content:space-between;gap:2px;margin-top:2px}
+.ctvals span{flex:1;text-align:center;font-size:10.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.ctvals span b{display:block;font-size:9px;letter-spacing:.08em;text-transform:uppercase;font-weight:600;opacity:.7;margin-bottom:1px}
+.ctvals span.now{color:var(--bone)}
+.pickrow{display:flex;gap:7px;margin:-2px 0 10px}
+.pick{font-size:11.5px;color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 11px;background:#0A1119;transition:.14s}
+.pick:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
+.pick:disabled{opacity:.32;cursor:default}
+.resetbtn{width:100%;margin-top:14px;padding:13px;border:1px solid var(--line);border-radius:11px;
+  color:var(--muted);font-size:13px;background:#0A1119;transition:.14s}
+.resetbtn:hover{color:var(--alert);border-color:var(--alert)}
+.renameinp{flex:1;background:#0A1119;border:1px solid var(--accent);border-radius:8px;
+  padding:8px 10px;color:var(--bone);font:inherit;font-size:14px;min-width:0}
+.ctfoot{font-size:11px;color:var(--muted);margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="top"><div class="top-in">
+  <div><div class="brandmark">Chasing Excellence</div><div class="brandsub">Scorecards</div></div>
+  <div class="top-sp"></div><button class="iconbtn" id="toolchest">⊞</button>
+</div></div>
+<div class="wrap" id="app"></div>
+<script>
+const T={
+ life:{name:'Life Balance',scoreName:'Balance',
+  desc:'Rate yourself across the areas that make a whole life. The goal is a round shape, not a perfect score.',
+  cats:[
+   {id:'faith',name:'Faith',items:[['Daily Devotional','d'],['Gratitude Journal','d'],['Nightly Prayers with Kids','d'],['Pray','d'],['Read the Bible (5 min)','d'],['Volunteer at Church','d'],['Attend Bible Study','w'],['Attend Church','w'],['Have a Faith Mentor','w'],['Invite Someone to Church','w'],['Read 15 min on Other Religions','w'],['Serve Someone Anonymously','w'],['Memorize a Verse or Passage','w'],['Attend Church on Holy Days','m'],['Practice Religious Rituals','m'],['Tithe 10% of Income','m'],['Volunteer on Church Committee','m'],['Mentor Someone in Faith','m'],['Community Service (1 hour)','q'],['Attend Church Retreat','a'],['Attend Mission Trip','a'],['Pray for Someone by Name','d'],['Worship Music','d'],['Attend a Small Group','w'],['Confession or Examine Conscience','m'],['Give to a Cause Outside Church','m'],['Faith Conversation with a Skeptic','m']]},
+   {id:'spouse',name:'Family: Spouse',items:[['Hugs & Kisses (7 seconds)','d'],['Kind Words','d'],['Quality Time (10 min)','d'],["Open, Honest — Don't Go to Bed Mad",'d'],['Ask About Their Day and Listen','d'],['Pray Together','d'],['Compliment Spouse','w'],['Help Spouse with Chores','w'],['Lunch Together','w'],['Intimacy','w'],['Phone-Free Evening Together','w'],['Date Night','m'],['Mutual Hobby Together','m'],['Random Gift','m'],['Review DISC & Enneagram','m'],['Review Budget Together','m'],['Review Five Qualities','m'],['Review Love Languages','m'],['Book Club Together','m'],['Couples Therapy','m'],['Date Night with Another Couple','m'],['Big Surprise or Gesture','q'],['Discuss 1, 3, 5, 10 Year Letters','q'],['Plan the Next Trip Together','q'],['Couples Trip','a'],['Say Thank You for Something Specific','d'],['Share a Win from the Day','d'],['Weekly Marriage Check-In','w'],['Serve Them Without Being Asked','w'],['Write a Note or Card','m'],['Marriage Book or Course','q']]},
+   {id:'family',name:'Family',items:[['Hugs & Kisses','d'],['Open, Honest, Apologize','d'],['Tell Kids You Love Them','d'],['Read to Kids','d'],['Call Family (Dad, Mom, Siblings)','w'],['Family Activity','w'],['Family Breakfast (3x)','w'],['Family Dinner (2x)','w'],['Review Finances with Kids','w'],['School or Camp Pickup','w'],['10 Hours Family-Focused Time','w'],['Family Meeting','w'],['Attend School & Sports Events','m'],['Daddy Daughter Date','m'],['One-on-One with Each Kid','m'],['Know DISC & Enneagram','m'],['Power Numbers','m'],['Review Family Vision Board','m'],['VIP Pyramid','m'],['Visit Family','m'],['Save a Photo or Video Memory','m'],['Big Surprise or Gesture','q'],['Discuss 1, 3, 5, 10 Year Letters','q'],['Review Family Bucket List','q'],['Review Qualities for Future Spouse','q'],['Family Vacation','a'],['Eat Without Screens','d'],['Bedtime Routine','d'],['Ask Each Kid a Real Question','d'],['Family Prayer or Devotional','d'],['Teach a Skill','m'],['Extended Family Gathering','q'],['Volunteer as a Family','q'],['Update Emergency Plan and Documents','a']]},
+   {id:'friends',name:'Friends',items:[['Text Core Friends','w'],['Call Core Friends','m'],['No Vampires — Filter via Power Number','m'],['Check In on Someone Struggling','m'],['Host an Event','q'],['Visit Core Friends','q'],['Make a New Friend','q'],['Reconnect with an Old Friend','q'],['Birthday Calls','a'],['Group Trip','a'],['Hand Written Note','a'],['Be the One Who Initiates','w'],['Celebrate a Friend Win','m'],['Invite Someone to Coffee or Lunch','m'],['Show Up in Person When It Matters','q']]},
+   {id:'health',name:'Health',items:[['Sleep 7 Hours','d'],['No Snooze','d'],['Pink Drink','d'],['Stretch','d'],['Exercise','d'],['Steps (10k)','d'],['Cold Shower','d'],['Sunscreen','d'],['12 Hour Fasting','d'],['Vitamins: Morning','d'],['Vitamins: Lunch','d'],['Vitamins: Night','d'],['Portion Control','d'],['Eat Healthy','d'],['No Eating 3 Hours Before Bed','d'],['Water (100 oz)','d'],['No TV','d'],['Strength Training (3x)','w'],['Scheduled Alcohol','w'],['Chiropractor','q'],['Dentist','s'],['Annual Physical','a'],['Blood Work','a'],['Skin Check','a'],['Eye Exam','a'],['Protein Target','d'],['Consistent Wake Time','d'],['No Screens 30 Min Before Bed','d'],['Track Weight','w'],['Meal Prep','w'],['Active Recovery Walk','w'],['Mobility Work','w'],['Sauna or Sweat','w'],['Review Bloodwork with Doctor','a']]},
+   {id:'self',name:'Self',items:[['Meditate (5 min)','d'],['Breathing Exercise','d'],['Daily Affirmations','d'],['Journal','d'],['Read (15 min)','d'],['Audio Book (15 min)','d'],['Positive Thoughts','d'],['No Phone First Hour','d'],['Spanish (15 min)','d'],['Guitar (15 min)','d'],['Podcast','w'],['Time Outdoors','w'],['Learn Something New','w'],['Digital Sabbath','m'],['Therapy or Counseling','m'],['Review 1, 3, 5, 10 Year Goals','m'],['Review Bucket List','q'],['Review Personal Vision','q'],['"Me" Day','q'],['Six Weeks of Vacation','a'],['Misogi','a'],['Gratitude: Three Things','d'],['Single-Tasking Block','d'],['Say No to One Thing','w'],['Creative Time','w'],['Solo Reflection Walk','w'],['Unplugged Half-Day','m'],['Review What Drained You','m'],['Take a Class or Course','q'],['Personal Retreat Day','a']]},
+   {id:'wealth',name:'Wealth',items:[['Finances Daily (30 min)','d'],['Kids Allowance','w'],['Personal Commissions','m'],['Personal Budget','m'],['Net Worth Update','m'],['Know SMS Numbers','m'],['Know 3R Magic Numbers','m'],['Profit & Loss','m'],['Business Expenses','m'],['Investments & 401k','m'],['Call Financial Advisor','m'],['Max Retirement','m'],['No Revolving Debt','m'],['Safety Savings','m'],['Save 25%','m'],['Savings for Milestones','m'],['Charitable Giving','m'],['Review Credit Report','s'],['Shop Services','a'],['Insurance Review','a'],['Tax Planning Meeting','a'],['Review Wills & Trusts','a'],['No Unplanned Purchases','d'],['Track Every Expense','w'],['Emergency Fund Check','m'],['Kids College / 529','m'],['Teach Kids One Money Lesson','m'],['Review Subscriptions','q'],['Rebalance Portfolio','s'],['Beneficiaries Current','a'],['Estate Docs Reviewed with Spouse','a']]},
+   {id:'work',name:'Work',items:[['Full GTX','d'],['Calendar Written, No White Space','d'],['Calendar Accuracy 90%+','d'],['Time Block Tomorrow','d'],['Social: Post','d'],['Social: Comment (25x4)','d'],['Social: DM (25x4)','d'],['Database Touches (10)','d'],['Journal for Business','d'],['MBS Highway','d'],['Read Chrisman / NREP','d'],['Time: Green = 20 hrs','w'],['Time: Gold = 5 hrs','w'],['Time: Recruiting = 10 hrs','w'],['Time: On Business = 2 hrs','w'],['Time: Total = 50 hrs','w'],['Weekly Business Review','w'],['Review Pipeline','w'],['Team One-on-Ones','w'],['Ask for a Review','w'],['Thank a Referral Partner','w'],['Get Coached (2x)','m'],['Coach Someone','m'],['Read a Business Book','m'],['Goals vs Actuals','m'],['Attend Training or Mastermind','q'],['Top Three Priorities Written','d'],['Update CRM','d'],['Follow Up on Every Lead','d'],['Inbox to Zero','d'],['Call Past Clients (5)','w'],['Preapproval Follow-Ups','w'],['Video Message to a Partner','w'],['Take a Full Day Off','w'],['Review Lost Deals','m'],['Personal P and L for Business','m'],['Quarterly Rocks Set','q'],['Update Marketing Plan','q'],['Annual Business Plan','a']]}
+  ]},
+ marketing:{name:'Marketing',scoreName:'Implementation',
+  desc:'How consistently are you executing the fundamentals? This one measures follow-through, not balance.',
+  cats:[
+   {id:'brand',name:'Brand',items:[['Consistent Profile Across Platforms','m'],['Value Proposition Documented','q'],['Photo & Video Assets Current','q'],['Bio and Headshot Updated','s']]},
+   {id:'content',name:'Content',items:[['Post to Social','d'],['Weekly Video','w'],['Repurpose Top Post','w'],['Monthly Newsletter','m'],['Blog or Long-Form','m']]},
+   {id:'database',name:'Database',items:[['Add New Contacts','w'],['Tag & Segment','m'],['Birthday & Anniversary Touches','m'],['Clean Bad Data','q']]},
+   {id:'partners',name:'Referral Partners',items:[['One-on-One Meetings','w'],['Top 10 List Current','m'],['Co-Marketing Piece','q'],['Partner Event','q']]},
+   {id:'events',name:'Events',items:[['Follow Up Within 48 Hours','m'],['Host Client Event','q'],['Attend Industry Event','q']]},
+   {id:'measure',name:'Measurement',items:[['Review Lead Sources','m'],['Cost Per Lead','m'],['Conversion by Source','m'],['Annual Plan Review','a']]}
+  ]}
+};
+const FREQ={d:'Daily',w:'Weekly',m:'Monthly',q:'Quarterly',s:'6-Month',a:'Annual'};
+const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const NOW={y:2026,m:7,d:29},DAY_TARGET=.7;
+const S={view:'card',active:'life',tab:'today',todayMode:'bottom',sortMode:'freq',editing:null,adopted:['life'],
+  sel:{},custom:{},entries:{},freq:{},daily:{},dlog:{},order:{},rename:{}};
+const key=(c,i)=>c+':'+i,pkey=(y,m)=>y+'-'+m,dkey=(y,m,d)=>y+'-'+m+'-'+d;
+const dim=(y,m)=>new Date(y,m+1,0).getDate(),target=(y,m)=>Math.ceil(dim(y,m)*DAY_TARGET);
+function allItems(t){const out=[],F=S.freq[t]||{},R=S.rename[t]||{};
+  T[t].cats.forEach(c=>c.items.forEach((it,i)=>{const k=key(c.id,i);
+    out.push({k,cat:c.id,label:R[k]||it[0],freq:F[k]||it[1],renamed:!!R[k]})}));
+  (S.custom[t]||[]).forEach(c=>out.push({k:c.key,cat:c.cat,label:R[c.key]||c.label,freq:F[c.key]||c.freq,renamed:!!R[c.key],custom:true}));
+  return out;}
+const FO={d:0,w:1,m:2,q:3,s:4,a:5};
+function catItems(t,cid){const list=allItems(t).filter(i=>i.cat===cid);
+  const az=(a,b)=>a.label.localeCompare(b.label);
+  if(S.sortMode==='manual'){const ord=(S.order[t]||{})[cid];if(!ord)return list;
+    const idx=k=>{const n=ord.indexOf(k);return n<0?9999:n};
+    return list.slice().sort((a,b)=>idx(a.k)-idx(b.k));}
+  if(S.sortMode==='az')return list.slice().sort(az);
+  if(S.sortMode==='trk')return list.slice().sort((a,b)=>(tracked(t,b.k)?1:0)-(tracked(t,a.k)?1:0)||FO[a.freq]-FO[b.freq]||az(a,b));
+  return list.slice().sort((a,b)=>FO[a.freq]-FO[b.freq]||az(a,b));}
+function isDue(f,m){if(f==='d'||f==='w'||f==='m')return true;if(f==='q')return m%3===2;if(f==='s')return m===5||m===11;if(f==='a')return m===11;return true}
+function dayCount(t,k,y,m){let n=0;for(let d=1;d<=dim(y,m);d++){const s=(S.dlog[t]||{})[dkey(y,m,d)];if(s&&s.has(k))n++}return n}
+const tracked=(t,k)=>(S.daily[t]||new Set()).has(k);
+const DEFAULTS={
+ faith:['Pray','Read the Bible (5 min)','Attend Church','Gratitude Journal','Tithe 10% of Income','Community Service (1 hour)'],
+ spouse:['Hugs & Kisses (7 seconds)','Kind Words','Quality Time (10 min)','Say Thank You for Something Specific','Compliment Spouse','Date Night','Couples Trip'],
+ family:['Tell Kids You Love Them','Hugs & Kisses','Family Dinner (2x)','Family Activity','Call Family (Dad, Mom, Siblings)','Attend School & Sports Events','Family Vacation'],
+ friends:['Text Core Friends','Be the One Who Initiates','Call Core Friends','Host an Event','Birthday Calls'],
+ health:['Sleep 7 Hours','Exercise','Water (100 oz)','Eat Healthy','Stretch','Steps (10k)','Scheduled Alcohol','Annual Physical'],
+ self:['Read (15 min)','Journal','Meditate (5 min)','Gratitude: Three Things','Podcast','Review 1, 3, 5, 10 Year Goals'],
+ wealth:['Personal Budget','Save 25%','No Revolving Debt','Investments & 401k','Profit & Loss','Emergency Fund Check','Review Credit Report'],
+ work:['Calendar Written, No White Space','Top Three Priorities Written','Social: Post','Database Touches (10)','Review Pipeline','Get Coached (2x)','Goals vs Actuals']
+};
+function seed(){
+  const picked=new Set();
+  Object.keys(DEFAULTS).forEach(cid=>{const c=T.life.cats.find(x=>x.id===cid);
+    DEFAULTS[cid].forEach(l=>{const i=c.items.findIndex(x=>x[0]===l);
+      if(i>=0)picked.add(key(cid,i));else console.warn('default not found',cid,l)})});
+  S.sel.life=picked;S.custom.life=[];S.entries.life={};S.freq.life={};S.dlog.life={};S.order.life={};
+  const find=(cat,l)=>{const c=T.life.cats.find(x=>x.id===cat);return key(cat,c.items.findIndex(x=>x[0]===l))};
+  const flags=new Set(['Exercise','Water (100 oz)'].map(l=>find('health',l)));
+  flags.add(find('faith','Pray'));['Read (15 min)','Journal'].forEach(l=>flags.add(find('self',l)));
+  S.daily.life=flags;
+  const rate={};[...flags].forEach((k,i)=>rate[k]=[.86,.72,.93,.62,.55][i]);
+  for(let d=1;d<=NOW.d;d++){const s=new Set();flags.forEach(k=>{if(Math.random()<rate[k])s.add(k)});S.dlog.life[dkey(NOW.y,NOW.m,d)]=s}
+  const pk=find('faith','Pray');for(let d=NOW.d-8;d<=NOW.d;d++)S.dlog.life[dkey(NOW.y,NOW.m,d)].add(pk);
+  const prof={faith:.72,spouse:.85,family:.8,friends:.35,health:.62,self:.55,wealth:.78,work:.9};
+  for(let m=2;m<=7;m++){const set=new Set();
+    T.life.cats.forEach(c=>catItems('life',c.id).filter(i=>picked.has(i.k)&&isDue(i.freq,m))
+      .forEach(i=>{if(Math.random()<Math.min(.97,prof[c.id]+(m-2)*.02))set.add(i.k)}));
+    S.entries.life[pkey(2026,m)]=set}
+  const cur=[...S.entries.life[pkey(2026,7)]];
+  S.entries.life[pkey(2026,7)]=new Set(cur.slice(0,Math.floor(cur.length*.55)));
+}
+function isDone(t,k,y,m){if(tracked(t,k)&&y===NOW.y&&m===NOW.m)return dayCount(t,k,y,m)>=target(y,m);
+  return ((S.entries[t]||{})[pkey(y,m)]||new Set()).has(k)}
+function score(t,y,m){const sel=S.sel[t]||new Set(),cats=[];
+  T[t].cats.forEach(c=>{const all=catItems(t,c.id),mine=all.filter(i=>sel.has(i.k)),due=mine.filter(i=>isDue(i.freq,m));
+    const hit=due.filter(i=>isDone(t,i.k,y,m)).length;
+    cats.push({id:c.id,name:c.name,pct:due.length?hit/due.length:null,done:hit,due:due.length,sel:mine.length,total:all.length})});
+  const live=cats.filter(c=>c.pct!==null);
+  return {cats,overall:live.length?live.reduce((a,c)=>a+c.pct,0)/live.length:null,
+    tDone:cats.reduce((a,c)=>a+c.done,0),tDue:cats.reduce((a,c)=>a+c.due,0)}}
+const ten=p=>p===null?'—':(p*10).toFixed(1);
+function radar(cats,size,lbl){
+  const live=cats.filter(c=>c.pct!==null);
+  if(live.length<3)return `<div class="empty">Select items in at least three categories to draw your shape.</div>`;
+  const cx=size/2,cy=size/2,R=size/2-(lbl?46:6),n=live.length;
+  const ang=i=>(Math.PI*2*i/n)-Math.PI/2,pt=(i,r)=>[cx+Math.cos(ang(i))*R*r,cy+Math.sin(ang(i))*R*r];
+  let g='';[.25,.5,.75].forEach(r=>g+=`<circle cx="${cx}" cy="${cy}" r="${R*r}" fill="none" stroke="#293949"/>`);
+  g+=`<circle cx="${cx}" cy="${cy}" r="${R}" fill="none" stroke="#3B5068" stroke-width="1.5" stroke-dasharray="3 4"/>`;
+  live.forEach((c,i)=>{const[x,y]=pt(i,1);g+=`<line x1="${cx}" y1="${cy}" x2="${x}" y2="${y}" stroke="#293949"/>`});
+  g+=`<polygon points="${live.map((c,i)=>pt(i,Math.max(c.pct,.02)).join(',')).join(' ')}" fill="rgba(76,155,224,.22)" stroke="#4C9BE0" stroke-width="${lbl?2:1.5}" stroke-linejoin="round"/>`;
+  live.forEach((c,i)=>{const[x,y]=pt(i,Math.max(c.pct,.02));
+    g+=`<circle cx="${x}" cy="${y}" r="${lbl?3.5:2}" fill="${c.pct<.5?'#E0705F':'#4C9BE0'}"/>`;
+    if(!lbl)return;
+    const[lx,ly]=pt(i,1.32),anc=Math.abs(lx-cx)<8?'middle':(lx>cx?'start':'end');
+    g+=`<text x="${lx}" y="${ly-5}" text-anchor="${anc}" fill="#8494A3" font-size="10.5" font-family="Instrument Sans" font-weight="500">${c.name.replace('Family: ','')}</text>`;
+    g+=`<text x="${lx}" y="${ly+8}" text-anchor="${anc}" fill="${c.pct<.5?'#E0705F':'#E8EDF2'}" font-size="11.5" font-family="Bricolage Grotesque" font-weight="800">${ten(c.pct)}</text>`;
+    g+=`<text x="${lx}" y="${ly+20}" text-anchor="${anc}" fill="#8494A3" font-size="9.5" font-family="Instrument Sans">${c.done} of ${c.due}</text>`;});
+  return `<svg viewBox="0 0 ${size} ${size}" width="100%" style="max-width:${size}px;display:block;margin:0 auto">${g}</svg>`;
+}
+const app=document.getElementById('app');
+function render(){S.view==='home'?home():S.view==='library'?library():cardView();initDrag()}
+function home(){
+  let h=`<div class="h1">${MON[NOW.m]}</div><div class="sub">Where you stand this month.</div>`;
+  S.adopted.map(t=>{const s=score(t,NOW.y,NOW.m);return{t,s,prev:score(t,NOW.y,NOW.m-1),complete:s.tDue>0&&s.tDone===s.tDue}})
+   .sort((a,b)=>a.complete-b.complete).forEach(({t,s,prev,complete})=>{
+    const low=s.cats.filter(c=>c.pct!==null).sort((a,b)=>a.pct-b.pct)[0];
+    const d=(s.overall!==null&&prev.overall!==null)?(s.overall-prev.overall)*10:null;
+    h+=`<button class="card" onclick="go('${t}')">
+      <div class="card-top"><span class="pill ${complete?'done':'due'}">${complete?'✓ Complete':'● Check in'}</span></div>
+      <div class="card-body"><div style="flex:1"><div class="card-name">${T[t].name}</div>
+        <div class="bigscore">${ten(s.overall)}</div>
+        <div class="delta">${s.tDone} of ${s.tDue} done${d===null?'':' · '+(d>=0?`<span class="up">▲${d.toFixed(1)}</span>`:`<span class="down">▼${Math.abs(d).toFixed(1)}</span>`)}</div>
+      </div><div style="width:96px;flex:none">${radar(s.cats,96,false)}</div></div>
+      ${low?`<div class="lowest">Lowest: <b>${low.name}</b> at ${ten(low.pct)} (${low.done} of ${low.due})</div>`:''}</button>`});
+  app.innerHTML=h+`<button class="addbtn" onclick="S.view='library';render()">+ Add a scorecard</button>`;
+}
+function library(){
+  let h=`<a class="back" onclick="S.view=S.adopted.length>1?'home':'card';render()">← Back</a>
+   <div class="h1">Add a scorecard</div><div class="sub">Same engine, different focus. Adopt what's useful.</div>`;
+  Object.keys(T).forEach(t=>{const have=S.adopted.includes(t),n=T[t].cats.reduce((a,c)=>a+c.items.length,0);
+    h+=`<button class="libcard ${have?'have':''}" ${have?'':`onclick="adopt('${t}')"`}>
+      <div class="libname">${T[t].name}${have?' ✓':''}</div><div class="libdesc">${T[t].desc}</div>
+      <div class="libmeta">${T[t].cats.length} categories · ${n} suggested items${have?' · Already added':''}</div></button>`});
+  app.innerHTML=h;
+}
+function cardView(){
+  const t=S.active,s=score(t,NOW.y,NOW.m),hasD=(S.daily[t]||new Set()).size>0;
+  if(S.tab==='today'&&!hasD)S.tab='checkin';
+  let h=S.adopted.length>1?`<a class="back" onclick="S.view='home';render()">← All scorecards</a>`:'';
+  h+=`<div class="h1">${T[t].name}</div><div class="sub">${MON[NOW.m]} ${NOW.y} · ${ten(s.overall)} out of 10 · ${s.tDone} of ${s.tDue} done</div><div class="tabs">`;
+  (hasD?[['today','Today']]:[]).concat([['checkin','Check-in'],['wheel',T[t].scoreName],['history','History'],['items','Items']])
+    .forEach(([k,l])=>h+=`<button class="tab ${S.tab===k?'on':''}" onclick="S.tab='${k}';render()">${l}</button>`);
+  h+=`</div>`+(S.tab==='today'?today(t):S.tab==='checkin'?checkin(t,s):S.tab==='wheel'?wheel(t,s):S.tab==='history'?history(t):items(t));
+  app.innerHTML=h;
+}
+function streakOf(t,k){let n=0;for(let d=NOW.d;d>=1;d--){const s=S.dlog[t][dkey(NOW.y,NOW.m,d)];if(s&&s.has(k))n++;else break}return n}
+function today(t){
+  let flags=[...(S.daily[t]||new Set())].map(k=>allItems(t).find(i=>i.k===k)).filter(Boolean);
+  const cur=S.dlog[t][dkey(NOW.y,NOW.m,NOW.d)]||new Set(),tgt=target(NOW.y,NOW.m);
+  const doneN=flags.filter(i=>cur.has(i.k)).length;
+  let show=flags.slice();
+  if(S.todayMode==='hide')show=show.filter(i=>!cur.has(i.k));
+  if(S.todayMode==='bottom')show.sort((a,b)=>(cur.has(a.k)?1:0)-(cur.has(b.k)?1:0));
+  let h=`<div class="today-hd"><div class="today-n">${doneN}<span style="font-size:22px;color:var(--muted)">/${flags.length}</span></div>
+    <div class="today-l">done today<br>${MON[NOW.m]} ${NOW.d}</div></div>
+    <div class="note">Only items flagged for daily tracking show here. Everything else stays a once-a-month reflection on <b>Check-in</b>.</div>`;
+  if(!show.length)h+=`<div class="empty">All clear for today.<br>Everything comes back tomorrow.</div>`;
+  show.forEach(i=>{const on=cur.has(i.k),n=dayCount(t,i.k,NOW.y,NOW.m),st=streakOf(t,i.k);
+    const short=n<tgt&&NOW.d>=dim(NOW.y,NOW.m);
+    h+=`<button class="trow ${on?'on':''}" onclick="logDay('${t}','${i.k}')">
+      <span class="box" style="${on?'background:var(--accent);border-color:var(--accent)':''}">${on?'✓':''}</span>
+      <span style="flex:1"><span class="ilabel">${i.label}</span>
+        <div class="meta">${n} of ${tgt} days needed${n>=tgt?' · counted ✓':''}</div>
+        <div class="mini"><span class="${short?'short':''}" style="width:${Math.min(100,n/tgt*100)}%"></span></div></span>
+      ${st>1?`<span class="streak">${st}d</span>`:''}</button>`});
+  const best=flags.map(i=>({i,st:streakOf(t,i.k)})).sort((a,b)=>b.st-a.st)[0];
+  if(best&&best.st>=7)h+=`<div class="note" style="margin-top:16px">You're on a <b>${best.st}-day run</b> with ${best.i.label}. When you're ready, add another item — that's how the list grows.</div>`;
+  h+=`<div class="seglbl">Completed items</div><div class="seg">`;
+  [['keep','Leave'],['bottom','Bottom'],['hide','Hide']]
+    .forEach(([k,l])=>h+=`<button class="${S.todayMode===k?'on':''}" onclick="S.todayMode='${k}';render()">${l}</button>`);
+  h+=`</div><div class="histcard" style="margin-top:18px"><div class="eyebrow" style="margin-bottom:10px">This month, all tracked items</div><div class="dots">`;
+  for(let d=1;d<=dim(NOW.y,NOW.m);d++){const s=S.dlog[t][dkey(NOW.y,NOW.m,d)];
+    h+=`<span class="dot ${s&&flags.length&&flags.every(i=>s.has(i.k))?'hit':''} ${d===NOW.d?'today':''}"></span>`}
+  return h+`</div><div style="font-size:11.5px;color:var(--muted);margin-top:9px">Filled = every tracked item done that day.</div></div>`;
+}
+function checkin(t,s){
+  const sel=S.sel[t],done=S.entries[t][pkey(NOW.y,NOW.m)]||new Set(),tgt=target(NOW.y,NOW.m);
+  let h=`<div class="note">Items outside their cycle are <b>greyed out and don't count</b>. Anything tracked daily fills in automatically.</div>`;
+  T[t].cats.forEach(c=>{const mine=catItems(t,c.id).filter(i=>sel.has(i.k));if(!mine.length)return;
+    const cs=s.cats.find(x=>x.id===c.id);
+    h+=`<div class="catblock"><div class="cathead"><div class="catname">${c.name}</div><div class="catpct">${ten(cs.pct)}</div></div>
+      <div class="catmeta">${cs.done} of ${cs.due} due · ${cs.sel} of ${cs.total} selected</div>
+      <div class="bar"><span style="width:${(cs.pct||0)*100}%"></span></div>`;
+    mine.forEach(i=>{const due=isDue(i.freq,NOW.m);
+      if(tracked(t,i.k)){const n=dayCount(t,i.k,NOW.y,NOW.m),ok=n>=tgt;
+        h+=`<div class="item auto ${ok?'on':''}"><span class="box">${ok?'✓':''}</span>
+          <span class="ilabel">${i.label}<div style="font-size:11px;color:var(--muted);margin-top:2px">${n}/${tgt} days tracked</div></span>
+          <span class="freq trk">Auto</span></div>`}
+      else{const on=done.has(i.k);
+        h+=`<button class="item ${on?'on':''} ${due?'':'na'}" onclick="tick('${t}','${i.k}')"><span class="box">${on?'✓':''}</span>
+          <span class="ilabel">${i.label}</span><span class="freq">${due?FREQ[i.freq]:'Not due'}</span></button>`}});
+    h+=`</div>`});
+  return h;
+}
+function wheel(t,s){
+  let h=`<div class="wheelwrap"><div class="scoreline"><div class="n">${ten(s.overall)}</div>
+    <div class="d">${T[t].scoreName} score · ${MON[NOW.m]}</div>
+    <div class="c">${s.tDone} of ${s.tDue} items completed</div></div>${radar(s.cats,320,true)}
+    <div class="legend"><span><i style="background:#3B5068"></i>Perfect</span><span><i style="background:#4C9BE0"></i>You</span></div>
+  </div><div class="catlist">`;
+  s.cats.filter(c=>c.pct!==null).sort((a,b)=>b.pct-a.pct).forEach(c=>{
+    h+=`<div class="catrow ${c.pct<.5?'low':''}"><div class="nm">${c.name}</div>
+      <div class="ct">${c.done} of ${c.due}</div><div class="tr"><span style="width:${c.pct*100}%"></span></div>
+      <div class="vl">${ten(c.pct)}</div></div>`});
+  return h+`</div>`;
+}
+function lineChart(series,w,h,col,showLbl,labels){
+  const n=series.length,P=6,B=showLbl?16:6,Tp=showLbl?14:6;
+  const xs=i=>P+i*(w-2*P)/Math.max(1,n-1), ys=v=>(h-B)-v*(h-B-Tp);
+  const pts=series.map((v,i)=>v===null?null:[xs(i),ys(v)]).filter(Boolean);
+  let g='';
+  [0,.5,1].forEach(r=>{const y=ys(r);g+=`<line x1="${P}" y1="${y}" x2="${w-P}" y2="${y}" stroke="#293949" stroke-width="1" ${r===0?'':'stroke-dasharray="2 4"'}/>`});
+  if(pts.length>1){
+    const line=pts.map(p=>p.join(',')).join(' ');
+    g+=`<polygon points="${xs(0)},${h-B} ${line} ${xs(n-1)},${h-B}" fill="${col}" opacity=".13"/>`;
+    g+=`<polyline points="${line}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>`;
+  }
+  pts.forEach((p,i)=>{g+=`<circle cx="${p[0]}" cy="${p[1]}" r="${i===pts.length-1?3.4:2.2}" fill="${col}"/>`});
+  if(showLbl){
+    series.forEach((v,i)=>{ if(v===null)return;
+      g+=`<text x="${xs(i)}" y="${ys(v)-7}" text-anchor="middle" fill="#E8EDF2" font-size="9.5" font-family="Bricolage Grotesque" font-weight="800">${(v*10).toFixed(1)}</text>`;
+      g+=`<text x="${xs(i)}" y="${h-4}" text-anchor="middle" fill="#8494A3" font-size="9" font-family="Instrument Sans">${labels[i]}</text>`;});
+  }
+  return `<svg viewBox="0 0 ${w} ${h}" width="100%" style="display:block">${g}</svg>`;
+}
+
+function history(t){
+  const ms=[];for(let m=2;m<=NOW.m;m++)ms.push({m,s:score(t,NOW.y,m)});
+  const labels=ms.map(x=>MON[x.m]);
+  const vals=ms.map(x=>x.s.overall);
+  const live=vals.filter(v=>v!==null);
+  const avg=live.length?live.reduce((a,b)=>a+b,0)/live.length:null;
+  const best=ms.slice().sort((a,b)=>(b.s.overall||0)-(a.s.overall||0))[0];
+  const worst=ms.slice().sort((a,b)=>(a.s.overall||0)-(b.s.overall||0))[0];
+  const pos=vals.filter(v=>v!==null&&v>=.7).length;
+
+  let h=`<div class="histcard"><div class="eyebrow" style="margin-bottom:10px">${T[t].scoreName} trend</div>
+    ${lineChart(vals,400,132,'#4C9BE0',true,labels)}</div>`;
+
+  h+=`<div class="statgrid">
+    <div class="stat"><div class="sl">Average</div><div class="sv">${ten(avg)}</div></div>
+    <div class="stat"><div class="sl">Best month</div><div class="sv">${ten(best.s.overall)}<span class="sm">${MON[best.m]}</span></div></div>
+    <div class="stat"><div class="sl">Lowest month</div><div class="sv" style="color:var(--alert)">${ten(worst.s.overall)}<span class="sm">${MON[worst.m]}</span></div></div>
+    <div class="stat"><div class="sl">7.0 or better</div><div class="sv">${pos}<span class="sm">of ${vals.length} months</span></div></div>
+  </div>`;
+
+  // per-category series
+  const rows=T[t].cats.map(c=>{
+    const ser=ms.map(x=>{const cc=x.s.cats.find(y=>y.id===c.id);return cc?cc.pct:null});
+    const cur=ser[ser.length-1], first=ser.find(v=>v!==null);
+    return {c,ser,cur,delta:(cur!==null&&first!==undefined&&first!==null)?(cur-first)*10:null,
+      last:ms[ms.length-1].s.cats.find(y=>y.id===c.id)};
+  }).filter(r=>r.cur!==null);
+
+  const moved=rows.filter(r=>r.delta!==null).sort((a,b)=>b.delta-a.delta);
+  if(moved.length>1){
+    const up=moved[0],dn=moved[moved.length-1];
+    h+=`<div class="statgrid">
+      <div class="stat"><div class="sl">Most improved</div><div class="sv" style="font-size:17px;color:var(--track)">${up.c.name.replace('Family: ','')}<span class="sm">${up.delta>=0?'+':''}${up.delta.toFixed(1)} since ${labels[0]}</span></div></div>
+      <div class="stat"><div class="sl">Biggest slide</div><div class="sv" style="font-size:17px;color:${dn.delta<0?'var(--alert)':'var(--muted)'}">${dn.c.name.replace('Family: ','')}<span class="sm">${dn.delta>=0?'+':''}${dn.delta.toFixed(1)} since ${labels[0]}</span></div></div>
+    </div>`;
+  }
+
+  h+=`<div class="eyebrow" style="margin:26px 0 12px">Every category, month by month</div>`;
+  rows.slice().sort((a,b)=>a.cur-b.cur).forEach(r=>{
+    const col=r.cur<.5?'#E0705F':r.cur>=.85?'#3FA88F':'#4C9BE0';
+    h+=`<div class="ctrend">
+      <div class="cth"><div class="ctn">${r.c.name}</div>
+        <div class="ctd">${r.delta===null?'':(r.delta>0?`<span style="color:var(--track)">▲ ${r.delta.toFixed(1)}</span>`:r.delta<0?`<span style="color:var(--alert)">▼ ${Math.abs(r.delta).toFixed(1)}</span>`:'<span>no change</span>')}</div>
+        <div class="ctv" style="color:${col}">${ten(r.cur)}</div></div>
+      <div class="ctc">${lineChart(r.ser,300,58,col,false,labels)}</div>
+      <div class="ctvals">${r.ser.map((v,i)=>`<span class="${i===r.ser.length-1?'now':''}"><b>${MON[ms[i].m]}</b>${ten(v)}</span>`).join('')}</div>
+      <div class="ctfoot">${r.last.done} of ${r.last.due} due this month · ${r.last.sel} of ${r.last.total} selected</div>
+    </div>`;
+  });
+
+  h+=`<div class="eyebrow" style="margin:26px 0 12px">Month by month</div><div class="mgrid">`;
+  for(let i=ms.length-1;i>=0;i--){const x=ms[i];
+    h+=`<div class="mcard ${x.m===NOW.m?'cur':''}"><div class="mn">${MON[x.m]}</div>
+      <div class="ms">${ten(x.s.overall)}</div><div class="mc">${x.s.tDone} of ${x.s.tDue}</div>
+      ${radar(x.s.cats,140,false)}</div>`}
+
+  h+=`</div><div class="histcard" style="margin-top:16px"><div class="eyebrow" style="margin-bottom:12px">Category streaks</div>`;
+  const st=[];T[t].cats.forEach(c=>{let run=0;
+    for(let m=NOW.m-1;m>=2;m--){const cc=score(t,NOW.y,m).cats.find(x=>x.id===c.id);if(cc&&cc.pct===1)run++;else break}
+    if(run)st.push({n:c.name,run})});
+  if(!st.length)h+=`<div style="font-size:13px;color:var(--muted);line-height:1.5">No categories at 100% yet.</div>`;
+  else st.sort((a,b)=>b.run-a.run).forEach(x=>{
+    h+=`<div class="hrow"><div style="flex:1;font-size:14px">${x.n}</div><div style="font-size:12.5px;color:var(--gold)">${x.run} month${x.run>1?'s':''} at 100%</div></div>`;
+    if(x.run>=3)h+=`<div style="font-size:12.5px;color:var(--muted);padding:0 0 10px;line-height:1.5">You've held ${x.n} for ${x.run} months. Want to add another item?</div>`});
+  return h+`</div>`;
+}
+
+function items(t){
+  const sel=S.sel[t];
+  let h=`<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>\u270e</b>, change the frequency, add your own, and tap <b>\u26a1</b> on a daily item to track it day by day.</div>`;
+  h+=`<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg">`;
+  [['freq','Frequency'],['az','A \u2013 Z'],['trk','\u26a1 First'],['manual','Custom']]
+    .forEach(([k,l])=>h+=`<button class="${S.sortMode===k?'on':''}" onclick="setSort('${k}')">${l}</button>`);
+  h+=`</div>`;
+  if(S.sortMode==='manual')h+=`<div style="font-size:11.5px;color:var(--muted);margin:9px 0 0">Drag \u283f to arrange items exactly how you want them.</div>`;
+  T[t].cats.forEach(c=>{const mine=catItems(t,c.id);
+    const nOn=mine.filter(i=>sel.has(i.k)).length;
+    h+=`<div class="catblock" style="margin-top:24px"><div class="cathead"><div class="catname">${c.name}</div>
+      <div style="font-size:12px;color:var(--muted);font-weight:600">${nOn} of ${mine.length}</div></div>
+      <div class="pickrow">
+        <button class="pick" ${nOn===mine.length?'disabled':''} onclick="pickAll('${t}','${c.id}',true)">Select all</button>
+        <button class="pick" ${nOn===0?'disabled':''} onclick="pickAll('${t}','${c.id}',false)">Clear all</button>
+      </div>
+      <div class="itemlist" data-t="${t}" data-cat="${c.id}" style="display:flex;flex-direction:column;gap:2px">`;
+    mine.forEach(i=>{const on=sel.has(i.k);
+      if(S.editing===i.k){
+        h+=`<div class="selrow on" data-k="${i.k}"><input class="renameinp" id="rn" value="${i.label.replace(/"/g,'&quot;')}"
+            onkeydown="if(event.key==='Enter')this.blur();if(event.key==='Escape'){S.editing=null;render()}"
+            onblur="saveName('${t}','${i.k}',this.value)">
+          <button class="trkbtn" onclick="saveName('${t}','${i.k}',document.getElementById('rn').value)">\u2713</button></div>`;
+        return;}
+      h+=`<div class="selrow ${on?'on':''}" data-k="${i.k}">
+        ${S.sortMode==='manual'?'<span class="grip">\u283f</span>':''}
+        <span class="tog" onclick="toggle('${t}','${i.k}')"></span>
+        <span class="ilabel" onclick="toggle('${t}','${i.k}')">${i.label}${i.custom?'<span class="custom-tag">Yours</span>':i.renamed?'<span class="custom-tag">Edited</span>':''}</span>
+        <button class="trkbtn" title="Rename" onclick="S.editing='${i.k}';render();document.getElementById('rn').focus()">\u270e</button>
+        ${on&&i.freq==='d'?`<button class="trkbtn ${tracked(t,i.k)?'on':''}" title="Track daily" onclick="trackDaily('${t}','${i.k}')">\u26a1</button>`:''}
+        <select class="fsel" onchange="setFreq('${t}','${i.k}',this.value)">
+        ${Object.keys(FREQ).map(f=>`<option value="${f}" ${i.freq===f?'selected':''}>${FREQ[f]}</option>`).join('')}</select></div>`});
+    h+=`</div><div class="addwrap"><input id="ci-${c.id}" placeholder="Add your own\u2026" onkeydown="if(event.key==='Enter')addItem('${t}','${c.id}')">
+      <select id="cf-${c.id}">${Object.keys(FREQ).map(f=>`<option value="${f}">${FREQ[f]}</option>`).join('')}</select>
+      <button onclick="addItem('${t}','${c.id}')">Add</button></div></div>`});
+  h+=`<button class="resetbtn" onclick="resetCard('${t}')">Reset this scorecard to the template</button>`;
+  return h;
+}
+function pickAll(t,cid,on){
+  catItems(t,cid).forEach(i=>on?S.sel[t].add(i.k):S.sel[t].delete(i.k));
+  if(!on&&S.daily[t])catItems(t,cid).forEach(i=>S.daily[t].delete(i.k));
+  render();
+}
+function resetCard(t){
+  if(!confirm('Clear every selection, rename, custom item and frequency change on this scorecard? Your check-in history stays.'))return;
+  S.sel[t]=new Set();S.rename[t]={};S.freq[t]={};S.custom[t]=[];S.daily[t]=new Set();S.order[t]={};
+  S.sortMode='freq';render();
+}
+function setSort(m){
+  if(m==='manual'){ // freeze the current visible order so nothing jumps
+    const t=S.active;S.order[t]=S.order[t]||{};
+    T[t].cats.forEach(c=>{if(!S.order[t][c.id])S.order[t][c.id]=catItems(t,c.id).map(i=>i.k)});
+  }
+  S.sortMode=m;S.editing=null;render();
+}
+function saveName(t,k,v){
+  S.rename[t]=S.rename[t]||{};
+  const val=(v||'').trim();
+  if(!val)delete S.rename[t][k]; else S.rename[t][k]=val;
+  S.editing=null;render();
+}
+/* drag to reorder — works with mouse and touch */
+function initDrag(){
+  document.querySelectorAll('.itemlist .grip').forEach(g=>{
+    g.onpointerdown=e=>{
+      e.preventDefault();
+      const row=g.closest('.selrow'),list=row.parentElement;
+      row.classList.add('dragging');g.setPointerCapture(e.pointerId);
+      const move=ev=>{
+        const others=[...list.querySelectorAll('.selrow:not(.dragging)')];
+        const after=others.find(r=>{const b=r.getBoundingClientRect();return ev.clientY<b.top+b.height/2});
+        after?list.insertBefore(row,after):list.appendChild(row);
+      };
+      const up=()=>{
+        row.classList.remove('dragging');
+        g.removeEventListener('pointermove',move);g.removeEventListener('pointerup',up);
+        const t=list.dataset.t,cid=list.dataset.cat;
+        S.order[t]=S.order[t]||{};
+        S.order[t][cid]=[...list.querySelectorAll('.selrow')].map(r=>r.dataset.k);
+        S.sortMode='manual';render();
+      };
+      g.addEventListener('pointermove',move);g.addEventListener('pointerup',up);
+    };
+  });
+}
+function tick(t,k){const p=pkey(NOW.y,NOW.m);S.entries[t][p]=S.entries[t][p]||new Set();
+  S.entries[t][p].has(k)?S.entries[t][p].delete(k):S.entries[t][p].add(k);render()}
+function logDay(t,k){const d=dkey(NOW.y,NOW.m,NOW.d);S.dlog[t][d]=S.dlog[t][d]||new Set();
+  S.dlog[t][d].has(k)?S.dlog[t][d].delete(k):S.dlog[t][d].add(k);render()}
+function toggle(t,k){S.sel[t].has(k)?S.sel[t].delete(k):S.sel[t].add(k);render()}
+function setFreq(t,k,f){S.freq[t]=S.freq[t]||{};S.freq[t][k]=f;if(f!=='d'&&S.daily[t])S.daily[t].delete(k);render()}
+function trackDaily(t,k){S.daily[t]=S.daily[t]||new Set();S.daily[t].has(k)?S.daily[t].delete(k):S.daily[t].add(k);render()}
+function addItem(t,cid){const inp=document.getElementById('ci-'+cid),f=document.getElementById('cf-'+cid);
+  const v=inp.value.trim();if(!v)return;const k='custom:'+cid+':'+Date.now();
+  S.custom[t].push({key:k,cat:cid,label:v,freq:f.value});S.sel[t].add(k);render()}
+function go(t){S.active=t;S.tab=(S.daily[t]||new Set()).size?'today':'checkin';S.view='card';render()}
+function adopt(t){if(!S.adopted.includes(t)){S.adopted.push(t);
+  const p=new Set();T[t].cats.forEach(c=>c.items.forEach((it,i)=>{if(i<3)p.add(key(c.id,i))}));
+  S.sel[t]=p;S.custom[t]=[];S.entries[t]={};S.freq[t]={};S.daily[t]=new Set();S.dlog[t]={};S.order[t]={}}
+  S.active=t;S.tab='items';S.view='card';render()}
+document.getElementById('toolchest').onclick=()=>alert('Tool chest\n\n• Scorecards (you are here)\n• Daily Time Tracker\n\nIn the real build this switches between Chasing Excellence tools using the same login.');
+seed();render();
+</script>
+</body>
+</html>
