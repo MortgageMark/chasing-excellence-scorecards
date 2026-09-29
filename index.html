@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=14;
+const APP_RELEASE=15;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -948,9 +948,9 @@ function history(){
   }
 
   h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, '+(isWeekly()?'week by week':'month by month')+'</div>';
-  rows.slice().sort((a,b)=>a.cur-b.cur).forEach(r=>{
+  rows.forEach(r=>{
     const col=r.cur<.5?'#E0705F':(r.cur>=.85?'#3FA88F':'#4C9BE0');
-    h+='<div class="ctrend"><div class="cth"><div class="ctn">'+esc(r.c.name)+'</div><div class="ctd">'
+    h+='<div class="ctrend"><div class="cth"><div class="ctn">'+esc(catTitle(r.c))+'</div><div class="ctd">'
       +(r.delta===null?'':(r.delta>0?'<span style="color:var(--track)">&#9650; '+dfmt(r.delta)+'</span>':(r.delta<0?'<span style="color:var(--alert)">&#9660; '+dfmt(Math.abs(r.delta))+'</span>':'<span>no change</span>')))
       +'</div><div class="ctv" style="color:'+col+'">'+ten(r.cur)+'</div></div>'
       +'<div class="ctc">'+lineChart(r.ser,300,58,col,false,labels)+'</div>'
@@ -1009,11 +1009,11 @@ function itemsScreen(){
       const canMove=S.sortMode==='manual'&&!S.editing, pos=mine.indexOf(i);
       h+='<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
         +(canMove?'<span class="grip" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
+        +(canMove?'<span class="mv"><button title="Move up" '+(pos===0?'disabled':'')+' onclick="moveItem(\''+i.id+'\',-1)">&#9650;</button>'
+          +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
         +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
         +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
-        +(canMove?'<span class="mv"><button title="Move up" '+(pos===0?'disabled':'')+' onclick="moveItem(\''+i.id+'\',-1)">&#9650;</button>'
-          +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
         +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
