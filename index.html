@@ -207,7 +207,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=5;
+const APP_RELEASE=6;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -324,7 +324,7 @@ const ten=p=>p===null?'—':(p*10).toFixed(1);
 const S={
   profile:null, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{},          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{},          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -351,7 +351,9 @@ function spreadTargetMonth(freq,idx){
   return (idx%p)+1;
 }
 
-const label=i=>i.renamed_label||i.custom_label||i.lib_label||'Untitled';
+/* Checklist text: your rename, else the template's short label, else the full question. */
+const label=i=>i.renamed_label||i.custom_label||i.lib_short||i.lib_label||'Untitled';
+const fullQ=i=>(i.lib_label&&i.lib_label!==label(i))?i.lib_label:'';
 const liveItems=()=>S.items.filter(i=>!i.removed_at);
 function catItems(catId){
   const list=liveItems().filter(i=>i.category_id===catId);
@@ -409,14 +411,40 @@ const catTitle=c=>isWeekly()?String.fromCharCode(65+S.cats.indexOf(c))+'. '+c.na
      overall        = mean of live category scores (equal weight)
      empty categories are excluded, not zeroed
    =================================================================== */
+/* Weekly cards: how the optional monthly/quarterly/6-month/yearly items touch
+   this week's score. A "yes" counts once, in the week it was ticked (+1 done,
+   +1 due). An item that is officially due this week, meaning the first-Friday
+   week that closes its period, counts as due if it was not answered yes (or
+   N/A). Anything else is left out, so an item that is not due yet costs nothing. */
+function longAdjust(P){
+  const out={};
+  const add=(cid,d,u)=>{const o=out[cid]||(out[cid]={done:0,due:0});o.done+=d;o.due+=u;};
+  const byId={};
+  liveItems().forEach(i=>{ if(i.is_selected&&!isShortCycle(i)) byId[i.id]=i; });
+  Object.keys(S.credit).forEach(k=>{
+    if(S.credit[k]!==P.key||S.entries[k]!==true) return;
+    const it=byId[k.split('|')[0]]; if(it) add(it.category_id,1,1);
+  });
+  const startD=S.card?new Date(S.card.started_at+"T00:00:00"):P.fri;
+  Object.keys(byId).forEach(id=>{
+    const it=byId[id], p=CYC[it.freq];
+    if(!p||!(P.fri.getDate()<=7&&P.fri.getMonth()%p===0)) return;
+    /* Do not penalise for a period that ended before the card was started. */
+    if(cycleStart(it.freq,P.fri,1)<cycleStart(it.freq,startD,0)) return;
+    const v=S.entries[id+'|'+cycleKey(it.freq,P.fri,1)];
+    if(v!==true&&v!=='na') add(it.category_id,0,1);
+  });
+  return out;
+}
 function score(P){
-  const cats=[];
+  const cats=[], adj=P.weekly?longAdjust(P):{};
   S.cats.forEach(c=>{
     const all=catItems(c.id).filter(i=>!P.weekly||isShortCycle(i)), mine=all.filter(i=>i.is_selected);
-    const due=mine.filter(i=>scored(i,P)&&!isNA(i,P));
-    const hit=due.filter(i=>isDone(i,P)).length;
-    cats.push({id:c.id,name:c.name,pct:due.length?hit/due.length:null,
-               done:hit,due:due.length,sel:mine.length,total:all.length});
+    const dueItems=mine.filter(i=>scored(i,P)&&!isNA(i,P));
+    const a=adj[c.id]||{done:0,due:0};
+    const hit=dueItems.filter(i=>isDone(i,P)).length+a.done, due=dueItems.length+a.due;
+    cats.push({id:c.id,name:c.name,pct:due?hit/due:null,
+               done:hit,due:due,sel:mine.length,total:all.length});
   });
   const live=cats.filter(c=>c.pct!==null);
   return {cats,
@@ -523,7 +551,7 @@ async function openTemplate(id){
   const catIds={}; S.cats.forEach(c=>catIds[c.id]=1);
   S.library=S.allLib.filter(i=>catIds[i.category_id]);
   S.card=S.cards.find(c=>c.template_id===id)||null;
-  S.items=[]; S.entries={};
+  S.items=[]; S.entries={}; S.credit={};
   S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.sortMode='freq'; S.editing=null;
   if(S.card) await loadCard();
 }
@@ -537,7 +565,7 @@ function goHome(){ S.template=null; S.card=null; render(); }
 async function loadCard(){
   const r=await Promise.all([
     SB.from("sc_user_scorecard_items").select("*").eq("user_scorecard_id",S.card.id),
-    SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool").eq("user_scorecard_id",S.card.id)
+    SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool,credit_week").eq("user_scorecard_id",S.card.id)
   ]);
   r.forEach(x=>{ if(x.error) throw x.error; });
   const libById={}; S.library.forEach(l=>libById[l.id]=l);
@@ -545,11 +573,16 @@ async function loadCard(){
     id:x.id, category_id:x.category_id, library_item_id:x.library_item_id,
     custom_label:x.custom_label, renamed_label:x.renamed_label,
     lib_label:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].label:null,
+    lib_short:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].short_label:null,
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
-  S.entries={};
-  (r[1].data||[]).forEach(e=>{ S.entries[e.user_scorecard_item_id+'|'+e.period_start]=(e.value_bool===null?'na':!!e.value_bool); });
+  S.entries={}; S.credit={};
+  (r[1].data||[]).forEach(e=>{
+    const k=e.user_scorecard_item_id+'|'+e.period_start;
+    S.entries[k]=(e.value_bool===null?'na':!!e.value_bool);
+    if(e.credit_week) S.credit[k]=e.credit_week;
+  });
 }
 
 /* Adoption: one card, one row per library item, first-run defaults on. */
@@ -588,19 +621,27 @@ async function adopt(){
   finally{ S.busy=false; render(); }
 }
 
-async function tick(itemId,period){
+async function tick(itemId,period,creditWeek){
   const it=S.items.find(i=>i.id===itemId); if(!it) return;
   const k=itemId+'|'+period;
   /* Cycle: not done -> yes -> N/A -> not done */
-  const prev=S.entries[k];
+  const prev=S.entries[k], prevCredit=S.credit[k];
   const next=prev===true?'na':(prev==='na'?false:true);
-  S.entries[k]=next; render();
+  /* A monthly/quarterly/yearly "yes" is credited to the week it was ticked in. */
+  const credit=(next===true&&creditWeek)?creditWeek:null;
+  S.entries[k]=next;
+  if(credit) S.credit[k]=credit; else delete S.credit[k];
+  render();
   try{
     await run(SB.from("sc_entries").upsert({
       user_scorecard_id:S.card.id, user_scorecard_item_id:itemId,
-      period_start:period, value_bool:(next==='na'?null:next)
+      period_start:period, value_bool:(next==='na'?null:next), credit_week:credit
     },{onConflict:"user_scorecard_item_id,period_start"}));
-  }catch(e){ S.entries[k]=prev; render(); }
+  }catch(e){
+    S.entries[k]=prev;
+    if(prevCredit) S.credit[k]=prevCredit; else delete S.credit[k];
+    render();
+  }
 }
 
 async function patchItem(itemId,patch,localPatch){
@@ -621,7 +662,7 @@ function setFreq(id,f){
 function saveName(id,v){
   const val=(v||'').trim(), it=S.items.find(i=>i.id===id);
   S.editing=null;
-  if(it.library_item_id) patchItem(id,{renamed_label:(val&&val!==it.lib_label)?val:null});
+  if(it.library_item_id) patchItem(id,{renamed_label:(val&&val!==(it.lib_short||it.lib_label))?val:null});
   else if(val)           patchItem(id,{custom_label:val});
   else render();
 }
@@ -646,7 +687,7 @@ async function addItem(catId){
       sort_order:9000+liveItems().filter(i=>i.category_id===catId).length
     }).select().single());
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
-      renamed_label:null,lib_label:null,freq:f,target_month:tm,is_selected:true,
+      renamed_label:null,lib_label:null,lib_short:null,freq:f,target_month:tm,is_selected:true,
       sort_order:row.sort_order,removed_at:null});
     render();
   }catch(e){}
@@ -705,9 +746,9 @@ function stepPeriod(d){
 }
 
 /* One tickable row. `right` is the small text on the right-hand side. */
-function itemBtn(i,key,due,right){
+function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
-  return '<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\',\''+key+'\')"':'')+'>'
+  return '<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\')"':'')+'>'
     +'<span class="box" '+(nap?'style="font-size:9px"':'')+'>'+(on?'✓':(nap?'N/A':''))+'</span><span class="ilabel">'+esc(label(i))+'</span>'
     +'<span class="freq">'+(nap?'Not applicable':right)+'</span></button>';
 }
@@ -716,7 +757,7 @@ function checkin(s){
   const P=viewP(), W=P.weekly;
   let h=periodBar();
   h+='<div class="note">Tap once for <b>yes</b>, twice for <b>N/A</b>, three times to clear. '
-    +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is this week\'s items only; the monthly, quarterly and yearly ones below are optional.'
+    +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is this week\'s items. The optional monthly, quarterly and yearly ones below only count when you tick yes, or in the week they\'re due.'
        :'Items outside their cycle and items marked N/A are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.')+'</div>';
   let any=false;
   S.cats.forEach(c=>{
@@ -751,8 +792,8 @@ function longCycle(P){
     if(!any){
       any=true;
       h+='<div class="seglbl" style="margin-top:30px">Beyond the week &middot; optional</div>'
-        +'<div class="note" style="margin-top:8px">These aren\'t part of your weekly score. Tick one whenever you do it, any week. '
-        +'On the first Friday of a new period, you\'ll also be asked about the one that just ended.</div>';
+        +'<div class="note" style="margin-top:8px">Tick one whenever you do it, any week. A yes adds to that week\'s score; leaving one blank costs nothing until it\'s due. '
+        +'On the first Friday of a new period the one that just ended becomes due, and counts if you haven\'t done it.</div>';
     }
     const p=CYC[f], fri=P.fri;
     const closing=fri.getDate()<=7&&fri.getMonth()%p===0;
@@ -767,11 +808,11 @@ function longCycle(P){
         +'<div class="cathead"><div class="catname" style="font-size:'+(isClose?'15':'14')+'px">'
         +(isClose?'Close out '+esc(nm)+' &middot; '+g[1].toLowerCase():g[1]+' &middot; '+esc(nm))+'</div>'
         +'<div class="catpct" style="font-size:13px">'+done+' of '+(items.length-na)+'</div></div>'
-        +'<div class="catmeta">'+(isClose?'Did you get these done last '+g[2]+'? Answer for '+esc(nm)+'.'
+        +'<div class="catmeta">'+(isClose?'Due this week. Answer for '+esc(nm)+' &mdash; anything not done counts against this week.'
            :'Do these once each '+g[2]+' &mdash; tick when you\'ve done it.')+'</div>';
       items.forEach(i=>{
         const c=S.cats.find(x=>x.id===i.category_id);
-        h+=itemBtn(i,key,true,c?c.name:'');
+        h+=itemBtn(i,key,true,c?c.name:'',P.key);
       });
       h+='</div>';
     });
@@ -909,7 +950,8 @@ function itemsScreen(){
                :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
       h+='<div class="selrow '+(i.is_selected?'on':'')+'">'
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
-        +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag+'</span>'
+        +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
+        +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
         +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
