@@ -51,33 +51,31 @@ drop table if exists _sm_items;
 create temp table _sm_items (
   cat_code text, code text, label text, freq text, is_default_on boolean, sort_order int);
 insert into _sm_items values
-  ('sales-activity', 'did-you-complete-your-activity-tracker-greatness-tracker-tod', 'Did you complete your Activity Tracker (Greatness Tracker) today?', 'daily', true, 0),
-  ('sales-activity', 'did-you-hit-50-talk-tos-today', 'Did you hit 50 talk-tos today?', 'daily', true, 1),
-  ('sales-activity', 'did-you-leave-50-voicemails-today', 'Did you leave 50 voicemails today?', 'daily', true, 2),
+  ('sales-activity', 'did-you-complete-your-activity-tracker-this-week', 'Did you complete your Activity Tracker this week?', 'weekly', true, 0),
+  ('sales-activity', 'did-you-hit-50-talk-tos-this-week', 'Did you hit 50 talk-tos this week?', 'weekly', true, 1),
+  ('sales-activity', 'did-you-leave-50-voicemails-this-week', 'Did you leave 50 voicemails this week?', 'weekly', true, 2),
   ('sales-activity', 'did-you-have-10-face-to-face-appointments-this-week', 'Did you have 10 face-to-face appointments this week?', 'weekly', true, 3),
-  ('sales-activity', 'did-you-make-all-your-theme-day-calls-today', 'Did you make all your Theme Day calls today?', 'daily', true, 4),
-  ('sales-activity', 'did-you-check-the-mbs-highway-market-update-today', 'Did you check the MBS Highway market update today?', 'daily', true, 5),
-  ('sales-activity', 'did-you-ask-for-leads-in-every-conversation-today', 'Did you ask for leads in every conversation today?', 'daily', true, 6),
-  ('sales-activity', 'did-you-get-60-new-leads-this-month', 'Did you get 60 new leads this month?', 'monthly', true, 7),
-  ('time-management', 'did-you-track-your-time-today', 'Did you track your time today?', 'daily', true, 0),
-  ('time-management', 'did-you-hit-80-on-your-time-tracker-today', 'Did you hit 80% on your Time Tracker today?', 'daily', true, 1),
-  ('time-management', 'did-you-print-out-your-calendar-today', 'Did you print out your calendar today?', 'daily', true, 2),
-  ('time-management', 'is-your-calendar-full-with-no-white-space', 'Is your calendar full, with no white space?', 'daily', true, 3),
-  ('time-management', 'is-your-calendar-accuracy-90-or-better', 'Is your calendar accuracy 90% or better?', 'daily', true, 4),
-  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 5),
-  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 6),
-  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 7),
-  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 8),
-  ('time-management', 'did-you-work-at-least-40-hours-this-week', 'Did you work at least 40 hours this week?', 'weekly', true, 9),
-  ('time-management', 'did-you-work-no-more-than-50-hours-this-week', 'Did you work no more than 50 hours this week?', 'weekly', true, 10),
-  ('realtor-partners', 'did-you-meet-3-new-realtors-this-week', 'Did you meet 3 new Realtors this week?', 'weekly', true, 0),
-  ('realtor-partners', 'did-you-email-your-realtors-the-monday-marketing-email-mme', 'Did you email your Realtors the Monday Marketing Email (MME)?', 'weekly', true, 1),
-  ('realtor-partners', 'did-you-email-your-realtors-the-weekly-market-update-video', 'Did you email your Realtors the weekly market update video?', 'weekly', true, 2),
-  ('realtor-partners', 'did-you-send-your-realtors-the-weekly-program-update-lal-vid', 'Did you send your Realtors the weekly program update (LAL: video, blog, and fliers)?', 'weekly', true, 3),
-  ('realtor-partners', 'did-you-send-a-thank-you-note-and-lotto-ticket-to-every-refe', 'Did you send a thank-you note (and lotto ticket) to every referral source?', 'weekly', true, 4),
-  ('realtor-partners', 'did-you-spend-100-on-unreasonable-hospitality', 'Did you spend $100 on Unreasonable Hospitality?', 'weekly', true, 5),
-  ('realtor-partners', 'did-you-send-your-5-handwritten-cards-this-week', 'Did you send your 5 handwritten cards this week?', 'weekly', true, 6),
-  ('database', 'did-you-review-and-update-your-dtr-list-this-week', 'Did you review and update your DTR list this week?', 'weekly', true, 0),
+  ('sales-activity', 'did-you-meet-3-new-realtors-this-week', 'Did you meet 3 new Realtors this week?', 'weekly', true, 4),
+  ('sales-activity', 'did-you-make-all-your-theme-day-calls-every-day-this-week', 'Did you make all your Theme Day calls every day this week?', 'weekly', true, 5),
+  ('sales-activity', 'did-you-ask-for-leads-in-every-conversation-this-week', 'Did you ask for leads in every conversation this week?', 'weekly', true, 6),
+  ('sales-activity', 'did-you-get-10-new-leads-this-week', 'Did you get 10 new leads this week?', 'weekly', true, 7),
+  ('time-management', 'did-you-track-your-time-every-day-this-week', 'Did you track your time every day this week?', 'weekly', true, 0),
+  ('time-management', 'did-you-hit-80-on-your-time-tracker-this-week', 'Did you hit 80% on your Time Tracker this week?', 'weekly', true, 1),
+  ('time-management', 'did-you-print-out-your-calendar-every-day-this-week', 'Did you print out your calendar every day this week?', 'weekly', true, 2),
+  ('time-management', 'was-your-calendar-full-with-no-white-space-all-week', 'Was your calendar full, with no white space, all week?', 'weekly', true, 3),
+  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 4),
+  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 5),
+  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 6),
+  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 7),
+  ('time-management', 'did-you-work-at-least-40-hours-this-week', 'Did you work at least 40 hours this week?', 'weekly', true, 8),
+  ('time-management', 'did-you-work-no-more-than-50-hours-this-week', 'Did you work no more than 50 hours this week?', 'weekly', true, 9),
+  ('realtor-partners', 'did-you-email-your-realtors-the-monday-marketing-email-mme', 'Did you email your Realtors the Monday Marketing Email (MME)?', 'weekly', true, 0),
+  ('realtor-partners', 'did-you-email-your-realtors-the-weekly-market-update-video', 'Did you email your Realtors the weekly market update video?', 'weekly', true, 1),
+  ('realtor-partners', 'did-you-send-your-realtors-the-weekly-program-update-lal-vid', 'Did you send your Realtors the weekly program update (LAL: video, blog, and fliers)?', 'weekly', true, 2),
+  ('realtor-partners', 'did-you-send-a-thank-you-note-and-lotto-ticket-to-every-refe', 'Did you send a thank-you note (and lotto ticket) to every referral source?', 'weekly', true, 3),
+  ('realtor-partners', 'did-you-spend-100-on-unreasonable-hospitality', 'Did you spend $100 on Unreasonable Hospitality?', 'weekly', true, 4),
+  ('realtor-partners', 'did-you-send-5-handwritten-cards-this-week', 'Did you send 5 handwritten cards this week?', 'weekly', true, 5),
+  ('database', 'did-you-review-and-update-your-database-categories-this-week', 'Did you review and update your database categories this week?', 'weekly', true, 0),
   ('database', 'did-you-send-your-database-an-evidence-of-awesomeness-eoa', 'Did you send your database an Evidence of Awesomeness (EOA)?', 'weekly', true, 1),
   ('database', 'did-you-run-your-whale-campaign-this-week', 'Did you run your Whale Campaign this week?', 'weekly', true, 2),
   ('database', 'did-you-send-the-weekend-warrior-sms-this-week', 'Did you send the Weekend Warrior SMS this week?', 'weekly', true, 3),
@@ -101,7 +99,7 @@ insert into _sm_items values
   ('business-development', 'do-you-have-a-business-plan', 'Do you have a business plan?', 'monthly', true, 0),
   ('business-development', 'did-you-review-your-business-plan-this-week', 'Did you review your business plan this week?', 'weekly', true, 1),
   ('business-development', 'did-you-journal-for-your-business-today', 'Did you journal for your business today?', 'daily', true, 2),
-  ('business-development', 'did-you-read-chrisman-nrep-and-mortgage-daily-today', 'Did you read Chrisman, NREP and Mortgage Daily today?', 'daily', true, 3),
+  ('business-development', 'did-you-read-chrisman-nrep-mortgage-daily-and-the-mbs-highwa', 'Did you read Chrisman, NREP, Mortgage Daily and the MBS Highway market update this week?', 'weekly', true, 3),
   ('business-development', 'were-you-coached-twice-this-month', 'Were you coached twice this month?', 'monthly', true, 4),
   ('business-development', 'did-you-coach-someone-this-month', 'Did you coach someone this month?', 'monthly', true, 5);
 
@@ -135,7 +133,7 @@ where t.id = c.template_id and t.slug = 'sales-marketing'
 
 drop table if exists _sm_items;
 
--- Verify: expect 53 active items across 6 categories
+-- Verify: expect 51 active items across 6 categories
 select c.code, count(*) filter (where i.is_active) as items
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
