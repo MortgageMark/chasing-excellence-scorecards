@@ -10,6 +10,8 @@ idempotent — safe to re-run.
 | `03-seed-life-balance.sql` | Life Balance template, 8 categories, 241 items, 53 defaults |
 | `04-fix-function-grants.sql` | **Security fix.** Revokes the default PUBLIC execute on every `sc_` function |
 | `05-fix-insert-returning.sql` | **Bug fix.** Lets an owner create a scorecard |
+| `06-seed-sales-marketing.sql` | Sales & Marketing template (5 categories, 56 yes/no questions). Re-runnable; retires removed items |
+| `07-weekly-checkins.sql` | `sc_templates.check_in_period`; entries may be dated a Monday (weekly) or the 1st (monthly). Sales & Marketing = weekly |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must

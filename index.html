@@ -207,7 +207,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=3;
+const APP_RELEASE=6;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -324,8 +324,8 @@ const ten=p=>p===null?'—':(p*10).toFixed(1);
 const S={
   profile:null, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{},          /* entries: "itemId|period" -> bool */
-  tab:'checkin', view:{y:NOW.y,m:NOW.m},
+  card:null, items:[], entries:{}, credit:{},          /* entries: "itemId|period" -> bool */
+  tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null,
   sortMode:'freq', editing:null, busy:false
 };
 
@@ -351,7 +351,9 @@ function spreadTargetMonth(freq,idx){
   return (idx%p)+1;
 }
 
-const label=i=>i.renamed_label||i.custom_label||i.lib_label||'Untitled';
+/* Checklist text: your rename, else the template's short label, else the full question. */
+const label=i=>i.renamed_label||i.custom_label||i.lib_short||i.lib_label||'Untitled';
+const fullQ=i=>(i.lib_label&&i.lib_label!==label(i))?i.lib_label:'';
 const liveItems=()=>S.items.filter(i=>!i.removed_at);
 function catItems(catId){
   const list=liveItems().filter(i=>i.category_id===catId);
@@ -360,7 +362,48 @@ function catItems(catId){
   if(S.sortMode==='manual') return list.slice().sort((a,b)=>a.sort_order-b.sort_order||az(a,b));
   return list.slice().sort((a,b)=>FO[a.freq]-FO[b.freq]||az(a,b));
 }
-const isDone=(itemId,y,m)=>!!S.entries[itemId+'|'+pkey(y,m)];
+/* An entry is true (yes), false/missing (no) or 'na' (not applicable).
+   N/A is stored as a row with value_bool null and is left out of the score. */
+/* ===================================================================
+   PERIODS. Monthly templates (Life Balance) score one month at a time.
+   A weekly template (check_in_period = 'weekly') scores one Monday-to-Sunday
+   week at a time. Its daily/weekly items are the score. Monthly, quarterly,
+   6-month and yearly items sit in their own optional section: they are
+   ticked against their own period, any time during it, and in the first-
+   Friday week of a period the app asks about the one that just ended.
+   =================================================================== */
+const isWeekly=()=>!!(S.template&&S.template.check_in_period==='weekly');
+const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+const addDays=(d,n)=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;};
+const mondayOf=d=>addDays(d,-((d.getDay()+6)%7));
+const shortDate=d=>MON[d.getMonth()]+' '+d.getDate();
+const isShortCycle=i=>i.freq==='d'||i.freq==='w';
+const CYC={m:1,q:3,s:6,a:12};
+function mkPWeek(mon){
+  const fri=addDays(mon,4);
+  return {weekly:true,key:ymd(mon),mon:mon,fri:fri,y:fri.getFullYear(),m:fri.getMonth(),
+          label:shortDate(mon)+' – '+shortDate(addDays(mon,6)),short:(mon.getMonth()+1)+'/'+mon.getDate()};
+}
+function mkPMonth(y,m){ return {weekly:false,key:pkey(y,m),y:y,m:m,label:MON[m]+' '+y,short:MON[m]}; }
+const viewP=()=>isWeekly()?mkPWeek(S.wk||mondayOf(new Date())):mkPMonth(S.view.y,S.view.m);
+/* First day of the month/quarter/half/year that contains the Friday, `back` periods earlier. */
+function cycleStart(freq,fri,back){
+  const p=CYC[freq];
+  return new Date(fri.getFullYear(),fri.getMonth()-fri.getMonth()%p-back*p,1);
+}
+const cycleKey=(freq,fri,back)=>{const d=cycleStart(freq,fri,back);return pkey(d.getFullYear(),d.getMonth());};
+function cycleName(freq,d){
+  const y=d.getFullYear(), m=d.getMonth();
+  return freq==='m'?MON[m]+' '+y : freq==='q'?'Q'+(Math.floor(m/3)+1)+' '+y
+       : freq==='s'?(m<6?'1st':'2nd')+' half of '+y : ''+y;
+}
+/* The entry key an item is answered under, for the period being viewed. */
+const ekey=(i,P)=>(!P.weekly||isShortCycle(i))?P.key:cycleKey(i.freq,P.fri,0);
+const isDone=(i,P)=>S.entries[i.id+'|'+ekey(i,P)]===true;
+const isNA=(i,P)=>S.entries[i.id+'|'+ekey(i,P)]==='na';
+/* Does this item count toward the score of period P? */
+const scored=(i,P)=>P.weekly?isShortCycle(i):isDue(i.freq,P.m,i.target_month);
+const catTitle=c=>isWeekly()?String.fromCharCode(65+S.cats.indexOf(c))+'. '+c.name:c.name;
 
 /* ===================================================================
    SCORING - ported unchanged from the prototype.
@@ -368,14 +411,40 @@ const isDone=(itemId,y,m)=>!!S.entries[itemId+'|'+pkey(y,m)];
      overall        = mean of live category scores (equal weight)
      empty categories are excluded, not zeroed
    =================================================================== */
-function score(y,m){
-  const cats=[];
+/* Weekly cards: how the optional monthly/quarterly/6-month/yearly items touch
+   this week's score. A "yes" counts once, in the week it was ticked (+1 done,
+   +1 due). An item that is officially due this week, meaning the first-Friday
+   week that closes its period, counts as due if it was not answered yes (or
+   N/A). Anything else is left out, so an item that is not due yet costs nothing. */
+function longAdjust(P){
+  const out={};
+  const add=(cid,d,u)=>{const o=out[cid]||(out[cid]={done:0,due:0});o.done+=d;o.due+=u;};
+  const byId={};
+  liveItems().forEach(i=>{ if(i.is_selected&&!isShortCycle(i)) byId[i.id]=i; });
+  Object.keys(S.credit).forEach(k=>{
+    if(S.credit[k]!==P.key||S.entries[k]!==true) return;
+    const it=byId[k.split('|')[0]]; if(it) add(it.category_id,1,1);
+  });
+  const startD=S.card?new Date(S.card.started_at+"T00:00:00"):P.fri;
+  Object.keys(byId).forEach(id=>{
+    const it=byId[id], p=CYC[it.freq];
+    if(!p||!(P.fri.getDate()<=7&&P.fri.getMonth()%p===0)) return;
+    /* Do not penalise for a period that ended before the card was started. */
+    if(cycleStart(it.freq,P.fri,1)<cycleStart(it.freq,startD,0)) return;
+    const v=S.entries[id+'|'+cycleKey(it.freq,P.fri,1)];
+    if(v!==true&&v!=='na') add(it.category_id,0,1);
+  });
+  return out;
+}
+function score(P){
+  const cats=[], adj=P.weekly?longAdjust(P):{};
   S.cats.forEach(c=>{
-    const all=catItems(c.id), mine=all.filter(i=>i.is_selected);
-    const due=mine.filter(i=>isDue(i.freq,m,i.target_month));
-    const hit=due.filter(i=>isDone(i.id,y,m)).length;
-    cats.push({id:c.id,name:c.name,pct:due.length?hit/due.length:null,
-               done:hit,due:due.length,sel:mine.length,total:all.length});
+    const all=catItems(c.id).filter(i=>!P.weekly||isShortCycle(i)), mine=all.filter(i=>i.is_selected);
+    const dueItems=mine.filter(i=>scored(i,P)&&!isNA(i,P));
+    const a=adj[c.id]||{done:0,due:0};
+    const hit=dueItems.filter(i=>isDone(i,P)).length+a.done, due=dueItems.length+a.due;
+    cats.push({id:c.id,name:c.name,pct:due?hit/due:null,
+               done:hit,due:due,sel:mine.length,total:all.length});
   });
   const live=cats.filter(c=>c.pct!==null);
   return {cats,
@@ -482,8 +551,8 @@ async function openTemplate(id){
   const catIds={}; S.cats.forEach(c=>catIds[c.id]=1);
   S.library=S.allLib.filter(i=>catIds[i.category_id]);
   S.card=S.cards.find(c=>c.template_id===id)||null;
-  S.items=[]; S.entries={};
-  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.sortMode='freq'; S.editing=null;
+  S.items=[]; S.entries={}; S.credit={};
+  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.sortMode='freq'; S.editing=null;
   if(S.card) await loadCard();
 }
 async function goTemplate(id){
@@ -496,7 +565,7 @@ function goHome(){ S.template=null; S.card=null; render(); }
 async function loadCard(){
   const r=await Promise.all([
     SB.from("sc_user_scorecard_items").select("*").eq("user_scorecard_id",S.card.id),
-    SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool").eq("user_scorecard_id",S.card.id)
+    SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool,credit_week").eq("user_scorecard_id",S.card.id)
   ]);
   r.forEach(x=>{ if(x.error) throw x.error; });
   const libById={}; S.library.forEach(l=>libById[l.id]=l);
@@ -504,11 +573,16 @@ async function loadCard(){
     id:x.id, category_id:x.category_id, library_item_id:x.library_item_id,
     custom_label:x.custom_label, renamed_label:x.renamed_label,
     lib_label:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].label:null,
+    lib_short:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].short_label:null,
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
-  S.entries={};
-  (r[1].data||[]).forEach(e=>{ S.entries[e.user_scorecard_item_id+'|'+e.period_start]=!!e.value_bool; });
+  S.entries={}; S.credit={};
+  (r[1].data||[]).forEach(e=>{
+    const k=e.user_scorecard_item_id+'|'+e.period_start;
+    S.entries[k]=(e.value_bool===null?'na':!!e.value_bool);
+    if(e.credit_week) S.credit[k]=e.credit_week;
+  });
 }
 
 /* Adoption: one card, one row per library item, first-run defaults on. */
@@ -547,18 +621,27 @@ async function adopt(){
   finally{ S.busy=false; render(); }
 }
 
-async function tick(itemId){
+async function tick(itemId,period,creditWeek){
   const it=S.items.find(i=>i.id===itemId); if(!it) return;
-  if(!isDue(it.freq,S.view.m,it.target_month)) return;
-  const period=pkey(S.view.y,S.view.m), k=itemId+'|'+period;
-  const next=!S.entries[k];
-  S.entries[k]=next; render();
+  const k=itemId+'|'+period;
+  /* Cycle: not done -> yes -> N/A -> not done */
+  const prev=S.entries[k], prevCredit=S.credit[k];
+  const next=prev===true?'na':(prev==='na'?false:true);
+  /* A monthly/quarterly/yearly "yes" is credited to the week it was ticked in. */
+  const credit=(next===true&&creditWeek)?creditWeek:null;
+  S.entries[k]=next;
+  if(credit) S.credit[k]=credit; else delete S.credit[k];
+  render();
   try{
     await run(SB.from("sc_entries").upsert({
       user_scorecard_id:S.card.id, user_scorecard_item_id:itemId,
-      period_start:period, value_bool:next
+      period_start:period, value_bool:(next==='na'?null:next), credit_week:credit
     },{onConflict:"user_scorecard_item_id,period_start"}));
-  }catch(e){ S.entries[k]=!next; render(); }
+  }catch(e){
+    S.entries[k]=prev;
+    if(prevCredit) S.credit[k]=prevCredit; else delete S.credit[k];
+    render();
+  }
 }
 
 async function patchItem(itemId,patch,localPatch){
@@ -579,7 +662,7 @@ function setFreq(id,f){
 function saveName(id,v){
   const val=(v||'').trim(), it=S.items.find(i=>i.id===id);
   S.editing=null;
-  if(it.library_item_id) patchItem(id,{renamed_label:(val&&val!==it.lib_label)?val:null});
+  if(it.library_item_id) patchItem(id,{renamed_label:(val&&val!==(it.lib_short||it.lib_label))?val:null});
   else if(val)           patchItem(id,{custom_label:val});
   else render();
 }
@@ -604,7 +687,7 @@ async function addItem(catId){
       sort_order:9000+liveItems().filter(i=>i.category_id===catId).length
     }).select().single());
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
-      renamed_label:null,lib_label:null,freq:f,target_month:tm,is_selected:true,
+      renamed_label:null,lib_label:null,lib_short:null,freq:f,target_month:tm,is_selected:true,
       sort_order:row.sort_order,removed_at:null});
     render();
   }catch(e){}
@@ -637,48 +720,111 @@ async function resetCard(){
 /* ===================================================================
    SCREENS
    =================================================================== */
-function monthBar(){
+function periodBar(){
+  if(isWeekly()){
+    const start=mondayOf(S.card?new Date(S.card.started_at+"T00:00:00"):new Date());
+    const cur=mondayOf(new Date());
+    const atStart=S.wk<=start, atNow=S.wk>=cur;
+    return '<div class="monthbar">'
+      +'<button onclick="stepPeriod(-1)" '+(atStart?'disabled':'')+' title="Previous week">&lsaquo;</button>'
+      +'<div class="mlbl">'+mkPWeek(S.wk).label+(atNow?'':' <span class="pill due">Backfill</span>')+'</div>'
+      +'<button onclick="stepPeriod(1)" '+(atNow?'disabled':'')+' title="Next week">&rsaquo;</button></div>';
+  }
   const start=S.card?new Date(S.card.started_at+"T00:00:00"):new Date(NOW.y,NOW.m,1);
   const atStart=S.view.y<start.getFullYear()||(S.view.y===start.getFullYear()&&S.view.m<=start.getMonth());
   const atNow=S.view.y===NOW.y&&S.view.m===NOW.m;
   return '<div class="monthbar">'
-    +'<button onclick="stepMonth(-1)" '+(atStart?'disabled':'')+' title="Previous month">&lsaquo;</button>'
+    +'<button onclick="stepPeriod(-1)" '+(atStart?'disabled':'')+' title="Previous month">&lsaquo;</button>'
     +'<div class="mlbl">'+MON[S.view.m]+' '+S.view.y+(atNow?'':' <span class="pill due">Backfill</span>')+'</div>'
-    +'<button onclick="stepMonth(1)" '+(atNow?'disabled':'')+' title="Next month">&rsaquo;</button></div>';
+    +'<button onclick="stepPeriod(1)" '+(atNow?'disabled':'')+' title="Next month">&rsaquo;</button></div>';
 }
-function stepMonth(d){
+function stepPeriod(d){
+  if(isWeekly()){ S.wk=addDays(S.wk,7*d); render(); return; }
   let m=S.view.m+d,y=S.view.y;
   if(m<0){m=11;y--} if(m>11){m=0;y++}
   S.view={y:y,m:m}; render();
 }
 
+/* One tickable row. `right` is the small text on the right-hand side. */
+function itemBtn(i,key,due,right,credit){
+  const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
+  return '<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\')"':'')+'>'
+    +'<span class="box" '+(nap?'style="font-size:9px"':'')+'>'+(on?'✓':(nap?'N/A':''))+'</span><span class="ilabel">'+esc(label(i))+'</span>'
+    +'<span class="freq">'+(nap?'Not applicable':right)+'</span></button>';
+}
+
 function checkin(s){
-  let h=monthBar();
-  h+='<div class="note">Items outside their cycle are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.</div>';
+  const P=viewP(), W=P.weekly;
+  let h=periodBar();
+  h+='<div class="note">Tap once for <b>yes</b>, twice for <b>N/A</b>, three times to clear. '
+    +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is this week\'s items. The optional monthly, quarterly and yearly ones below only count when you tick yes, or in the week they\'re due.'
+       :'Items outside their cycle and items marked N/A are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.')+'</div>';
   let any=false;
   S.cats.forEach(c=>{
-    const mine=catItems(c.id).filter(i=>i.is_selected); if(!mine.length) return;
-    any=true;
+    const mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
+    if(liveItems().some(i=>i.category_id===c.id&&i.is_selected)) any=true;
+    if(!mine.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
-    h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(c.name)+'</div><div class="catpct">'+ten(cs.pct)+'</div></div>'
-      +'<div class="catmeta">'+cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected</div>'
+    h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+ten(cs.pct)+'</div></div>'
+      +'<div class="catmeta">'+cs.done+' of '+cs.due+(W?' done this week':' due')+' &middot; '+cs.sel+' of '+cs.total+' selected</div>'
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
-      const due=isDue(i.freq,S.view.m,i.target_month), on=isDone(i.id,S.view.y,S.view.m);
-      h+='<button class="item '+(on?'on':'')+' '+(due?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\')"':'')+'>'
-        +'<span class="box">'+(on?'✓':'')+'</span><span class="ilabel">'+esc(label(i))+'</span>'
-        +'<span class="freq">'+(due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'))+'</span></button>';
+      const due=W?true:isDue(i.freq,P.m,i.target_month);
+      h+=itemBtn(i,ekey(i,P),due,due?(W?'Weekly':FREQ[i.freq]):(i.target_month?MON[i.target_month-1]:'Not due'));
     });
     h+='</div>';
   });
+  if(W) h+=longCycle(P);
   if(!any) h+='<div class="empty">Nothing selected yet. Open <b>Items</b> and pick what applies to you.</div>';
   return h;
 }
 
+/* Weekly template only: the optional monthly / quarterly / 6-month / yearly items. */
+function longCycle(P){
+  const groups=[['m','Monthly','month'],['q','Quarterly','quarter'],['s','Every 6 months','half-year'],['a','Yearly','year']];
+  const catPos=id=>S.cats.findIndex(c=>c.id===id);
+  let h='',any=false;
+  groups.forEach(g=>{
+    const f=g[0];
+    const items=liveItems().filter(i=>i.is_selected&&i.freq===f)
+      .sort((a,b)=>catPos(a.category_id)-catPos(b.category_id)||a.sort_order-b.sort_order);
+    if(!items.length) return;
+    if(!any){
+      any=true;
+      h+='<div class="seglbl" style="margin-top:30px">Beyond the week &middot; optional</div>'
+        +'<div class="note" style="margin-top:8px">Tick one whenever you do it, any week. A yes adds to that week\'s score; leaving one blank costs nothing until it\'s due. '
+        +'On the first Friday of a new period the one that just ended becomes due, and counts if you haven\'t done it.</div>';
+    }
+    const p=CYC[f], fri=P.fri;
+    const closing=fri.getDate()<=7&&fri.getMonth()%p===0;
+    const blocks=(closing?[1]:[]).concat([0]);
+    blocks.forEach(back=>{
+      const start=cycleStart(f,fri,back), key=pkey(start.getFullYear(),start.getMonth());
+      const nm=cycleName(f,start);
+      const na=items.filter(i=>S.entries[i.id+'|'+key]==='na').length;
+      const done=items.filter(i=>S.entries[i.id+'|'+key]===true).length;
+      const isClose=back===1;
+      h+='<div class="catblock" style="margin-top:14px'+(isClose?';border:1px solid var(--gold);border-radius:12px;padding:12px':'')+'">'
+        +'<div class="cathead"><div class="catname" style="font-size:'+(isClose?'15':'14')+'px">'
+        +(isClose?'Close out '+esc(nm)+' &middot; '+g[1].toLowerCase():g[1]+' &middot; '+esc(nm))+'</div>'
+        +'<div class="catpct" style="font-size:13px">'+done+' of '+(items.length-na)+'</div></div>'
+        +'<div class="catmeta">'+(isClose?'Due this week. Answer for '+esc(nm)+' &mdash; anything not done counts against this week.'
+           :'Do these once each '+g[2]+' &mdash; tick when you\'ve done it.')+'</div>';
+      items.forEach(i=>{
+        const c=S.cats.find(x=>x.id===i.category_id);
+        h+=itemBtn(i,key,true,c?c.name:'',P.key);
+      });
+      h+='</div>';
+    });
+  });
+  return h;
+}
+
 function wheel(s){
-  let h=monthBar();
+  const P=viewP();
+  let h=periodBar();
   h+='<div class="wheelwrap"><div class="scoreline"><div class="n">'+ten(s.overall)+'</div>'
-    +'<div class="d">'+esc(S.template.score_label)+' score &middot; '+MON[S.view.m]+' '+S.view.y+'</div>'
+    +'<div class="d">'+esc(S.template.score_label)+' score &middot; '+esc(P.label)+'</div>'
     +'<div class="c">'+s.tDone+' of '+s.tDue+' items completed</div></div>'+radar(s.cats,320,true)
     +'<div class="legend"><span><i style="background:#3B5068"></i>Perfect</span><span><i style="background:#4C9BE0"></i>You</span></div>'
     +'</div><div class="catlist">';
@@ -689,11 +835,25 @@ function wheel(s){
   return h+'</div>';
 }
 
-function monthsSinceStart(){
+/* Periods from the card's start up to the one being viewed. Weekly cards show
+   the latest 12 weeks so the charts stay readable. */
+function periodsSinceStart(){
+  const out=[];
+  if(isWeekly()){
+    let mon=mondayOf(new Date(S.card.started_at+"T00:00:00"));
+    while(mon<=S.wk){
+      const P=mkPWeek(mon);
+      out.push({P:P,label:P.short,y:P.y,m:P.m,s:score(P)});
+      mon=addDays(mon,7);
+      if(out.length>156) break;
+    }
+    return out.slice(-12);
+  }
   const start=new Date(S.card.started_at+"T00:00:00");
-  const out=[]; let y=start.getFullYear(), m=start.getMonth();
+  let y=start.getFullYear(), m=start.getMonth();
   while(y<S.view.y||(y===S.view.y&&m<=S.view.m)){
-    out.push({y:y,m:m,s:score(y,m)});
+    const P=mkPMonth(y,m);
+    out.push({P:P,label:MON[m],y:y,m:m,s:score(P)});
     m++; if(m>11){m=0;y++}
     if(out.length>60) break;
   }
@@ -701,9 +861,9 @@ function monthsSinceStart(){
 }
 
 function history(){
-  const ms=monthsSinceStart();
+  const ms=periodsSinceStart(), U=isWeekly()?'week':'month';
   if(!ms.length) return '<div class="empty">No history yet.</div>';
-  const labels=ms.map(x=>MON[x.m]);
+  const labels=ms.map(x=>x.label);
   const vals=ms.map(x=>x.s.overall);
   const live=vals.filter(v=>v!==null);
   const avg=live.length?live.reduce((a,b)=>a+b,0)/live.length:null;
@@ -715,9 +875,9 @@ function history(){
     +lineChart(vals,400,132,'#4C9BE0',true,labels)+'</div>';
   h+='<div class="statgrid">'
     +'<div class="stat"><div class="sl">Average</div><div class="sv">'+ten(avg)+'</div></div>'
-    +'<div class="stat"><div class="sl">Best month</div><div class="sv">'+ten(best.s.overall)+'<span class="sm">'+MON[best.m]+'</span></div></div>'
-    +'<div class="stat"><div class="sl">Lowest month</div><div class="sv" style="color:var(--alert)">'+ten(worst.s.overall)+'<span class="sm">'+MON[worst.m]+'</span></div></div>'
-    +'<div class="stat"><div class="sl">7.0 or better</div><div class="sv">'+pos+'<span class="sm">of '+vals.length+' months</span></div></div></div>';
+    +'<div class="stat"><div class="sl">Best '+U+'</div><div class="sv">'+ten(best.s.overall)+'<span class="sm">'+best.label+'</span></div></div>'
+    +'<div class="stat"><div class="sl">Lowest '+U+'</div><div class="sv" style="color:var(--alert)">'+ten(worst.s.overall)+'<span class="sm">'+worst.label+'</span></div></div>'
+    +'<div class="stat"><div class="sl">7.0 or better</div><div class="sv">'+pos+'<span class="sm">of '+vals.length+' '+U+'s</span></div></div></div>';
 
   const rows=S.cats.map(c=>{
     const ser=ms.map(x=>{const cc=x.s.cats.find(y=>y.id===c.id);return cc?cc.pct:null;});
@@ -735,20 +895,20 @@ function history(){
       +'<div class="stat"><div class="sl">Biggest slide</div><div class="sv" style="font-size:17px;color:'+(dn.delta<0?'var(--alert)':'var(--muted)')+'">'+esc(dn.c.name.replace('Family: ',''))+'<span class="sm">'+(dn.delta>=0?'+':'')+dn.delta.toFixed(1)+' since '+labels[0]+'</span></div></div></div>';
   }
 
-  h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, month by month</div>';
+  h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, '+(isWeekly()?'week by week':'month by month')+'</div>';
   rows.slice().sort((a,b)=>a.cur-b.cur).forEach(r=>{
     const col=r.cur<.5?'#E0705F':(r.cur>=.85?'#3FA88F':'#4C9BE0');
     h+='<div class="ctrend"><div class="cth"><div class="ctn">'+esc(r.c.name)+'</div><div class="ctd">'
       +(r.delta===null?'':(r.delta>0?'<span style="color:var(--track)">&#9650; '+r.delta.toFixed(1)+'</span>':(r.delta<0?'<span style="color:var(--alert)">&#9660; '+Math.abs(r.delta).toFixed(1)+'</span>':'<span>no change</span>')))
       +'</div><div class="ctv" style="color:'+col+'">'+ten(r.cur)+'</div></div>'
       +'<div class="ctc">'+lineChart(r.ser,300,58,col,false,labels)+'</div>'
-      +'<div class="ctvals">'+r.ser.map((v,i)=>'<span class="'+(i===r.ser.length-1?'now':'')+'"><b>'+MON[ms[i].m]+'</b>'+ten(v)+'</span>').join('')+'</div>'
-      +'<div class="ctfoot">'+r.last.done+' of '+r.last.due+' due this month &middot; '+r.last.sel+' of '+r.last.total+' selected</div></div>';
+      +'<div class="ctvals">'+r.ser.map((v,i)=>'<span class="'+(i===r.ser.length-1?'now':'')+'"><b>'+ms[i].label+'</b>'+ten(v)+'</span>').join('')+'</div>'
+      +'<div class="ctfoot">'+r.last.done+' of '+r.last.due+' due this '+U+' &middot; '+r.last.sel+' of '+r.last.total+' selected</div></div>';
   });
 
-  h+='<div class="eyebrow" style="margin:26px 0 12px">Month by month</div><div class="mgrid">';
+  h+='<div class="eyebrow" style="margin:26px 0 12px">'+(isWeekly()?'Week by week':'Month by month')+'</div><div class="mgrid">';
   for(let i=ms.length-1;i>=0;i--){const x=ms[i];
-    h+='<div class="mcard '+((x.m===S.view.m&&x.y===S.view.y)?'cur':'')+'"><div class="mn">'+MON[x.m]+'</div>'
+    h+='<div class="mcard '+((x.P.key===viewP().key)?'cur':'')+'"><div class="mn">'+x.label+'</div>'
       +'<div class="ms">'+ten(x.s.overall)+'</div><div class="mc">'+x.s.tDone+' of '+x.s.tDue+'</div>'
       +radar(x.s.cats,140,false)+'</div>';}
   h+='</div>';
@@ -760,7 +920,7 @@ function history(){
     if(run)st.push({n:c.name,run:run});});
   if(!st.length) h+='<div style="font-size:13px;color:var(--muted);line-height:1.5">No categories at 100% yet.</div>';
   else st.sort((a,b)=>b.run-a.run).forEach(x=>{
-    h+='<div class="hrow"><div style="flex:1;font-size:14px">'+esc(x.n)+'</div><div style="font-size:12.5px;color:var(--gold)">'+x.run+' month'+(x.run>1?'s':'')+' at 100%</div></div>';});
+    h+='<div class="hrow"><div style="flex:1;font-size:14px">'+esc(x.n)+'</div><div style="font-size:12.5px;color:var(--gold)">'+x.run+' '+U+(x.run>1?'s':'')+' at 100%</div></div>';});
   return h+'</div>';
 }
 
@@ -772,7 +932,7 @@ function itemsScreen(){
   h+='</div>';
   S.cats.forEach(c=>{
     const mine=catItems(c.id), nOn=mine.filter(i=>i.is_selected).length;
-    h+='<div class="catblock" style="margin-top:24px"><div class="cathead"><div class="catname">'+esc(c.name)+'</div>'
+    h+='<div class="catblock" style="margin-top:24px"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div>'
       +'<div style="font-size:12px;color:var(--muted);font-weight:600">'+nOn+' of '+mine.length+'</div></div>'
       +'<div class="pickrow">'
       +'<button class="pick" '+(nOn===mine.length?'disabled':'')+' onclick="pickAll(\''+c.id+'\',true)">Select all</button>'
@@ -790,19 +950,21 @@ function itemsScreen(){
                :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
       h+='<div class="selrow '+(i.is_selected?'on':'')+'">'
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
-        +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag+'</span>'
+        +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
+        +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
-        +Object.keys(FREQ).map(f=>'<option value="'+f+'" '+(i.freq===f?'selected':'')+'>'+FREQ[f]+'</option>').join('')
+        +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
         +'</select></div>';
     });
     h+='</div><div class="addwrap"><input id="ci-'+c.id+'" placeholder="Add your own..." onkeydown="if(event.key===\'Enter\')addItem(\''+c.id+'\')">'
-      +'<select id="cf-'+c.id+'">'+Object.keys(FREQ).map(f=>'<option value="'+f+'" '+(f==='m'?'selected':'')+'>'+FREQ[f]+'</option>').join('')+'</select>'
+      +'<select id="cf-'+c.id+'">'+freqKeys().map(f=>'<option value="'+f+'" '+(f===(isWeekly()?'w':'m')?'selected':'')+'>'+FREQ[f]+'</option>').join('')+'</select>'
       +'<button onclick="addItem(\''+c.id+'\')">Add</button></div></div>';
   });
   h+='<button class="resetbtn" onclick="resetCard()">Reset this scorecard to the template</button>';
   return h;
 }
+const freqKeys=()=>isWeekly()?['w','m','q','s','a']:Object.keys(FREQ);
 function setSort(m){ S.sortMode=m; S.editing=null; render(); }
 
 function render(){
@@ -833,7 +995,7 @@ function render(){
     const b=$("adoptBtn"); if(b) b.addEventListener("click",adopt);
     return;
   }
-  const s=score(S.view.y,S.view.m);
+  const s=score(viewP());
   const tabs=[['checkin','Check-in'],['score',S.template.score_label],['history','History'],['items','Items']];
   let h=back+'<div class="h1">'+esc(S.template.name)+'</div>'
     +'<div class="sub">'+MON[NOW.m]+' '+NOW.y+' &middot; signed in as '+esc(S.profile.email||'')+'</div><div class="tabs">';
