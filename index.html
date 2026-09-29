@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=12;
+const APP_RELEASE=13;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -329,7 +329,10 @@ const MON=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 const now=new Date();
 const NOW={y:now.getFullYear(),m:now.getMonth()};          /* m is 0-based */
 const pkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0')+'-01'; /* sc_entries.period_start */
-const ten=p=>p===null?'—':(p*10).toFixed(1);
+/* Scores are shown as a percentage on weekly scorecards, and as 0-10 on monthly ones (Life Balance). */
+const ten=p=>p===null?'—':(isWeekly()?Math.round(p*100)+'%':(p*10).toFixed(1));
+/* Change in a score, given in tenths (0-10 units): "+1.2", or "+12 pts" on weekly cards. */
+const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
@@ -509,7 +512,7 @@ function lineChart(series,w,h,col,showLbl,labels){
   pts.forEach((p,i)=>{g+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i===pts.length-1?3.4:2.2)+'" fill="'+col+'"/>';});
   if(showLbl){
     series.forEach((v,i)=>{ if(v===null)return;
-      g+='<text x="'+xs(i)+'" y="'+(ys(v)-7)+'" text-anchor="middle" fill="#E8EDF2" font-size="9.5" font-weight="800">'+(v*10).toFixed(1)+'</text>';
+      g+='<text x="'+xs(i)+'" y="'+(ys(v)-7)+'" text-anchor="middle" fill="#E8EDF2" font-size="9.5" font-weight="800">'+ten(v)+'</text>';
       g+='<text x="'+xs(i)+'" y="'+(h-4)+'" text-anchor="middle" fill="#8494A3" font-size="9">'+esc(labels[i])+'</text>';});
   }
   return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="display:block">'+g+'</svg>';
@@ -926,7 +929,7 @@ function history(){
     +'<div class="stat"><div class="sl">Average</div><div class="sv">'+ten(avg)+'</div></div>'
     +'<div class="stat"><div class="sl">Best '+U+'</div><div class="sv">'+ten(best.s.overall)+'<span class="sm">'+best.label+'</span></div></div>'
     +'<div class="stat"><div class="sl">Lowest '+U+'</div><div class="sv" style="color:var(--alert)">'+ten(worst.s.overall)+'<span class="sm">'+worst.label+'</span></div></div>'
-    +'<div class="stat"><div class="sl">7.0 or better</div><div class="sv">'+pos+'<span class="sm">of '+vals.length+' '+U+'s</span></div></div></div>';
+    +'<div class="stat"><div class="sl">'+(isWeekly()?'70%':'7.0')+' or better</div><div class="sv">'+pos+'<span class="sm">of '+vals.length+' '+U+(vals.length===1?'':'s')+'</span></div></div></div>';
 
   const rows=S.cats.map(c=>{
     const ser=ms.map(x=>{const cc=x.s.cats.find(y=>y.id===c.id);return cc?cc.pct:null;});
@@ -937,18 +940,18 @@ function history(){
   }).filter(r=>r.cur!==null);
 
   const moved=rows.filter(r=>r.delta!==null).sort((a,b)=>b.delta-a.delta);
-  if(moved.length>1){
+  if(moved.length>1&&ms.length>1){
     const up=moved[0],dn=moved[moved.length-1];
     h+='<div class="statgrid">'
-      +'<div class="stat"><div class="sl">Most improved</div><div class="sv" style="font-size:17px;color:var(--track)">'+esc(up.c.name.replace('Family: ',''))+'<span class="sm">'+(up.delta>=0?'+':'')+up.delta.toFixed(1)+' since '+labels[0]+'</span></div></div>'
-      +'<div class="stat"><div class="sl">Biggest slide</div><div class="sv" style="font-size:17px;color:'+(dn.delta<0?'var(--alert)':'var(--muted)')+'">'+esc(dn.c.name.replace('Family: ',''))+'<span class="sm">'+(dn.delta>=0?'+':'')+dn.delta.toFixed(1)+' since '+labels[0]+'</span></div></div></div>';
+      +'<div class="stat"><div class="sl">Most improved</div><div class="sv" style="font-size:17px;color:var(--track)">'+esc(up.c.name.replace('Family: ',''))+'<span class="sm">'+(up.delta>=0?'+':'')+dfmt(up.delta)+' since '+labels[0]+'</span></div></div>'
+      +'<div class="stat"><div class="sl">Biggest slide</div><div class="sv" style="font-size:17px;color:'+(dn.delta<0?'var(--alert)':'var(--muted)')+'">'+esc(dn.c.name.replace('Family: ',''))+'<span class="sm">'+(dn.delta>=0?'+':'')+dfmt(dn.delta)+' since '+labels[0]+'</span></div></div></div>';
   }
 
   h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, '+(isWeekly()?'week by week':'month by month')+'</div>';
   rows.slice().sort((a,b)=>a.cur-b.cur).forEach(r=>{
     const col=r.cur<.5?'#E0705F':(r.cur>=.85?'#3FA88F':'#4C9BE0');
     h+='<div class="ctrend"><div class="cth"><div class="ctn">'+esc(r.c.name)+'</div><div class="ctd">'
-      +(r.delta===null?'':(r.delta>0?'<span style="color:var(--track)">&#9650; '+r.delta.toFixed(1)+'</span>':(r.delta<0?'<span style="color:var(--alert)">&#9660; '+Math.abs(r.delta).toFixed(1)+'</span>':'<span>no change</span>')))
+      +(r.delta===null?'':(r.delta>0?'<span style="color:var(--track)">&#9650; '+dfmt(r.delta)+'</span>':(r.delta<0?'<span style="color:var(--alert)">&#9660; '+dfmt(Math.abs(r.delta))+'</span>':'<span>no change</span>')))
       +'</div><div class="ctv" style="color:'+col+'">'+ten(r.cur)+'</div></div>'
       +'<div class="ctc">'+lineChart(r.ser,300,58,col,false,labels)+'</div>'
       +'<div class="ctvals">'+r.ser.map((v,i)=>'<span class="'+(i===r.ser.length-1?'now':'')+'"><b>'+ms[i].label+'</b>'+ten(v)+'</span>').join('')+'</div>'
