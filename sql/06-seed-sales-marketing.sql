@@ -34,11 +34,11 @@ insert into public.sc_categories (template_id, code, name, sort_order)
 select t.id, v.code, v.name, v.sort_order
 from public.sc_templates t
 cross join (values
-  ('sales-activity', 'Sales Activity', 0),
+  ('business-development', 'Business Development', 0),
   ('time-management', 'Time Management', 1),
-  ('marketing', 'Marketing', 2),
-  ('online-presence', 'Online Presence & Reviews', 3),
-  ('business-development', 'Business Development', 4)
+  ('sales-activity', 'Sales Activity', 2),
+  ('marketing', 'Marketing', 3),
+  ('online-presence', 'Online Presence & Reviews', 4)
 ) as v(code, name, sort_order)
 where t.slug = 'sales-marketing'
 on conflict (template_id, code) do update set
