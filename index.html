@@ -182,7 +182,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
 <!-- ================= APP ================= -->
 <div id="appRoot" style="display:none">
   <div class="top"><div class="top-in">
-    <div><div class="brandmark">Chasing Excellence</div><div class="brandsub">Scorecards</div></div>
+    <a href="/" id="homeLink" title="All scorecards" style="text-decoration:none;color:inherit;display:block"><div class="brandmark">Chasing Excellence</div><div class="brandsub">Scorecards</div></a>
     <div class="top-sp"></div>
     <button class="iconbtn" id="signOutBtn" title="Sign out">&#9211;</button>
   </div></div>
@@ -207,7 +207,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=6;
+const APP_RELEASE=7;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -302,6 +302,7 @@ $("loginBtn").addEventListener("click",doAuth);
 });
 $("forgotLink").addEventListener("click",e=>{e.preventDefault();setAuthMode("reset");});
 $("modeLink").addEventListener("click",e=>{e.preventDefault();setAuthMode(authMode==="signin"?"signup":"signin");});
+$("homeLink").addEventListener("click",e=>{e.preventDefault(); if(typeof goHome==="function"&&S.profile) goHome();});
 $("signOutBtn").addEventListener("click",async()=>{ await SB.auth.signOut(); location.reload(); });
 
 /* ===================================================================
@@ -553,7 +554,11 @@ async function openTemplate(id){
   S.card=S.cards.find(c=>c.template_id===id)||null;
   S.items=[]; S.entries={}; S.credit={};
   S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.sortMode='freq'; S.editing=null;
-  if(S.card) await loadCard();
+  if(S.card){
+    await loadCard();
+    const used={}; S.library.forEach(l=>used[l.category_id]=1); liveItems().forEach(i=>used[i.category_id]=1);
+    S.cats=S.cats.filter(c=>used[c.id]);
+  }
 }
 async function goTemplate(id){
   $("app").innerHTML='<div class="empty">Loading...</div>';
@@ -562,14 +567,40 @@ async function goTemplate(id){
 }
 function goHome(){ S.template=null; S.card=null; render(); }
 
-async function loadCard(){
+async function loadCard(synced){
   const r=await Promise.all([
     SB.from("sc_user_scorecard_items").select("*").eq("user_scorecard_id",S.card.id),
     SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool,credit_week").eq("user_scorecard_id",S.card.id)
   ]);
   r.forEach(x=>{ if(x.error) throw x.error; });
   const libById={}; S.library.forEach(l=>libById[l.id]=l);
-  S.items=(r[0].data||[]).map(x=>({
+  const rows=r[0].data||[];
+
+  /* Template questions added after this card was started (or that the card
+     never received) are added now, so edits to a template reach existing
+     users. Questions the template has retired drop out of the card below. */
+  if(!synced){
+    const have={}; rows.forEach(x=>{ if(x.library_item_id) have[x.library_item_id]=1; });
+    const missing=S.library.filter(l=>!have[l.id]);
+    if(missing.length){
+      const counters={q:0,s:0,a:0};
+      const add=missing.sort((a,b)=>a.sort_order-b.sort_order).map(l=>{
+        const f=DB2F[l.default_frequency]||'m';
+        let tm=l.default_target_month;
+        if(!tm&&PERIOD[f]) tm=spreadTargetMonth(f,counters[f]++);
+        return {user_scorecard_id:S.card.id, library_item_id:l.id, category_id:l.category_id,
+          frequency:l.default_frequency, target_month:tm||null, target_value:l.default_target_value,
+          is_selected:!!l.is_default_on, sort_order:l.sort_order};
+      });
+      for(let i=0;i<add.length;i+=100){
+        const {error}=await SB.from("sc_user_scorecard_items").insert(add.slice(i,i+100));
+        if(error) throw error;
+      }
+      return loadCard(true);
+    }
+  }
+
+  S.items=rows.filter(x=>!x.library_item_id||libById[x.library_item_id]).map(x=>({
     id:x.id, category_id:x.category_id, library_item_id:x.library_item_id,
     custom_label:x.custom_label, renamed_label:x.renamed_label,
     lib_label:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].label:null,
@@ -981,7 +1012,7 @@ function render(){
     app.innerHTML=h+'<div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:30px">v'+APP_RELEASE+' &middot; '+esc(BUILD_ID)+'</div>';
     return;
   }
-  const back=S.templates.length>1?'<button class="trkbtn" style="margin-bottom:10px" onclick="goHome()">&lsaquo; All scorecards</button>':'';
+  const back='';
   if(!S.card){
     const n=S.library.filter(l=>l.is_default_on).length;
     app.innerHTML=back+'<div class="h1">'+esc(S.template.name)+'</div>'
