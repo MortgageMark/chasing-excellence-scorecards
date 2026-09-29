@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=11;
+const APP_RELEASE=12;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -398,7 +398,7 @@ function isoWeek(mon){
 function mkPWeek(mon){
   const fri=addDays(mon,4), wn=isoWeek(mon);
   return {weekly:true,key:ymd(mon),mon:mon,fri:fri,y:fri.getFullYear(),m:fri.getMonth(),week:wn,
-          label:'Week '+wn+' ('+shortDate(mon)+' – '+shortDate(addDays(mon,6))+')',short:'W'+wn};
+          label:'W'+wn+': '+shortDate(mon)+' – '+shortDate(addDays(mon,6)),short:'W'+wn};
 }
 function mkPMonth(y,m){ return {weekly:false,key:pkey(y,m),y:y,m:m,label:MON[m]+' '+y,short:MON[m]}; }
 const viewP=()=>isWeekly()?mkPWeek(S.wk||mondayOf(new Date())):mkPMonth(S.view.y,S.view.m);
@@ -814,8 +814,8 @@ function checkin(s){
     if(liveItems().some(i=>i.category_id===c.id&&i.is_selected)) any=true;
     if(!mine.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
-    h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+ten(cs.pct)+'</div></div>'
-      +'<div class="catmeta">'+cs.done+' of '+cs.due+(W?' done this week':' due')+' &middot; '+cs.sel+' of '+cs.total+' selected</div>'
+    h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct))+'</div></div>'
+      +'<div class="catmeta">'+(W?cs.sel+' selected &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
       const due=W?true:isDue(i.freq,P.m,i.target_month);
