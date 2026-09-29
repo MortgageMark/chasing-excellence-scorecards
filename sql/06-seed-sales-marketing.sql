@@ -13,7 +13,7 @@
 --   To add a category, add a row to the categories list. The radar chart
 --   needs at least 3 categories with selected items.
 --
--- Content: Mark's Sales & Marketing worksheet (2 categories, 31 items).
+-- Content: Mark's Sales & Marketing worksheet (6 categories, yes/no questions).
 -- =====================================================================
 
 insert into public.sc_templates
@@ -34,8 +34,12 @@ insert into public.sc_categories (template_id, code, name, sort_order)
 select t.id, v.code, v.name, v.sort_order
 from public.sc_templates t
 cross join (values
-  ('marketing', 'Marketing', 0),
-  ('sales', 'Sales', 1)
+  ('sales-activity', 'Sales Activity', 0),
+  ('time-management', 'Time Management', 1),
+  ('realtor-partners', 'Realtor Partners & Referrals', 2),
+  ('database', 'Database & Past Clients', 3),
+  ('online-presence', 'Online Presence & Reviews', 4),
+  ('personal-development', 'Personal Development', 5)
 ) as v(code, name, sort_order)
 where t.slug = 'sales-marketing'
 on conflict (template_id, code) do update set
@@ -47,37 +51,50 @@ select c.id, v.code, v.label, v.freq::sc_frequency, v.is_default_on, v.sort_orde
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
 join (values
-  ('marketing', 'social-posts-3-ig-1-linkedin-google-review-post', 'Social Posts (3 IG, 1 LinkedIn, Google Review Post)', 'daily', true, 0),
-  ('marketing', 'youtube-post', 'YouTube Post', 'daily', true, 1),
-  ('marketing', 'marketing-calendar-review-execute', 'Marketing Calendar - Review & Execute', 'daily', true, 2),
-  ('marketing', 'fu-on-google-review-requests', 'FU on Google Review Requests', 'daily', true, 3),
-  ('marketing', 'google-reviews', 'Google Reviews', 'daily', true, 4),
-  ('marketing', 'dtr', 'DTR', 'weekly', true, 5),
-  ('marketing', 'eoa', 'EOA', 'weekly', true, 6),
-  ('marketing', 'lal-video-blog-and-fliers', 'LAL: video, blog, and fliers', 'weekly', true, 7),
-  ('marketing', 'monday-marketing-email-mme', 'Monday Marketing Email (MME)', 'weekly', true, 8),
-  ('marketing', 'send-tu-note-and-lotto-ticket-to-every-referral-source', 'Send TU note (and lotto ticket) to every referral source', 'weekly', true, 9),
-  ('marketing', 'spend-100-on-unreasonable-hospitality', 'Spend $100 on Unreasonable Hospitality', 'weekly', true, 10),
-  ('marketing', 'weekly-market-update', 'Weekly Market Update', 'weekly', true, 11),
-  ('marketing', 'whale-campaign', 'Whale Campaign', 'weekly', true, 12),
-  ('marketing', 'weekend-warrior-sms', 'Weekend Warrior SMS', 'weekly', true, 13),
-  ('marketing', 'lfth', 'LFTH', 'monthly', true, 14),
-  ('marketing', 'cheesy-gifts', 'Cheesy Gifts', 'monthly', true, 15),
-  ('marketing', 'events-12-l-l-6-hh', 'Events (12 L&L / 6 HH)', 'monthly', true, 16),
-  ('marketing', 'newsletter-to-clients', 'Newsletter to Clients', 'monthly', true, 17),
-  ('marketing', 'snail-mail-to-database', 'Snail mail to database', 'monthly', true, 18),
-  ('marketing', 'vip-gifts', 'VIP Gifts', 'monthly', true, 19),
-  ('marketing', 'client-appreciation-events-x-2-per-year', 'Client Appreciation Events x 2 per year', 'semiannual', true, 20),
-  ('marketing', '12-days-of-xmas-with-sponsor-each-day', '12 Days of Xmas (with sponsor each day)', 'annual', true, 21),
-  ('sales', 'time-tracker-80', 'Time Tracker 80%', 'daily', true, 0),
-  ('sales', 'activity-tracker', 'Activity Tracker', 'daily', true, 1),
-  ('sales', 'theme-day-calls', 'Theme Day Calls', 'daily', true, 2),
-  ('sales', 'green-time-4-hr-per-day', 'Green Time: 4/hr per day', 'weekly', true, 3),
-  ('sales', 'gold-time-1-hr-per-day', 'Gold Time: 1/hr per day', 'weekly', true, 4),
-  ('sales', 'new-realtor-3-per-week', 'New Realtor: 3 per week', 'weekly', true, 5),
-  ('sales', 'handwritten-card', 'Handwritten Card', 'weekly', true, 6),
-  ('sales', 'call-past-clients', 'Call Past Clients', 'monthly', true, 7),
-  ('sales', 'annual-client-reviews', 'Annual Client Reviews', 'monthly', true, 8)
+  ('sales-activity', 'did-you-complete-your-activity-tracker-greatness-tracker-tod', 'Did you complete your Activity Tracker (Greatness Tracker) today?', 'daily', true, 0),
+  ('sales-activity', 'did-you-hit-80-on-your-time-tracker-today', 'Did you hit 80% on your Time Tracker today?', 'daily', true, 1),
+  ('sales-activity', 'did-you-make-all-your-theme-day-calls-today', 'Did you make all your Theme Day calls today?', 'daily', true, 2),
+  ('sales-activity', 'did-you-check-the-mbs-highway-market-update-today', 'Did you check the MBS Highway market update today?', 'daily', true, 3),
+  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 0),
+  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 1),
+  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 2),
+  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 3),
+  ('time-management', 'did-you-work-50-total-hours-this-week', 'Did you work 50 total hours this week?', 'weekly', true, 4),
+  ('realtor-partners', 'did-you-meet-3-new-realtors-this-week', 'Did you meet 3 new Realtors this week?', 'weekly', true, 0),
+  ('realtor-partners', 'did-you-email-your-realtors-the-monday-marketing-email-mme', 'Did you email your Realtors the Monday Marketing Email (MME)?', 'weekly', true, 1),
+  ('realtor-partners', 'did-you-email-your-realtors-the-weekly-market-update-video', 'Did you email your Realtors the weekly market update video?', 'weekly', true, 2),
+  ('realtor-partners', 'did-you-send-your-realtors-the-weekly-program-update-lal-vid', 'Did you send your Realtors the weekly program update (LAL: video, blog, and fliers)?', 'weekly', true, 3),
+  ('realtor-partners', 'did-you-send-a-thank-you-note-and-lotto-ticket-to-every-refe', 'Did you send a thank-you note (and lotto ticket) to every referral source?', 'weekly', true, 4),
+  ('realtor-partners', 'did-you-spend-100-on-unreasonable-hospitality', 'Did you spend $100 on Unreasonable Hospitality?', 'weekly', true, 5),
+  ('realtor-partners', 'did-you-send-your-5-handwritten-cards-this-week', 'Did you send your 5 handwritten cards this week?', 'weekly', true, 6),
+  ('database', 'did-you-review-and-update-your-dtr-list-this-week', 'Did you review and update your DTR list this week?', 'weekly', true, 0),
+  ('database', 'did-you-send-your-database-an-evidence-of-awesomeness-eoa', 'Did you send your database an Evidence of Awesomeness (EOA)?', 'weekly', true, 1),
+  ('database', 'did-you-run-your-whale-campaign-this-week', 'Did you run your Whale Campaign this week?', 'weekly', true, 2),
+  ('database', 'did-you-send-the-weekend-warrior-sms-this-week', 'Did you send the Weekend Warrior SMS this week?', 'weekly', true, 3),
+  ('database', 'did-you-send-cheesy-gifts-this-month', 'Did you send Cheesy Gifts this month?', 'monthly', true, 4),
+  ('database', 'did-you-send-vip-gifts-this-month', 'Did you send VIP Gifts this month?', 'monthly', true, 5),
+  ('database', 'did-you-send-the-newsletter-to-clients-this-month', 'Did you send the newsletter to clients this month?', 'monthly', true, 6),
+  ('database', 'did-you-send-snail-mail-to-your-database-this-month', 'Did you send snail mail to your database this month?', 'monthly', true, 7),
+  ('database', 'did-you-call-your-past-clients-two-letters-of-the-alphabet-t', 'Did you call your past clients (two letters of the alphabet) this month?', 'monthly', true, 8),
+  ('database', 'did-you-do-your-annual-client-reviews-this-month', 'Did you do your Annual Client Reviews this month?', 'monthly', true, 9),
+  ('database', 'did-you-hold-your-events-this-month-12-l-l-6-hh-per-year', 'Did you hold your events this month (12 L&L / 6 HH per year)?', 'monthly', true, 10),
+  ('database', 'did-you-send-a-letter-from-the-heart-lfth-this-quarter', 'Did you send a Letter From The Heart (LFTH) this quarter?', 'quarterly', true, 11),
+  ('database', 'did-you-hold-your-client-appreciation-event-this-half-year-2', 'Did you hold your Client Appreciation Event this half-year (2 per year)?', 'semiannual', true, 12),
+  ('database', 'did-you-run-the-12-days-of-xmas-with-a-sponsor-each-day', 'Did you run the 12 Days of Xmas with a sponsor each day?', 'annual', true, 13),
+  ('online-presence', 'did-you-post-on-social-3-ig-1-linkedin-google-review-post-to', 'Did you post on social (3 IG, 1 LinkedIn, Google Review post) today?', 'daily', true, 0),
+  ('online-presence', 'did-you-do-your-social-post-today', 'Did you do your Social: Post today?', 'daily', true, 1),
+  ('online-presence', 'did-you-do-your-social-comments-today-25-x-4', 'Did you do your Social: Comments today (25 x 4)?', 'daily', true, 2),
+  ('online-presence', 'did-you-do-your-social-dms-today-25-x-4', 'Did you do your Social: DMs today (25 x 4)?', 'daily', true, 3),
+  ('online-presence', 'did-you-post-on-youtube-today', 'Did you post on YouTube today?', 'daily', true, 4),
+  ('online-presence', 'did-you-review-and-execute-your-marketing-calendar-today', 'Did you review and execute your marketing calendar today?', 'daily', true, 5),
+  ('online-presence', 'is-your-calendar-written-with-no-white-space', 'Is your calendar written with no white space?', 'daily', true, 6),
+  ('online-presence', 'is-your-calendar-accuracy-90-or-better', 'Is your calendar accuracy 90% or better?', 'daily', true, 7),
+  ('online-presence', 'did-you-ask-every-lead-and-realtor-you-work-with-for-a-googl', 'Did you ask every lead and Realtor you work with for a Google Review?', 'daily', true, 8),
+  ('online-presence', 'did-you-follow-up-on-your-google-review-requests', 'Did you follow up on your Google Review requests?', 'daily', true, 9),
+  ('personal-development', 'did-you-journal-for-your-business-today', 'Did you journal for your business today?', 'daily', true, 0),
+  ('personal-development', 'did-you-read-chrisman-nrep-and-mortgage-daily-today', 'Did you read Chrisman, NREP and Mortgage Daily today?', 'daily', true, 1),
+  ('personal-development', 'were-you-coached-twice-this-month', 'Were you coached twice this month?', 'monthly', true, 2),
+  ('personal-development', 'did-you-coach-someone-this-month', 'Did you coach someone this month?', 'monthly', true, 3)
 ) as v(cat_code, code, label, freq, is_default_on, sort_order)
   on v.cat_code = c.code
 on conflict (category_id, code) do update set
@@ -86,25 +103,23 @@ on conflict (category_id, code) do update set
   is_active = true, updated_at = now();
 
 -- ---------------------------------------------------------------------
--- Retire the first-draft placeholders. Items are deactivated (never
--- deleted, so any scorecard already started keeps working); categories
--- nothing points at are removed.
+-- Retire anything from earlier drafts. Items no longer in the list above
+-- are deactivated (never deleted, so a scorecard already started keeps
+-- working); categories from earlier drafts that nothing points at are
+-- removed.
 -- ---------------------------------------------------------------------
 update public.sc_library_items i set is_active = false, updated_at = now()
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
-where i.category_id = c.id
-  and i.code in ('make-new-contacts','review-pipeline','return-leads-same-day',
-                 'follow-up-past-clients','post-on-social','send-newsletter',
-                 'contact-referral-partners','referral-partner-meeting');
+where i.category_id = c.id and c.code not in ('sales-activity','time-management','realtor-partners','database','online-presence','personal-development');
 
 delete from public.sc_categories c
 using public.sc_templates t
 where t.id = c.template_id and t.slug = 'sales-marketing'
-  and c.code in ('prospecting','follow-up','referrals')
+  and c.code not in ('sales-activity','time-management','realtor-partners','database','online-presence','personal-development')
   and not exists (select 1 from public.sc_user_scorecard_items u where u.category_id = c.id);
 
--- Verify: expect Marketing 22 / Sales 9
+-- Verify: expect 44 active items across 6 categories
 select c.code, count(*) filter (where i.is_active) as items
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
