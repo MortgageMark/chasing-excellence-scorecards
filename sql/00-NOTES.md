@@ -12,6 +12,8 @@ idempotent — safe to re-run.
 | `05-fix-insert-returning.sql` | **Bug fix.** Lets an owner create a scorecard |
 | `06-seed-sales-marketing.sql` | Sales & Marketing template (5 categories, 56 yes/no questions). Re-runnable; retires removed items |
 | `07-weekly-checkins.sql` | `sc_templates.check_in_period`; entries may be dated a Monday (weekly) or the 1st (monthly). Sales & Marketing = weekly |
+| `08-admin-global-items.sql` | `sc_admins`, `sc_is_admin()`, `sc_set_global()`: an admin can promote their own question into the shared template |
+| `09-default-order.sql` | `sc_set_default_order()`: an admin saves a category's order as the template default |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must

@@ -91,6 +91,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
 .selrow.on .tog{background:rgba(76,155,224,.3)}
 .selrow.on .tog::after{transform:translateX(15px);background:var(--accent)}
+.grip{flex:none;width:22px;text-align:center;color:var(--muted);font-size:18px;line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.mv{flex:none;display:flex;flex-direction:column;gap:2px}
+.mv button{width:24px;height:12px;border:1px solid var(--line);border-radius:4px;color:var(--muted);font-size:7px;line-height:1;display:grid;place-items:center;padding:0}
+.mv button:disabled{opacity:.3}
+.selrow.dragging{opacity:.7;background:var(--raise);outline:1px solid var(--accent)}
 .gtog{width:36px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
 .gtog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
 .gtog.on{background:rgba(224,178,76,.3)}
@@ -211,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=8;
+const APP_RELEASE=9;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -559,7 +564,7 @@ async function openTemplate(id){
   S.library=S.allLib.filter(i=>catIds[i.category_id]);
   S.card=S.cards.find(c=>c.template_id===id)||null;
   S.items=[]; S.entries={}; S.credit={};
-  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.sortMode='freq'; S.editing=null;
+  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.sortMode=defSort(); S.editing=null;
   if(S.card){
     await loadCard();
     const used={}; S.library.forEach(l=>used[l.category_id]=1); liveItems().forEach(i=>used[i.category_id]=1);
@@ -750,7 +755,7 @@ async function resetCard(){
       }).eq("id",it.id);
       if(error) throw error;
     }
-    await loadCard(); S.sortMode='freq'; S.editing=null; saving('on','Reset');
+    await loadCard(); S.sortMode=defSort(); S.editing=null; saving('on','Reset');
   }catch(e){ console.error(e); saving('err','Reset failed - '+e.message); }
   render();
 }
@@ -966,7 +971,7 @@ function itemsScreen(){
   let h='<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>&#9998;</b>, change the frequency, and add your own.'
     +(S.isAdmin?'<br><br><b style="color:var(--gold)">Admin:</b> the gold toggle at the end of a row you added adds it to the global template for everyone.':'')+'</div>';
   h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg">';
-  [['freq','Frequency'],['az','A – Z'],['manual','Template']].forEach(function(p){
+  [['freq','Frequency'],['az','A – Z'],['manual','My order']].forEach(function(p){
     h+='<button class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
   h+='</div>';
   S.cats.forEach(c=>{
@@ -976,6 +981,7 @@ function itemsScreen(){
       +'<div class="pickrow">'
       +'<button class="pick" '+(nOn===mine.length?'disabled':'')+' onclick="pickAll(\''+c.id+'\',true)">Select all</button>'
       +'<button class="pick" '+(nOn===0?'disabled':'')+' onclick="pickAll(\''+c.id+'\',false)">Clear all</button>'
+      +(S.isAdmin&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
     mine.forEach(i=>{
       if(S.editing===i.id){
@@ -987,10 +993,14 @@ function itemsScreen(){
       }
       const tag=!i.library_item_id?'<span class="custom-tag">Yours</span>'
                :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
-      h+='<div class="selrow '+(i.is_selected?'on':'')+'">'
+      const canMove=S.sortMode==='manual'&&!S.editing, pos=mine.indexOf(i);
+      h+='<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
+        +(canMove?'<span class="grip" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
         +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
         +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
+        +(canMove?'<span class="mv"><button title="Move up" '+(pos===0?'disabled':'')+' onclick="moveItem(\''+i.id+'\',-1)">&#9650;</button>'
+          +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
         +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
@@ -1005,6 +1015,8 @@ function itemsScreen(){
   h+='<button class="resetbtn" onclick="resetCard()">Reset this scorecard to the template</button>';
   return h;
 }
+/* Weekly cards open in "My order" (the template's order until the user moves things). */
+function defSort(){ return isWeekly()?'manual':'freq'; }
 const freqKeys=()=>isWeekly()?['w','m','q','s','a']:Object.keys(FREQ);
 /* Admin only: a question an admin added ("Yours") can be made part of the shared
    template. Only questions promoted this way (code 'custom-...') can be switched back. */
@@ -1027,6 +1039,65 @@ async function toggleGlobal(id){
     await openTemplate(tid); S.tab=tab; S.sortMode=sort;
   }catch(e){ console.error(e); }
   render();
+}
+/* ---- Reordering (Items screen, "My order" only) ---------------------------
+   sort_order is per user item. Moving renumbers the category 0..n-1. */
+async function applyOrder(catId,ids){
+  const list=catItems(catId);
+  if(ids.length!==list.length||S.sortMode!=='manual'){ render(); return; }
+  const changes=[];
+  ids.forEach((id,n)=>{ const it=S.items.find(x=>x.id===id); if(it&&it.sort_order!==n) changes.push({it:it,was:it.sort_order,n:n}); });
+  changes.forEach(c=>{ c.it.sort_order=c.n; }); render();
+  if(!changes.length) return;
+  try{
+    await Promise.all(changes.map(c=>run(SB.from("sc_user_scorecard_items").update({sort_order:c.n}).eq("id",c.it.id))));
+  }catch(e){ changes.forEach(c=>{ c.it.sort_order=c.was; }); render(); }
+}
+function moveItem(id,dir){
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  const ids=catItems(it.category_id).map(x=>x.id), i=ids.indexOf(id), j=i+dir;
+  if(i<0||j<0||j>=ids.length) return;
+  ids.splice(j,0,ids.splice(i,1)[0]);
+  return applyOrder(it.category_id,ids);
+}
+let DRAG=null;
+function dragStart(e,catId){
+  e.preventDefault();
+  const h=e.currentTarget, row=h.closest('[data-row]');
+  DRAG={catId:catId,row:row,list:row.parentNode};
+  row.classList.add('dragging');
+  h.setPointerCapture(e.pointerId);
+  h.onpointermove=dragMove; h.onpointerup=dragEnd; h.onpointercancel=dragEnd;
+}
+function dragMove(e){
+  if(!DRAG) return;
+  const y=e.clientY;
+  if(y<90) window.scrollBy(0,-12); else if(y>window.innerHeight-90) window.scrollBy(0,12);
+  let before=null;
+  const rows=DRAG.list.querySelectorAll('[data-row]');
+  for(let k=0;k<rows.length;k++){
+    if(rows[k]===DRAG.row) continue;
+    const b=rows[k].getBoundingClientRect();
+    if(y<b.top+b.height/2){ before=rows[k]; break; }
+  }
+  if(before) DRAG.list.insertBefore(DRAG.row,before); else DRAG.list.appendChild(DRAG.row);
+}
+function dragEnd(){
+  if(!DRAG) return;
+  const d=DRAG; DRAG=null; d.row.classList.remove('dragging');
+  const ids=[].map.call(d.list.querySelectorAll('[data-row]'),r=>r.getAttribute('data-row'));
+  applyOrder(d.catId,ids);
+}
+/* Admin: make this category's order the default for the shared template. */
+async function saveDefaultOrder(catId){
+  if(!confirm("Use this order as the default for everyone? New scorecards will start in it. People who already have a scorecard keep their own order.")) return;
+  try{
+    await run(SB.rpc("sc_set_default_order",{p_items:catItems(catId).map(i=>i.id)}));
+    const {data,error}=await SB.from("sc_library_items").select("*").eq("is_active",true).order("sort_order");
+    if(error) throw error;
+    S.allLib=data||[]; S.library=S.allLib.filter(l=>S.cats.some(c=>c.id===l.category_id));
+    saving('on','Default order saved');
+  }catch(e){ console.error(e); }
 }
 function setSort(m){ S.sortMode=m; S.editing=null; render(); }
 
