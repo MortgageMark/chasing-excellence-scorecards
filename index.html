@@ -207,7 +207,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=2;
+const APP_RELEASE=3;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -322,7 +322,8 @@ const pkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0')+'-01'; /* sc_entries.period_
 const ten=p=>p===null?'—':(p*10).toFixed(1);
 
 const S={
-  profile:null, template:null, cats:[], library:[],
+  profile:null, templates:[], allCats:[], allLib:[], cards:[],
+  template:null, cats:[], library:[],
   card:null, items:[], entries:{},          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m},
   sortMode:'freq', editing:null, busy:false
@@ -461,23 +462,36 @@ async function loadAll(){
   S.profile=Array.isArray(prof)?prof[0]:prof;
 
   const r=await Promise.all([
-    SB.from("sc_templates").select("*").eq("slug","life-balance"),
+    SB.from("sc_templates").select("*").eq("is_published",true).order("sort_order"),
     SB.from("sc_categories").select("*").order("sort_order"),
-    SB.from("sc_library_items").select("*").eq("is_active",true).order("sort_order")
+    SB.from("sc_library_items").select("*").eq("is_active",true).order("sort_order"),
+    SB.from("sc_user_scorecards").select("*").eq("is_active",true).order("created_at")
   ]);
   r.forEach(x=>{ if(x.error) throw x.error; });
-  S.template=(r[0].data||[])[0];
-  if(!S.template) throw new Error("Life Balance template not found. Has the seed been run?");
-  S.cats=(r[1].data||[]).filter(c=>c.template_id===S.template.id);
-  const catIds={}; S.cats.forEach(c=>catIds[c.id]=1);
-  S.library=(r[2].data||[]).filter(i=>catIds[i.category_id]);
+  S.templates=r[0].data||[];
+  if(!S.templates.length) throw new Error("No scorecard templates found. Has the seed been run?");
+  S.allCats=r[1].data||[]; S.allLib=r[2].data||[]; S.cards=r[3].data||[];
+  /* One template: go straight in. Several: show the home screen. */
+  if(S.templates.length===1) await openTemplate(S.templates[0].id);
+}
 
-  const {data:cards,error:ke}=await SB.from("sc_user_scorecards")
-    .select("*").eq("template_id",S.template.id).eq("is_active",true).order("created_at");
-  if(ke) throw ke;
-  S.card=(cards||[])[0]||null;
+/* Point the working state (S.template/cats/library/card/items) at one template. */
+async function openTemplate(id){
+  S.template=S.templates.find(t=>t.id===id);
+  S.cats=S.allCats.filter(c=>c.template_id===id);
+  const catIds={}; S.cats.forEach(c=>catIds[c.id]=1);
+  S.library=S.allLib.filter(i=>catIds[i.category_id]);
+  S.card=S.cards.find(c=>c.template_id===id)||null;
+  S.items=[]; S.entries={};
+  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.sortMode='freq'; S.editing=null;
   if(S.card) await loadCard();
 }
+async function goTemplate(id){
+  $("app").innerHTML='<div class="empty">Loading...</div>';
+  try{ await openTemplate(id); }catch(e){ console.error(e); saving('err','Could not load - '+e.message); }
+  render();
+}
+function goHome(){ S.template=null; S.card=null; render(); }
 
 async function loadCard(){
   const r=await Promise.all([
@@ -505,7 +519,7 @@ async function adopt(){
     const {data:card,error:ce}=await SB.from("sc_user_scorecards")
       .insert({template_id:S.template.id}).select().single();
     if(ce) throw ce;
-    S.card=card;
+    S.card=card; S.cards.push(card);
     const counters={q:0,s:0,a:0};
     const rows=[];
     S.cats.forEach(c=>{
@@ -793,22 +807,35 @@ function setSort(m){ S.sortMode=m; S.editing=null; render(); }
 
 function render(){
   const app=$("app");
+  if(!S.template){
+    let h='<div class="h1">Scorecards</div><div class="sub">Choose a scorecard &middot; signed in as '+esc(S.profile.email||'')+'</div>';
+    S.templates.forEach(t=>{
+      const started=S.cards.some(c=>c.template_id===t.id);
+      h+='<button class="card" style="display:block;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit" onclick="goTemplate(\''+t.id+'\')">'
+        +'<div class="eyebrow" style="margin-bottom:6px">'+(started?'In progress':'Not started')+'</div>'
+        +'<div style="font-size:17px;font-weight:700;margin-bottom:6px">'+esc(t.name)+'</div>'
+        +'<div style="font-size:13.5px;line-height:1.5;color:var(--muted)">'+esc(t.description||'')+'</div></button>';
+    });
+    app.innerHTML=h+'<div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:30px">v'+APP_RELEASE+' &middot; '+esc(BUILD_ID)+'</div>';
+    return;
+  }
+  const back=S.templates.length>1?'<button class="trkbtn" style="margin-bottom:10px" onclick="goHome()">&lsaquo; All scorecards</button>':'';
   if(!S.card){
     const n=S.library.filter(l=>l.is_default_on).length;
-    app.innerHTML='<div class="h1">Life Balance</div>'
-      +'<div class="sub">'+esc(S.template?S.template.description:'')+'</div>'
+    app.innerHTML=back+'<div class="h1">'+esc(S.template.name)+'</div>'
+      +'<div class="sub">'+esc(S.template.description||'')+'</div>'
       +'<div class="card"><div class="eyebrow" style="margin-bottom:10px">What you get</div>'
       +'<div style="font-size:13.5px;line-height:1.6;color:var(--muted)">'
       +S.cats.length+' categories &middot; '+S.library.length+' suggested items &middot; '
       +'<b style="color:var(--bone)">'+n+' switched on to start</b>.<br>'
       +'Nothing is required. Add, rename, drop or re-time anything on the Items tab.</div></div>'
-      +'<button class="bigbtn" id="adoptBtn" '+(S.busy?'disabled':'')+'>Start my Life Balance Scorecard</button>';
+      +'<button class="bigbtn" id="adoptBtn" '+(S.busy?'disabled':'')+'>Start my '+esc(S.template.name)+'</button>';
     const b=$("adoptBtn"); if(b) b.addEventListener("click",adopt);
     return;
   }
   const s=score(S.view.y,S.view.m);
   const tabs=[['checkin','Check-in'],['score',S.template.score_label],['history','History'],['items','Items']];
-  let h='<div class="h1">Life Balance</div>'
+  let h=back+'<div class="h1">'+esc(S.template.name)+'</div>'
     +'<div class="sub">'+MON[NOW.m]+' '+NOW.y+' &middot; signed in as '+esc(S.profile.email||'')+'</div><div class="tabs">';
   tabs.forEach(function(t){ h+='<button class="tab '+(S.tab===t[0]?'on':'')+'" onclick="S.tab=\''+t[0]+'\';render()">'+esc(t[1])+'</button>'; });
   h+='</div>';
