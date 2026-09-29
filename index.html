@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=16;
+const APP_RELEASE=17;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -847,7 +847,7 @@ function checkin(s){
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
       const due=W?true:isDue(i.freq,P.m,i.target_month);
-      h+=itemBtn(i,ekey(i,P),due,due?(W?'Weekly':FREQ[i.freq]):(i.target_month?MON[i.target_month-1]:'Not due'));
+      h+=itemBtn(i,ekey(i,P),due,due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'));
     });
     h+='</div>';
   });
@@ -1044,7 +1044,7 @@ function itemsScreen(){
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +(!i.library_item_id?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
-        +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
+        +freqKeys().map(f=>'<option value="'+f+'" '+(i.freq===f?'selected':'')+'>'+FREQ[f]+'</option>').join('')
         +'</select>'
         +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
         +'</div>';
@@ -1059,7 +1059,7 @@ function itemsScreen(){
 }
 /* Every scorecard opens in "My order": the template's order until the user moves things. */
 function defSort(){ return 'manual'; }
-const freqKeys=()=>isWeekly()?['w','m','q','s','a']:Object.keys(FREQ);
+const freqKeys=()=>Object.keys(FREQ);
 /* Admin only: a question an admin added ("Yours") can be made part of the shared
    template. Only questions promoted this way (code 'custom-...') can be switched back. */
 const isGlobal=i=>!!i.library_item_id;
