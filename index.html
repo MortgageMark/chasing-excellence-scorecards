@@ -91,6 +91,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
 .selrow.on .tog{background:rgba(76,155,224,.3)}
 .selrow.on .tog::after{transform:translateX(15px);background:var(--accent)}
+.gtog{width:36px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
+.gtog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
+.gtog.on{background:rgba(224,178,76,.3)}
+.gtog.on::after{transform:translateX(15px);background:var(--gold)}
 .fsel{background:var(--ink);border:1px solid var(--line);border-radius:7px;color:var(--muted);font:inherit;font-size:10.5px;padding:4px 3px;flex:none;width:88px;cursor:pointer}
 .selrow.on .fsel{color:var(--bone)}
 .trkbtn{flex:none;width:28px;height:25px;border:1px solid var(--line);border-radius:7px;font-size:11px;color:var(--muted);display:grid;place-items:center}
@@ -207,7 +211,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=7;
+const APP_RELEASE=8;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -323,7 +327,7 @@ const pkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0')+'-01'; /* sc_entries.period_
 const ten=p=>p===null?'—':(p*10).toFixed(1);
 
 const S={
-  profile:null, templates:[], allCats:[], allLib:[], cards:[],
+  profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
   card:null, items:[], entries:{}, credit:{},          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null,
@@ -530,6 +534,8 @@ async function loadAll(){
   const {data:prof,error:pe}=await SB.rpc("sc_bootstrap_profile",{p_timezone:tz});
   if(pe) throw pe;
   S.profile=Array.isArray(prof)?prof[0]:prof;
+  /* Admins (sql/08) can promote their own questions into the shared template. */
+  try{ const {data:adm,error:ae}=await SB.rpc("sc_is_admin"); S.isAdmin=!ae&&adm===true; }catch(e){ S.isAdmin=false; }
 
   const r=await Promise.all([
     SB.from("sc_templates").select("*").eq("is_published",true).order("sort_order"),
@@ -605,6 +611,7 @@ async function loadCard(synced){
     custom_label:x.custom_label, renamed_label:x.renamed_label,
     lib_label:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].label:null,
     lib_short:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].short_label:null,
+    lib_code:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].code:null,
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
@@ -718,7 +725,7 @@ async function addItem(catId){
       sort_order:9000+liveItems().filter(i=>i.category_id===catId).length
     }).select().single());
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
-      renamed_label:null,lib_label:null,lib_short:null,freq:f,target_month:tm,is_selected:true,
+      renamed_label:null,lib_label:null,lib_short:null,lib_code:null,freq:f,target_month:tm,is_selected:true,
       sort_order:row.sort_order,removed_at:null});
     render();
   }catch(e){}
@@ -956,7 +963,8 @@ function history(){
 }
 
 function itemsScreen(){
-  let h='<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>&#9998;</b>, change the frequency, and add your own.</div>';
+  let h='<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>&#9998;</b>, change the frequency, and add your own.'
+    +(S.isAdmin?'<br><br><b style="color:var(--gold)">Admin:</b> the gold toggle at the end of a row you added adds it to the global template for everyone.':'')+'</div>';
   h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg">';
   [['freq','Frequency'],['az','A – Z'],['manual','Template']].forEach(function(p){
     h+='<button class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
@@ -986,7 +994,9 @@ function itemsScreen(){
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
         +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
-        +'</select></div>';
+        +'</select>'
+        +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'In the global template - tap to remove':'Add to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
+        +'</div>';
     });
     h+='</div><div class="addwrap"><input id="ci-'+c.id+'" placeholder="Add your own..." onkeydown="if(event.key===\'Enter\')addItem(\''+c.id+'\')">'
       +'<select id="cf-'+c.id+'">'+freqKeys().map(f=>'<option value="'+f+'" '+(f===(isWeekly()?'w':'m')?'selected':'')+'>'+FREQ[f]+'</option>').join('')+'</select>'
@@ -996,6 +1006,28 @@ function itemsScreen(){
   return h;
 }
 const freqKeys=()=>isWeekly()?['w','m','q','s','a']:Object.keys(FREQ);
+/* Admin only: a question an admin added ("Yours") can be made part of the shared
+   template. Only questions promoted this way (code 'custom-...') can be switched back. */
+const isGlobal=i=>!!(i.library_item_id&&(i.lib_code||'').indexOf('custom-')===0);
+const canGlobal=i=>S.isAdmin&&(!i.library_item_id||isGlobal(i));
+async function toggleGlobal(id){
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  const on=!isGlobal(it);
+  if(!confirm(on?'Add "'+label(it)+'" to the global template? Every user will get this question.'
+                 :'Remove "'+label(it)+'" from the global template? Other users will stop seeing it.')) return;
+  try{
+    await run(SB.rpc("sc_set_global",{p_item:id,p_on:on}));
+    const tid=S.template.id, tab=S.tab, sort=S.sortMode;
+    const r=await Promise.all([
+      SB.from("sc_categories").select("*").order("sort_order"),
+      SB.from("sc_library_items").select("*").eq("is_active",true).order("sort_order")
+    ]);
+    r.forEach(x=>{ if(x.error) throw x.error; });
+    S.allCats=r[0].data||[]; S.allLib=r[1].data||[];
+    await openTemplate(tid); S.tab=tab; S.sortMode=sort;
+  }catch(e){ console.error(e); }
+  render();
+}
 function setSort(m){ S.sortMode=m; S.editing=null; render(); }
 
 function render(){
