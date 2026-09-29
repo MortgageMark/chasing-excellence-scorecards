@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=10;
+const APP_RELEASE=11;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -389,10 +389,16 @@ const mondayOf=d=>addDays(d,-((d.getDay()+6)%7));
 const shortDate=d=>MON[d.getMonth()]+' '+d.getDate();
 const isShortCycle=i=>i.freq==='d'||i.freq==='w';
 const CYC={m:1,q:3,s:6,a:12};
+/* ISO week of the year (weeks start Monday; week 1 holds the year's first Thursday). */
+function isoWeek(mon){
+  const thu=addDays(mon,3);
+  const doy=Math.round((new Date(thu.getFullYear(),thu.getMonth(),thu.getDate())-new Date(thu.getFullYear(),0,1))/86400000)+1;
+  return Math.floor((doy-1)/7)+1;
+}
 function mkPWeek(mon){
-  const fri=addDays(mon,4);
-  return {weekly:true,key:ymd(mon),mon:mon,fri:fri,y:fri.getFullYear(),m:fri.getMonth(),
-          label:shortDate(mon)+' – '+shortDate(addDays(mon,6)),short:(mon.getMonth()+1)+'/'+mon.getDate()};
+  const fri=addDays(mon,4), wn=isoWeek(mon);
+  return {weekly:true,key:ymd(mon),mon:mon,fri:fri,y:fri.getFullYear(),m:fri.getMonth(),week:wn,
+          label:'Week '+wn+' ('+shortDate(mon)+' – '+shortDate(addDays(mon,6))+')',short:'W'+wn};
 }
 function mkPMonth(y,m){ return {weekly:false,key:pkey(y,m),y:y,m:m,label:MON[m]+' '+y,short:MON[m]}; }
 const viewP=()=>isWeekly()?mkPWeek(S.wk||mondayOf(new Date())):mkPMonth(S.view.y,S.view.m);
