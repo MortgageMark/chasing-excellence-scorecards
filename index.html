@@ -96,10 +96,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .mv button{width:24px;height:12px;border:1px solid var(--line);border-radius:4px;color:var(--muted);font-size:7px;line-height:1;display:grid;place-items:center;padding:0}
 .mv button:disabled{opacity:.3}
 .selrow.dragging{opacity:.7;background:var(--raise);outline:1px solid var(--accent)}
-.gtog{width:36px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
+.gtog{width:32px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
 .gtog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
 .gtog.on{background:rgba(224,178,76,.3)}
-.gtog.on::after{transform:translateX(15px);background:var(--gold)}
+.gtog.on::after{transform:translateX(13px);background:var(--gold)}
 .fsel{background:var(--ink);border:1px solid var(--line);border-radius:7px;color:var(--muted);font:inherit;font-size:10.5px;padding:4px 3px;flex:none;width:88px;cursor:pointer}
 .selrow.on .fsel{color:var(--bone)}
 .trkbtn{flex:none;width:28px;height:25px;border:1px solid var(--line);border-radius:7px;font-size:11px;color:var(--muted);display:grid;place-items:center}
@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=9;
+const APP_RELEASE=10;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -969,7 +969,7 @@ function history(){
 
 function itemsScreen(){
   let h='<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>&#9998;</b>, change the frequency, and add your own.'
-    +(S.isAdmin?'<br><br><b style="color:var(--gold)">Admin:</b> the gold toggle at the end of a row you added adds it to the global template for everyone.':'')+'</div>';
+    +(S.isAdmin?'<br><br><b style="color:var(--gold)">Admin:</b> a gold toggle at the end of each row shows where a question lives. <b>On</b> = it is part of the global template that every user gets. <b>Off</b> = it is only on your scorecard; turn it on to share it. When you edit wording with &#9998;, <b>Everyone</b> changes it for all users and <b>Just me</b> changes only your own copy (tagged <i>Edited</i>).':'')+'</div>';
   h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg">';
   [['freq','Frequency'],['az','A – Z'],['manual','My order']].forEach(function(p){
     h+='<button class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
@@ -988,7 +988,11 @@ function itemsScreen(){
         h+='<div class="selrow on"><input class="renameinp" id="rn" value="'+esc(label(i))+'"'
           +' onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){S.editing=null;render()}"'
           +' onblur="saveName(\''+i.id+'\',this.value)">'
-          +'<button class="trkbtn" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">✓</button></div>';
+          +(S.isAdmin&&i.library_item_id
+             ?'<button class="trkbtn" style="width:auto;padding:0 8px" title="Only on your scorecard" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">Just me</button>'
+              +'<button class="trkbtn" style="width:auto;padding:0 8px;color:var(--gold);border-color:var(--gold)" title="Changes it for every user" onmousedown="saveGlobalName(\''+i.id+'\',document.getElementById(\'rn\').value)">Everyone</button>'
+             :'<button class="trkbtn" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">✓</button>')
+          +'</div>';
         return;
       }
       const tag=!i.library_item_id?'<span class="custom-tag">Yours</span>'
@@ -1005,7 +1009,7 @@ function itemsScreen(){
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
         +freqKeys().map(f=>'<option value="'+f+'" '+((i.freq===f||(f==='w'&&i.freq==='d'&&isWeekly()))?'selected':'')+'>'+FREQ[f]+'</option>').join('')
         +'</select>'
-        +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'In the global template - tap to remove':'Add to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
+        +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
         +'</div>';
     });
     h+='</div><div class="addwrap"><input id="ci-'+c.id+'" placeholder="Add your own..." onkeydown="if(event.key===\'Enter\')addItem(\''+c.id+'\')">'
@@ -1020,13 +1024,28 @@ function defSort(){ return isWeekly()?'manual':'freq'; }
 const freqKeys=()=>isWeekly()?['w','m','q','s','a']:Object.keys(FREQ);
 /* Admin only: a question an admin added ("Yours") can be made part of the shared
    template. Only questions promoted this way (code 'custom-...') can be switched back. */
-const isGlobal=i=>!!(i.library_item_id&&(i.lib_code||'').indexOf('custom-')===0);
-const canGlobal=i=>S.isAdmin&&(!i.library_item_id||isGlobal(i));
+const isGlobal=i=>!!i.library_item_id;
+const canGlobal=i=>S.isAdmin;
+async function saveGlobalName(id,v){
+  const val=(v||'').trim();
+  S.editing=null;
+  if(!val){ render(); return; }
+  if(!confirm('Change this question to "'+val+'" for every user?')){ render(); return; }
+  try{
+    await run(SB.rpc("sc_edit_global",{p_item:id,p_text:val}));
+    const {data,error}=await SB.from("sc_library_items").select("*").eq("is_active",true).order("sort_order");
+    if(error) throw error;
+    S.allLib=data||[]; S.library=S.allLib.filter(l=>S.cats.some(c=>c.id===l.category_id));
+    await loadCard(true);
+    saving('on','Saved for everyone');
+  }catch(e){ console.error(e); }
+  render();
+}
 async function toggleGlobal(id){
   const it=S.items.find(i=>i.id===id); if(!it) return;
   const on=!isGlobal(it);
   if(!confirm(on?'Add "'+label(it)+'" to the global template? Every user will get this question.'
-                 :'Remove "'+label(it)+'" from the global template? Other users will stop seeing it.')) return;
+                 :'Remove "'+label(it)+'" from the global template? Other users will stop seeing it. It stays on your own scorecard.')) return;
   try{
     await run(SB.rpc("sc_set_global",{p_item:id,p_on:on}));
     const tid=S.template.id, tab=S.tab, sort=S.sortMode;
