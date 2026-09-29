@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=13;
+const APP_RELEASE=14;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -1028,8 +1028,8 @@ function itemsScreen(){
   h+='<button class="resetbtn" onclick="resetCard()">Reset this scorecard to the template</button>';
   return h;
 }
-/* Weekly cards open in "My order" (the template's order until the user moves things). */
-function defSort(){ return isWeekly()?'manual':'freq'; }
+/* Every scorecard opens in "My order": the template's order until the user moves things. */
+function defSort(){ return 'manual'; }
 const freqKeys=()=>isWeekly()?['w','m','q','s','a']:Object.keys(FREQ);
 /* Admin only: a question an admin added ("Yours") can be made part of the shared
    template. Only questions promoted this way (code 'custom-...') can be switched back. */
