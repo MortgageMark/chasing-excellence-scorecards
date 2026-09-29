@@ -45,21 +45,26 @@ where t.slug = 'sales-marketing'
 on conflict (template_id, code) do update set
   name = excluded.name, sort_order = excluded.sort_order, updated_at = now();
 
-insert into public.sc_library_items
-  (category_id, code, label, default_frequency, is_default_on, sort_order)
-select c.id, v.code, v.label, v.freq::sc_frequency, v.is_default_on, v.sort_order
-from public.sc_categories c
-join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
-join (values
+-- The item list goes into a temp table first so the same list drives both
+-- the upsert and the clean-up of anything you have since removed.
+drop table if exists _sm_items;
+create temp table _sm_items (
+  cat_code text, code text, label text, freq text, is_default_on boolean, sort_order int);
+insert into _sm_items values
   ('sales-activity', 'did-you-complete-your-activity-tracker-greatness-tracker-tod', 'Did you complete your Activity Tracker (Greatness Tracker) today?', 'daily', true, 0),
-  ('sales-activity', 'did-you-hit-80-on-your-time-tracker-today', 'Did you hit 80% on your Time Tracker today?', 'daily', true, 1),
-  ('sales-activity', 'did-you-make-all-your-theme-day-calls-today', 'Did you make all your Theme Day calls today?', 'daily', true, 2),
-  ('sales-activity', 'did-you-check-the-mbs-highway-market-update-today', 'Did you check the MBS Highway market update today?', 'daily', true, 3),
-  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 0),
-  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 1),
-  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 2),
-  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 3),
-  ('time-management', 'did-you-work-50-total-hours-this-week', 'Did you work 50 total hours this week?', 'weekly', true, 4),
+  ('sales-activity', 'did-you-hit-50-talk-tos-today', 'Did you hit 50 talk-tos today?', 'daily', true, 1),
+  ('sales-activity', 'did-you-leave-50-voicemails-today', 'Did you leave 50 voicemails today?', 'daily', true, 2),
+  ('sales-activity', 'did-you-have-10-face-to-face-appointments-this-week', 'Did you have 10 face-to-face appointments this week?', 'weekly', true, 3),
+  ('sales-activity', 'did-you-make-all-your-theme-day-calls-today', 'Did you make all your Theme Day calls today?', 'daily', true, 4),
+  ('sales-activity', 'did-you-check-the-mbs-highway-market-update-today', 'Did you check the MBS Highway market update today?', 'daily', true, 5),
+  ('sales-activity', 'did-you-ask-for-leads-in-every-conversation-today', 'Did you ask for leads in every conversation today?', 'daily', true, 6),
+  ('sales-activity', 'did-you-get-60-new-leads-this-month', 'Did you get 60 new leads this month?', 'monthly', true, 7),
+  ('time-management', 'did-you-hit-80-on-your-time-tracker-today', 'Did you hit 80% on your Time Tracker today?', 'daily', true, 0),
+  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 1),
+  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 2),
+  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 3),
+  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 4),
+  ('time-management', 'did-you-work-50-total-hours-this-week', 'Did you work 50 total hours this week?', 'weekly', true, 5),
   ('realtor-partners', 'did-you-meet-3-new-realtors-this-week', 'Did you meet 3 new Realtors this week?', 'weekly', true, 0),
   ('realtor-partners', 'did-you-email-your-realtors-the-monday-marketing-email-mme', 'Did you email your Realtors the Monday Marketing Email (MME)?', 'weekly', true, 1),
   ('realtor-partners', 'did-you-email-your-realtors-the-weekly-market-update-video', 'Did you email your Realtors the weekly market update video?', 'weekly', true, 2),
@@ -94,24 +99,29 @@ join (values
   ('personal-development', 'did-you-journal-for-your-business-today', 'Did you journal for your business today?', 'daily', true, 0),
   ('personal-development', 'did-you-read-chrisman-nrep-and-mortgage-daily-today', 'Did you read Chrisman, NREP and Mortgage Daily today?', 'daily', true, 1),
   ('personal-development', 'were-you-coached-twice-this-month', 'Were you coached twice this month?', 'monthly', true, 2),
-  ('personal-development', 'did-you-coach-someone-this-month', 'Did you coach someone this month?', 'monthly', true, 3)
-) as v(cat_code, code, label, freq, is_default_on, sort_order)
-  on v.cat_code = c.code
+  ('personal-development', 'did-you-coach-someone-this-month', 'Did you coach someone this month?', 'monthly', true, 3);
+
+insert into public.sc_library_items
+  (category_id, code, label, default_frequency, is_default_on, sort_order)
+select c.id, v.code, v.label, v.freq::sc_frequency, v.is_default_on, v.sort_order
+from public.sc_categories c
+join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
+join _sm_items v on v.cat_code = c.code
 on conflict (category_id, code) do update set
   label = excluded.label, default_frequency = excluded.default_frequency,
   is_default_on = excluded.is_default_on, sort_order = excluded.sort_order,
   is_active = true, updated_at = now();
 
 -- ---------------------------------------------------------------------
--- Retire anything from earlier drafts. Items no longer in the list above
--- are deactivated (never deleted, so a scorecard already started keeps
--- working); categories from earlier drafts that nothing points at are
--- removed.
+-- Clean-up. Items no longer in the list are deactivated (never deleted, so
+-- a scorecard already started keeps working). Categories no longer in the
+-- list are removed if nothing points at them.
 -- ---------------------------------------------------------------------
 update public.sc_library_items i set is_active = false, updated_at = now()
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
-where i.category_id = c.id and c.code not in ('sales-activity','time-management','realtor-partners','database','online-presence','personal-development');
+where i.category_id = c.id and i.is_active
+  and not exists (select 1 from _sm_items v where v.cat_code = c.code and v.code = i.code);
 
 delete from public.sc_categories c
 using public.sc_templates t
@@ -119,7 +129,9 @@ where t.id = c.template_id and t.slug = 'sales-marketing'
   and c.code not in ('sales-activity','time-management','realtor-partners','database','online-presence','personal-development')
   and not exists (select 1 from public.sc_user_scorecard_items u where u.category_id = c.id);
 
--- Verify: expect 44 active items across 6 categories
+drop table if exists _sm_items;
+
+-- Verify: expect 49 active items across 6 categories
 select c.code, count(*) filter (where i.is_active) as items
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'

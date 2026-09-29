@@ -207,7 +207,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=3;
+const APP_RELEASE=4;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -360,7 +360,10 @@ function catItems(catId){
   if(S.sortMode==='manual') return list.slice().sort((a,b)=>a.sort_order-b.sort_order||az(a,b));
   return list.slice().sort((a,b)=>FO[a.freq]-FO[b.freq]||az(a,b));
 }
-const isDone=(itemId,y,m)=>!!S.entries[itemId+'|'+pkey(y,m)];
+/* An entry is true (yes), false/missing (no) or 'na' (not applicable).
+   N/A is stored as a row with value_bool null and is left out of the score. */
+const isDone=(itemId,y,m)=>S.entries[itemId+'|'+pkey(y,m)]===true;
+const isNA=(itemId,y,m)=>S.entries[itemId+'|'+pkey(y,m)]==='na';
 
 /* ===================================================================
    SCORING - ported unchanged from the prototype.
@@ -372,7 +375,7 @@ function score(y,m){
   const cats=[];
   S.cats.forEach(c=>{
     const all=catItems(c.id), mine=all.filter(i=>i.is_selected);
-    const due=mine.filter(i=>isDue(i.freq,m,i.target_month));
+    const due=mine.filter(i=>isDue(i.freq,m,i.target_month)&&!isNA(i.id,y,m));
     const hit=due.filter(i=>isDone(i.id,y,m)).length;
     cats.push({id:c.id,name:c.name,pct:due.length?hit/due.length:null,
                done:hit,due:due.length,sel:mine.length,total:all.length});
@@ -508,7 +511,7 @@ async function loadCard(){
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
   S.entries={};
-  (r[1].data||[]).forEach(e=>{ S.entries[e.user_scorecard_item_id+'|'+e.period_start]=!!e.value_bool; });
+  (r[1].data||[]).forEach(e=>{ S.entries[e.user_scorecard_item_id+'|'+e.period_start]=(e.value_bool===null?'na':!!e.value_bool); });
 }
 
 /* Adoption: one card, one row per library item, first-run defaults on. */
@@ -551,14 +554,16 @@ async function tick(itemId){
   const it=S.items.find(i=>i.id===itemId); if(!it) return;
   if(!isDue(it.freq,S.view.m,it.target_month)) return;
   const period=pkey(S.view.y,S.view.m), k=itemId+'|'+period;
-  const next=!S.entries[k];
+  /* Cycle: not done -> yes -> N/A -> not done */
+  const prev=S.entries[k];
+  const next=prev===true?'na':(prev==='na'?false:true);
   S.entries[k]=next; render();
   try{
     await run(SB.from("sc_entries").upsert({
       user_scorecard_id:S.card.id, user_scorecard_item_id:itemId,
-      period_start:period, value_bool:next
+      period_start:period, value_bool:(next==='na'?null:next)
     },{onConflict:"user_scorecard_item_id,period_start"}));
-  }catch(e){ S.entries[k]=!next; render(); }
+  }catch(e){ S.entries[k]=prev; render(); }
 }
 
 async function patchItem(itemId,patch,localPatch){
@@ -654,7 +659,7 @@ function stepMonth(d){
 
 function checkin(s){
   let h=monthBar();
-  h+='<div class="note">Items outside their cycle are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.</div>';
+  h+='<div class="note">Tap once for <b>yes</b>, twice for <b>N/A</b>, three times to clear. Items outside their cycle and items marked N/A are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.</div>';
   let any=false;
   S.cats.forEach(c=>{
     const mine=catItems(c.id).filter(i=>i.is_selected); if(!mine.length) return;
@@ -664,10 +669,10 @@ function checkin(s){
       +'<div class="catmeta">'+cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected</div>'
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
-      const due=isDue(i.freq,S.view.m,i.target_month), on=isDone(i.id,S.view.y,S.view.m);
-      h+='<button class="item '+(on?'on':'')+' '+(due?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\')"':'')+'>'
-        +'<span class="box">'+(on?'✓':'')+'</span><span class="ilabel">'+esc(label(i))+'</span>'
-        +'<span class="freq">'+(due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'))+'</span></button>';
+      const due=isDue(i.freq,S.view.m,i.target_month), on=isDone(i.id,S.view.y,S.view.m), nap=due&&isNA(i.id,S.view.y,S.view.m);
+      h+='<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\')"':'')+'>'
+        +'<span class="box" '+(nap?'style="font-size:9px"':'')+'>'+(on?'✓':(nap?'N/A':''))+'</span><span class="ilabel">'+esc(label(i))+'</span>'
+        +'<span class="freq">'+(nap?'Not applicable':due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'))+'</span></button>';
     });
     h+='</div>';
   });
