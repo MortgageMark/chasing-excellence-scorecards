@@ -39,7 +39,7 @@ cross join (values
   ('realtor-partners', 'Realtor Partners & Referrals', 2),
   ('database', 'Database & Past Clients', 3),
   ('online-presence', 'Online Presence & Reviews', 4),
-  ('personal-development', 'Personal Development', 5)
+  ('business-development', 'Business Development', 5)
 ) as v(code, name, sort_order)
 where t.slug = 'sales-marketing'
 on conflict (template_id, code) do update set
@@ -59,12 +59,17 @@ insert into _sm_items values
   ('sales-activity', 'did-you-check-the-mbs-highway-market-update-today', 'Did you check the MBS Highway market update today?', 'daily', true, 5),
   ('sales-activity', 'did-you-ask-for-leads-in-every-conversation-today', 'Did you ask for leads in every conversation today?', 'daily', true, 6),
   ('sales-activity', 'did-you-get-60-new-leads-this-month', 'Did you get 60 new leads this month?', 'monthly', true, 7),
-  ('time-management', 'did-you-hit-80-on-your-time-tracker-today', 'Did you hit 80% on your Time Tracker today?', 'daily', true, 0),
-  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 1),
-  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 2),
-  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 3),
-  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 4),
-  ('time-management', 'did-you-work-50-total-hours-this-week', 'Did you work 50 total hours this week?', 'weekly', true, 5),
+  ('time-management', 'did-you-track-your-time-today', 'Did you track your time today?', 'daily', true, 0),
+  ('time-management', 'did-you-hit-80-on-your-time-tracker-today', 'Did you hit 80% on your Time Tracker today?', 'daily', true, 1),
+  ('time-management', 'did-you-print-out-your-calendar-today', 'Did you print out your calendar today?', 'daily', true, 2),
+  ('time-management', 'is-your-calendar-full-with-no-white-space', 'Is your calendar full, with no white space?', 'daily', true, 3),
+  ('time-management', 'is-your-calendar-accuracy-90-or-better', 'Is your calendar accuracy 90% or better?', 'daily', true, 4),
+  ('time-management', 'did-you-spend-20-hours-in-green-time-this-week', 'Did you spend 20 hours in Green Time this week?', 'weekly', true, 5),
+  ('time-management', 'did-you-spend-5-hours-in-gold-time-this-week', 'Did you spend 5 hours in Gold Time this week?', 'weekly', true, 6),
+  ('time-management', 'did-you-spend-10-hours-on-recruiting-this-week', 'Did you spend 10 hours on Recruiting this week?', 'weekly', true, 7),
+  ('time-management', 'did-you-spend-2-hours-working-on-your-business-this-week', 'Did you spend 2 hours working "on" your business this week?', 'weekly', true, 8),
+  ('time-management', 'did-you-work-at-least-40-hours-this-week', 'Did you work at least 40 hours this week?', 'weekly', true, 9),
+  ('time-management', 'did-you-work-no-more-than-50-hours-this-week', 'Did you work no more than 50 hours this week?', 'weekly', true, 10),
   ('realtor-partners', 'did-you-meet-3-new-realtors-this-week', 'Did you meet 3 new Realtors this week?', 'weekly', true, 0),
   ('realtor-partners', 'did-you-email-your-realtors-the-monday-marketing-email-mme', 'Did you email your Realtors the Monday Marketing Email (MME)?', 'weekly', true, 1),
   ('realtor-partners', 'did-you-email-your-realtors-the-weekly-market-update-video', 'Did you email your Realtors the weekly market update video?', 'weekly', true, 2),
@@ -86,20 +91,19 @@ insert into _sm_items values
   ('database', 'did-you-send-a-letter-from-the-heart-lfth-this-quarter', 'Did you send a Letter From The Heart (LFTH) this quarter?', 'quarterly', true, 11),
   ('database', 'did-you-hold-your-client-appreciation-event-this-half-year-2', 'Did you hold your Client Appreciation Event this half-year (2 per year)?', 'semiannual', true, 12),
   ('database', 'did-you-run-the-12-days-of-xmas-with-a-sponsor-each-day', 'Did you run the 12 Days of Xmas with a sponsor each day?', 'annual', true, 13),
-  ('online-presence', 'did-you-post-on-social-3-ig-1-linkedin-google-review-post-to', 'Did you post on social (3 IG, 1 LinkedIn, Google Review post) today?', 'daily', true, 0),
-  ('online-presence', 'did-you-do-your-social-post-today', 'Did you do your Social: Post today?', 'daily', true, 1),
-  ('online-presence', 'did-you-do-your-social-comments-today-25-x-4', 'Did you do your Social: Comments today (25 x 4)?', 'daily', true, 2),
-  ('online-presence', 'did-you-do-your-social-dms-today-25-x-4', 'Did you do your Social: DMs today (25 x 4)?', 'daily', true, 3),
-  ('online-presence', 'did-you-post-on-youtube-today', 'Did you post on YouTube today?', 'daily', true, 4),
-  ('online-presence', 'did-you-review-and-execute-your-marketing-calendar-today', 'Did you review and execute your marketing calendar today?', 'daily', true, 5),
-  ('online-presence', 'is-your-calendar-written-with-no-white-space', 'Is your calendar written with no white space?', 'daily', true, 6),
-  ('online-presence', 'is-your-calendar-accuracy-90-or-better', 'Is your calendar accuracy 90% or better?', 'daily', true, 7),
-  ('online-presence', 'did-you-ask-every-lead-and-realtor-you-work-with-for-a-googl', 'Did you ask every lead and Realtor you work with for a Google Review?', 'daily', true, 8),
-  ('online-presence', 'did-you-follow-up-on-your-google-review-requests', 'Did you follow up on your Google Review requests?', 'daily', true, 9),
-  ('personal-development', 'did-you-journal-for-your-business-today', 'Did you journal for your business today?', 'daily', true, 0),
-  ('personal-development', 'did-you-read-chrisman-nrep-and-mortgage-daily-today', 'Did you read Chrisman, NREP and Mortgage Daily today?', 'daily', true, 1),
-  ('personal-development', 'were-you-coached-twice-this-month', 'Were you coached twice this month?', 'monthly', true, 2),
-  ('personal-development', 'did-you-coach-someone-this-month', 'Did you coach someone this month?', 'monthly', true, 3);
+  ('online-presence', 'did-you-make-3-social-posts-this-week', 'Did you make 3 social posts this week?', 'weekly', true, 0),
+  ('online-presence', 'did-you-do-your-social-comments-today-25-x-4', 'Did you do your Social: Comments today (25 x 4)?', 'daily', true, 1),
+  ('online-presence', 'did-you-do-your-social-dms-today-25-x-4', 'Did you do your Social: DMs today (25 x 4)?', 'daily', true, 2),
+  ('online-presence', 'did-you-post-one-youtube-video-this-week', 'Did you post one YouTube video this week?', 'weekly', true, 3),
+  ('online-presence', 'did-you-review-and-execute-your-marketing-calendar-today', 'Did you review and execute your marketing calendar today?', 'daily', true, 4),
+  ('online-presence', 'did-you-ask-every-lead-and-realtor-you-work-with-for-a-googl', 'Did you ask every lead and Realtor you work with for a Google Review?', 'daily', true, 5),
+  ('online-presence', 'did-you-follow-up-on-your-google-review-requests', 'Did you follow up on your Google Review requests?', 'daily', true, 6),
+  ('business-development', 'do-you-have-a-business-plan', 'Do you have a business plan?', 'monthly', true, 0),
+  ('business-development', 'did-you-review-your-business-plan-this-week', 'Did you review your business plan this week?', 'weekly', true, 1),
+  ('business-development', 'did-you-journal-for-your-business-today', 'Did you journal for your business today?', 'daily', true, 2),
+  ('business-development', 'did-you-read-chrisman-nrep-and-mortgage-daily-today', 'Did you read Chrisman, NREP and Mortgage Daily today?', 'daily', true, 3),
+  ('business-development', 'were-you-coached-twice-this-month', 'Were you coached twice this month?', 'monthly', true, 4),
+  ('business-development', 'did-you-coach-someone-this-month', 'Did you coach someone this month?', 'monthly', true, 5);
 
 insert into public.sc_library_items
   (category_id, code, label, default_frequency, is_default_on, sort_order)
@@ -126,12 +130,12 @@ where i.category_id = c.id and i.is_active
 delete from public.sc_categories c
 using public.sc_templates t
 where t.id = c.template_id and t.slug = 'sales-marketing'
-  and c.code not in ('sales-activity','time-management','realtor-partners','database','online-presence','personal-development')
+  and c.code not in ('sales-activity','time-management','realtor-partners','database','online-presence','business-development')
   and not exists (select 1 from public.sc_user_scorecard_items u where u.category_id = c.id);
 
 drop table if exists _sm_items;
 
--- Verify: expect 49 active items across 6 categories
+-- Verify: expect 53 active items across 6 categories
 select c.code, count(*) filter (where i.is_active) as items
 from public.sc_categories c
 join public.sc_templates t on t.id = c.template_id and t.slug = 'sales-marketing'
