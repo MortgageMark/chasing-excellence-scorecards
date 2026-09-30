@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=17;
+const APP_RELEASE=18;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -463,7 +463,7 @@ function score(P){
     const a=adj[c.id]||{done:0,due:0};
     const hit=dueItems.filter(i=>isDone(i,P)).length+a.done, due=dueItems.length+a.due;
     cats.push({id:c.id,name:c.name,pct:due?hit/due:null,
-               done:hit,due:due,sel:mine.length,total:all.length});
+               done:hit,due:due,sel:mine.length,total:all.length,xdue:a.due});
   });
   const live=cats.filter(c=>c.pct!==null);
   return {cats,
@@ -843,7 +843,7 @@ function checkin(s){
     if(!mine.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
     h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct))+'</div></div>'
-      +'<div class="catmeta">'+(W?cs.sel+' selected &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
+      +'<div class="catmeta">'+(W?cs.sel+' this week'+(cs.xdue?' + '+cs.xdue+' from &ldquo;Beyond the week&rdquo; below':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
       const due=W?true:isDue(i.freq,P.m,i.target_month);
