@@ -216,7 +216,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=18;
+const APP_RELEASE=19;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -435,6 +435,31 @@ const catTitle=c=>isWeekly()?String.fromCharCode(65+S.cats.indexOf(c))+'. '+c.na
    +1 due). An item that is officially due this week, meaning the first-Friday
    week that closes its period, counts as due if it was not answered yes (or
    N/A). Anything else is left out, so an item that is not due yet costs nothing. */
+/* Is the period that just ended officially due for this item in week P? (first-Friday week,
+   and the period did not end before the card was started) */
+function closingFor(it,P){
+  const p=CYC[it.freq];
+  if(!p||!(P.fri.getDate()<=7&&P.fri.getMonth()%p===0)) return false;
+  const startD=S.card?new Date(S.card.started_at+"T00:00:00"):P.fri;
+  return cycleStart(it.freq,P.fri,1)>=cycleStart(it.freq,startD,0);
+}
+/* The longer-cycle items that count toward a section this week: ticked yes this week, or due now
+   and not done. Items marked N/A while due are included (greyed) so they can be changed back. */
+function longCounted(P){
+  const out={};
+  const push=(it,key)=>{ (out[it.category_id]||(out[it.category_id]=[])).push({it:it,key:key}); };
+  liveItems().forEach(it=>{
+    if(!it.is_selected||isShortCycle(it)||!CYC[it.freq]) return;
+    const ck=cycleKey(it.freq,P.fri,0), pk=cycleKey(it.freq,P.fri,1);
+    const credited=k=>S.entries[it.id+'|'+k]===true&&S.credit[it.id+'|'+k]===P.key;
+    if(closingFor(it,P)){
+      const v=S.entries[it.id+'|'+pk];
+      if(v!==true||credited(pk)) push(it,pk);
+    }
+    if(credited(ck)) push(it,ck);
+  });
+  return out;
+}
 function longAdjust(P){
   const out={};
   const add=(cid,d,u)=>{const o=out[cid]||(out[cid]={done:0,due:0});o.done+=d;o.due+=u;};
@@ -444,12 +469,10 @@ function longAdjust(P){
     if(S.credit[k]!==P.key||S.entries[k]!==true) return;
     const it=byId[k.split('|')[0]]; if(it) add(it.category_id,1,1);
   });
-  const startD=S.card?new Date(S.card.started_at+"T00:00:00"):P.fri;
   Object.keys(byId).forEach(id=>{
-    const it=byId[id], p=CYC[it.freq];
-    if(!p||!(P.fri.getDate()<=7&&P.fri.getMonth()%p===0)) return;
-    /* Do not penalise for a period that ended before the card was started. */
-    if(cycleStart(it.freq,P.fri,1)<cycleStart(it.freq,startD,0)) return;
+    const it=byId[id];
+    /* closingFor also skips periods that ended before the card was started. */
+    if(!closingFor(it,P)) return;
     const v=S.entries[id+'|'+cycleKey(it.freq,P.fri,1)];
     if(v!==true&&v!=='na') add(it.category_id,0,1);
   });
@@ -837,30 +860,38 @@ function checkin(s){
     +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is this week\'s items. The optional monthly, quarterly and yearly ones below only count when you tick yes, or in the week they\'re due.'
        :'Items outside their cycle and items marked N/A are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.')+'</div>';
   let any=false;
+  const counted=W?longCounted(P):{};
   S.cats.forEach(c=>{
     const mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
+    const extra=counted[c.id]||[];
     if(liveItems().some(i=>i.category_id===c.id&&i.is_selected)) any=true;
-    if(!mine.length) return;
+    if(!mine.length&&!extra.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
     h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct))+'</div></div>'
-      +'<div class="catmeta">'+(W?cs.sel+' this week'+(cs.xdue?' + '+cs.xdue+' from &ldquo;Beyond the week&rdquo; below':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
+      +'<div class="catmeta">'+(W?cs.sel+' this week'+(cs.xdue?' + '+cs.xdue+' due or ticked from your longer list':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
       const due=W?true:isDue(i.freq,P.m,i.target_month);
       h+=itemBtn(i,ekey(i,P),due,due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'));
     });
+    if(extra.length){
+      h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">From your monthly / quarterly / yearly list &mdash; due or ticked this week</div>';
+      extra.forEach(x=>{ h+=itemBtn(x.it,x.key,true,cycleName(x.it.freq,new Date(x.key+'T00:00:00')),P.key); });
+    }
     h+='</div>';
   });
-  if(W) h+=longCycle(P);
+  if(W) h+=longCycle(P,counted);
   if(!any) h+='<div class="empty">Nothing selected yet. Open <b>Items</b> and pick what applies to you.</div>';
   return h;
 }
 
 /* Weekly template only: the optional monthly / quarterly / 6-month / yearly items. */
-function longCycle(P){
+function longCycle(P,counted){
   const groups=[['m','Monthly','month'],['q','Quarterly','quarter'],['s','Every 6 months','half-year'],['a','Yearly','year']];
   const catPos=id=>S.cats.findIndex(c=>c.id===id);
   let h='',any=false;
+  const shown={};
+  Object.keys(counted||{}).forEach(cid=>counted[cid].forEach(x=>{ shown[x.it.id+'|'+x.key]=1; }));
   groups.forEach(g=>{
     const f=g[0];
     const items=liveItems().filter(i=>i.is_selected&&i.freq===f)
@@ -881,13 +912,15 @@ function longCycle(P){
       const na=items.filter(i=>S.entries[i.id+'|'+key]==='na').length;
       const done=items.filter(i=>S.entries[i.id+'|'+key]===true).length;
       const isClose=back===1;
+      const vis=items.filter(i=>!shown[i.id+'|'+key]);
+      if(!vis.length) return;
       h+='<div class="catblock" style="margin-top:14px'+(isClose?';border:1px solid var(--gold);border-radius:12px;padding:12px':'')+'">'
         +'<div class="cathead"><div class="catname" style="font-size:'+(isClose?'15':'14')+'px">'
         +(isClose?'Close out '+esc(nm)+' &middot; '+g[1].toLowerCase():g[1]+' &middot; '+esc(nm))+'</div>'
         +'<div class="catpct" style="font-size:13px">'+done+' of '+(items.length-na)+'</div></div>'
         +'<div class="catmeta">'+(isClose?'Due this week. Answer for '+esc(nm)+' &mdash; anything not done counts against this week.'
            :'Do these once each '+g[2]+' &mdash; tick when you\'ve done it.')+'</div>';
-      items.forEach(i=>{
+      vis.forEach(i=>{
         const c=S.cats.find(x=>x.id===i.category_id);
         h+=itemBtn(i,key,true,c?c.name:'',P.key);
       });
