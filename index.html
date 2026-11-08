@@ -32,11 +32,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:calc(16.5px*var(--z))}
 .iconbtn:hover{color:var(--bone);border-color:var(--muted)}
 .avatar{width:42px;height:42px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:800;font-size:calc(16.5px*var(--z));display:grid;place-items:center;text-transform:uppercase;flex:none}
-.menu{position:absolute;right:14px;top:60px;width:240px;background:var(--slate);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:6px;z-index:40}
+.menu{position:absolute;right:14px;top:60px;width:270px;max-width:calc(100vw - 28px);background:var(--slate);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:6px;z-index:40}
 .menu .who{padding:10px 12px;font-size:calc(13.5px*var(--z));color:var(--muted);border-bottom:1px solid var(--line);margin-bottom:4px;word-break:break-all}
 .menu button{display:block;width:100%;text-align:left;padding:14px 14px;border-radius:8px;font-size:calc(15.5px*var(--z));color:var(--bone)}
 .menu button:hover{background:var(--raise)}
 .menu button.danger{color:var(--alert)}
+.menu .ver{margin-top:4px;padding:10px 14px 6px;border-top:1px solid var(--line);font-size:calc(12px*var(--z));color:var(--muted);font-variant-numeric:tabular-nums}
 .overlay{position:fixed;inset:0;background:rgba(5,10,16,.72);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:calc(40px + env(safe-area-inset-top)) 16px 40px;overflow:auto}
 .modal{background:var(--slate);border:1px solid var(--line);border-radius:14px;width:100%;max-width:440px;padding:20px}
 .modal h2{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(20px*var(--z));margin:0 0 14px}
@@ -223,6 +224,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
       <button id="menuDue" style="display:none"></button>
       <button id="menuSettings">Settings</button>
       <button id="menuOut" class="danger">Sign out</button>
+      <div class="ver" id="menuVer"></div>
     </div>
   </div></div>
   <div class="overlay" id="settingsOverlay" style="display:none"><div class="modal" id="settingsBody"></div></div>
@@ -247,7 +249,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=27;
+const APP_RELEASE=28;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -924,6 +926,7 @@ function setShowLonger(){
 }
 /* The menu entry only applies on weekly / daily scorecards. */
 function refreshMenu(){
+  const v=$("menuVer"); if(v) v.textContent='Version '+fmtBuild(BUILD_ID);
   const b=$("menuLonger"); if(!b) return;
   const on=!!(S.template&&isWeekly());
   b.style.display=on?"block":"none";
@@ -1459,10 +1462,10 @@ function setSort(m){ S.sortMode=m; S.editing=null; render(); }
 
 /* ---- Version stamp: the build time, shown as YYYY/MMDD HH:MM in the viewer's own time ---- */
 function fmtBuild(id){
-  const m=/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(id||'');
+  const m=/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})(\d{2})?(?!\d)/.exec(id||'');
   if(!m) return 'dev build';
-  const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5])), p=n=>String(n).padStart(2,'0');
-  return d.getFullYear()+'/'+p(d.getMonth()+1)+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+  const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],m[6]?+m[6]:0)), p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'/'+p(d.getMonth()+1)+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+(m[6]?':'+p(d.getSeconds()):'');
 }
 const footerHtml=()=>'<div style="text-align:center;font-size:calc(12px*var(--z));color:var(--muted);margin-top:30px">Version '+esc(fmtBuild(BUILD_ID))+'</div>';
 
