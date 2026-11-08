@@ -1246,7 +1246,7 @@ function setOnlyUsing(){
 const shownItems=catId=>{
   let all=catItems(catId);
   if(S.todFilter) all=all.filter(i=>todOf(i)===S.todFilter);
-  return S.onlyUsing?all.filter(i=>i.is_selected||S.keepShown[i.id]):all;
+  return all.filter(i=>i.is_selected||S.keepShown[i.id]);
 };
 function setTodFilter(v){ S.todFilter=v||''; render(); }
 /* Delete one of the user's own added items. It is soft-deleted (entries are kept). */
@@ -1866,21 +1866,43 @@ function itemRow(i,groupId,catName){
     +'<span class="grip'+(S.sortMode===need?'':' dim')+'" title="Drag to reorder" onpointerdown="dragStart(event,\''+groupId+'\')">&#8801;</span>'
     +'</div>';
 }
+const ideaItems=()=>liveItems().filter(i=>!i.is_selected&&!S.keepShown[i.id]);
+function openIdeas(){ S.ideas=true; S.keepShown={}; window.scrollTo(0,0); render(); }
+function closeIdeas(){ S.ideas=false; window.scrollTo(0,0); render(); }
+function addFromIdeas(id){ patchItem(id,{is_selected:true}); }
+function ideasScreen(){
+  let h='<div class="itop"><button class="chip" onclick="closeIdeas()">&#8249; Back to Items</button></div>'
+    +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);margin:12px 4px 0;line-height:1.45">Ideas you aren&rsquo;t using yet. Tap <b>Add</b> to move one to your Items. Tap a name to edit it first.</div>';
+  let n=0;
+  S.cats.forEach(c=>{
+    const list=catItems(c.id).filter(i=>!i.is_selected);
+    if(!list.length) return; n+=list.length;
+    h+='<div class="seglbl" style="margin-top:20px">'+esc(catTitle(c))+'</div><div style="display:flex;flex-direction:column;gap:2px">'
+      +list.map(i=>'<div class="selrow" data-row="'+i.id+'">'
+        +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
+        +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+'<span class="isub">'+schedSummary(i)+'</span>'
+        +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
+        +'<button class="chip on" onclick="addFromIdeas(\''+i.id+'\')">Add</button></div>').join('')+'</div>';
+  });
+  if(!n) h+='<div class="allclear" style="text-align:center;padding:30px 0">No more ideas &mdash; everything is already in your Items.</div>';
+  return h;
+}
 function itemsScreen(){
-  const sorts=[['tod','Time of day (no sections)'],['active','Active only (no sections)'],['manual','My order'],['freq','Frequency'],['az','A – Z']];
+  if(S.ideas) return ideasScreen();
+  const sorts=[['tod','Time of day (no sections)'],['manual','My order'],['freq','Frequency'],['az','A – Z']];
   const allCol=S.cats.length>1&&S.cats.every(c=>S.collapsed[c.id]);
   let h='<div class="itop"><select class="fsel" aria-label="Sort within each category" onchange="setSort(this.value)">'
     +sorts.map(p=>'<option value="'+p[0]+'" '+(S.sortMode===p[0]?'selected':'')+'>Sort: '+p[1]+'</option>').join('')+'</select>'
     +'<button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>'
     +'<div class="itop2"><select class="chip" aria-label="Filter by time of day" onchange="setTodFilter(this.value)"><option value="">All times</option>'
     +TODS.map(t=>'<option value="'+t[0]+'" '+(S.todFilter===t[0]?'selected':'')+'>'+t[1]+' only</option>').join('')+'</select>'
-    +'<button class="chip'+(S.onlyUsing?' on':'')+'" onclick="setOnlyUsing()">Only what I&rsquo;m using</button>'
+    +'<button class="chip on" onclick="openIdeas()">Ideas ('+ideaItems().length+')</button>'
     +(S.cats.length>1?'<button class="chip" onclick="foldAll('+(!allCol)+')">'+(allCol?'Expand all':'Collapse all')+'</button>':'')+'</div>';
   if(S.sortMode==='tod'||S.sortMode==='active'){
     const only=S.sortMode==='active', catOf={}; S.cats.forEach(c=>{ catOf[c.id]=c.name; });
     TODS.forEach(t=>{
       if(S.todFilter&&S.todFilter!==t[0]) return;
-      const all=todList(t[0]), mine=(only||S.onlyUsing)?all.filter(i=>i.is_selected||(!only&&S.keepShown[i.id])):all;
+      const all=todList(t[0]), mine=all.filter(i=>i.is_selected||S.keepShown[i.id]);
       if(!mine.length) return;
       h+='<div class="todhead" style="margin-top:20px"><span>'+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
         +'<div style="display:flex;flex-direction:column;gap:2px">'+mine.map(i=>itemRow(i,'tod:'+t[0],catOf[i.category_id])).join('')+'</div>';
@@ -1897,7 +1919,7 @@ function itemsScreen(){
       +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
     mine.forEach(i=>{ h+=itemRow(i,c.id); });
-    if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
+    if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing active here. Add some from Ideas.</div>';
     h+='</div></div>';
   });
   if(S.template.owner){
@@ -1909,7 +1931,7 @@ function itemsScreen(){
 }
 /* Every scorecard opens in "My order": the template's order until the user moves things. */
 function defSort(){
-  try{ const v=localStorage.getItem('ces-sort-'+(S.template&&S.template.id)); if(['manual','active','freq','tod','az'].indexOf(v)>=0) return v; }catch(e){}
+  try{ const v=localStorage.getItem('ces-sort-'+(S.template&&S.template.id)); if(v==='active') return 'tod'; if(['manual','freq','tod','az'].indexOf(v)>=0) return v; }catch(e){}
   return 'manual';
 }
 const freqKeys=()=>Object.keys(FREQ);
@@ -2258,6 +2280,7 @@ function render(){
   }
   const s=score(viewP());
   renderNav(scorecardTabs());
+  if(S.tab!=='items') S.ideas=false;
   let h='<div style="height:14px"></div>';
   h += S.tab==='checkin' ? checkin(s)
      : S.tab==='score'   ? wheel(s)
