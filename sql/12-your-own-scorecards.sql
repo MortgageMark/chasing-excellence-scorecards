@@ -209,3 +209,6 @@ grant  execute on function public.sc_copy_template(uuid, text, text)      to aut
 grant  execute on function public.sc_add_category(uuid, text)             to authenticated;
 grant  execute on function public.sc_rename_template(uuid, text)          to authenticated;
 grant  execute on function public.sc_delete_template(uuid)                to authenticated;
+
+-- Make the new functions callable straight away (Supabase's API caches the function list).
+notify pgrst, 'reload schema';
