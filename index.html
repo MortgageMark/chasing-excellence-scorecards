@@ -609,6 +609,25 @@ function todColors(){
   return S.todColors;
 }
 const todBg=t=>todColors()[t]+'2B';
+/* Default icon for an item that has none: first keyword match on its name, else a generic one. */
+const ICON_GUESS=[
+ ['fast','⏳'],['cold shower|shower','🚿'],['sauna|sweat','🧖'],['strength|mobility|chiro','💪'],['physical|blood|doctor|skin check|eye exam|health','🩺'],['dentist','🦷'],['sunscreen','🧴'],
+ ['protein|portion|eat healthy|meal|pink drink','🥗'],['alcohol','🍷'],['wake|snooze','⏰'],['no phone|phone-free|unplug|digital|screens|\\btv\\b','📵'],['outdoor|green time','🌳'],
+ ['therapy|counsel|affirm|positive|drained|open, honest|apolog','🧠'],['bible|verse|faith|mentor someone in faith|ritual|confession|religious|small group|mission','🙏'],['church','⛪'],
+ ['couples trip|trip|vacation|travel','✈️'],['date|marriage|couples|love language|spouse|surprise|gesture','❤️'],['kid|daughter|daddy|school|camp|child|quality time','👪'],
+ ['birthday|call|talk-to|voicemail','📞'],['text|sms','💬'],['note|letter|thank|kind words|card','✉️'],['review from|ask for a review|google review','⭐'],
+ ['referral|realtor|network|coach|mastermind|event|happy hour|host|hospitality|appreciation|serve|community|check in on|someone|friend|initiat','🤝'],
+ ['podcast','🎧'],['guitar|creative','🎸'],['spanish|learn|class|course|teach|training|read\\b|disc|enneagram|five qualities','📚'],
+ ['vision|goal|rocks|bucket|plan|priorit|rock|misogi|retreat','🎯'],['time block|calendar|time:|time tracker|track your time|single-tasking|day off|me.? day','📅'],
+ ['inbox|email|crm|database|vip|pipeline|activity tracker|whale|eoa|xmas|lfth','📧'],['content|marketing|social','📣'],
+ ['p and l|profit|expense|budget|save|debt|retire|net worth|portfolio|credit|insurance|tax|emergency fund|subscription|commission|giving|spending|purchase|wills|beneficiar|revolving|money|\\$','💰'],
+ ['numbers|highway|magic|power|gtx|shop','📊'],['business|review|weekly|annual|quarter|monthly','📝']
+];
+function guessIcon(name){
+  const t=(name||'').toLowerCase();
+  for(let k=0;k<ICON_GUESS.length;k++){ if(new RegExp(ICON_GUESS[k][0]).test(t)) return ICON_GUESS[k][1]; }
+  return '✅';
+}
 const ICONS=['🙏','💧','🛏️','😴','🧘','🚶','🏃','🚴','💪','🏋️','🥗','🍳','🍎','☕','💊','🚿','⚖️','📖','✍️','📝','🧠','🎧','📞','💬','📧','✉️','📣','🎥','📅','🎯','📈','💰','❤️','💑','👪','🤝','⛪','🌱','☀️','🌙','⭐','🏠','🧹','🛒','🎁','📱','✅','🏆','🥤','🍽️','🥦','🍌','🥑','🍇','🛌','⏰','⌚','🧴','🪥','🦷','🩺','🧘‍♀️','🤸','⚽','🏀','🏊','⛰️','🧗','🥾','🎾','⛳','🎨','🎸','🎹','🎤','📚','🎓','🔬','💡','💻','🖥️','⌨️','📊','🗂️','📁','🧾','💵','🏦','💳','📈','🔑','🏡','🛠️','🔧','🚗','✈️','🧺','🪴','🐕','🐈','👶','👫','🎉','🤗','🙌','👍','🔥','🚀','🌟','💎','🎖️','🥇','📍','🗓️','🔔','📌','🧭','🕊️','✝️','📿','🌅','🌳','🌊','🌈'];
 
 /* ---- Due and late ------------------------------------------------------------------
@@ -944,6 +963,7 @@ async function loadCard(synced){
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
+  S.items.forEach(i=>{ if(i.icon==null) i.icon=guessIcon(label(i)); });
   S.entries={}; S.credit={};
   (r[1].data||[]).forEach(e=>{
     const k=e.user_scorecard_item_id+'|'+e.period_start;
@@ -1227,7 +1247,7 @@ async function addItem(catId,text){
       sort_order:9000+liveItems().filter(i=>i.category_id===catId).length
     }).select().single());
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
-      renamed_label:null,lib_label:null,lib_short:null,lib_code:null,freq:f,target_month:tm,is_selected:true,
+      icon:guessIcon(text),renamed_label:null,lib_label:null,lib_short:null,lib_code:null,freq:f,target_month:tm,is_selected:true,
       sort_order:row.sort_order,removed_at:null,days:null});
     openEdit(row.id);   /* open the edit screen so repeats, days and icon can be picked */
   }catch(e){}
@@ -1978,33 +1998,33 @@ function settingsHtml(){
   const inCard=!!(S.template&&S.card&&isWeekly());
   const sw=(on,fn,txt)=>'<div class="selrow'+(on?' on':'')+'" style="cursor:pointer" onclick="'+fn+'()"><span class="tog"></span><span class="ilabel">'+txt+'</span></div>';
   let h='<div style="height:14px"></div>';
-  h+='<div class="card"><div class="eyebrow" style="margin-bottom:8px">Account</div>'
-    +'<div style="font-size:calc(16px*var(--z));word-break:break-all">'+esc(email)+'</div>'
-    +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:4px">Time zone: '+esc(tz||'—')+'</div>'
-    +'<div class="cardact"><button class="pick" style="color:var(--alert)" onclick="signOut()">Sign out</button></div></div>';
   if(inCard){
     h+='<div class="card"><div class="eyebrow" style="margin-bottom:10px">This scorecard</div>'
       +sw(S.showLonger,'setShowLonger','Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section')
       +(isDaily()?sw(S.dueOnly,'setDueOnly','Only show what&rsquo;s due now'):'')+'</div>';
   }
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Open this device to</div>'
+    +'<select class="formfld" id="stStart" onchange="setStart(this.value)"><option value="">All scorecards</option>'
+    +S.templates.map(t=>'<option value="'+t.id+'" '+(startPref()===t.id?'selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>'
+    +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;line-height:1.45">Applies to this phone or computer only. To put a scorecard on your iPhone home screen: open it in Safari, tap Share, then Add to Home Screen.</div></div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Text size</div>'
     +'<select class="formfld" id="stText" onchange="setTextSize(this.value)">'
     +[['standard','Standard'],['large','Large'],['xl','Extra large']].map(o=>'<option value="'+o[0]+'" '+(textSize()===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Time-of-day colors</div>'
     +TODS.map(t=>'<div class="todcol"><span>'+t[2]+' '+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')+'</div>';
-  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Open this device to</div>'
-    +'<select class="formfld" id="stStart" onchange="setStart(this.value)"><option value="">All scorecards</option>'
-    +S.templates.map(t=>'<option value="'+t.id+'" '+(startPref()===t.id?'selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>'
-    +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;line-height:1.45">Applies to this phone or computer only. To put a scorecard on your iPhone home screen: open it in Safari, tap Share, then Add to Home Screen.</div></div>';
-  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Change password</div>'
-    +'<input class="formfld" type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
-    +'<input class="formfld" type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
-    +'<div class="cardact"><button class="pick" onclick="changePassword()">Update password</button></div></div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">App version</div>'
     +'<div style="font-size:calc(16px*var(--z));font-variant-numeric:tabular-nums">'+esc(fmtBuild(BUILD_ID))+'</div>'
     +'<div style="font-size:calc(13px*var(--z));color:var(--muted)">Your local time</div>'
     +'<div class="cardact"><button class="pick" onclick="checkUpdate()">Check for updates</button></div>'
     +'<div id="stMsg" style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;min-height:18px"></div></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Change password</div>'
+    +'<input class="formfld" type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
+    +'<input class="formfld" type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
+    +'<div class="cardact"><button class="pick" onclick="changePassword()">Update password</button></div></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:8px">Account</div>'
+    +'<div style="font-size:calc(16px*var(--z));word-break:break-all">'+esc(email)+'</div>'
+    +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:4px">Time zone: '+esc(tz||'—')+'</div>'
+    +'<div class="cardact"><button class="pick" style="color:var(--alert)" onclick="signOut()">Sign out</button></div></div>';
   return h;
 }
 function setTodColor(slot,hex){
