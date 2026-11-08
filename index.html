@@ -178,6 +178,9 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .grid th,.grid td{border:1px solid var(--line);text-align:center;padding:0;font-size:calc(12.5px*var(--z))}
 .grid th{background:var(--raise);color:var(--muted);font-weight:600;padding:5px 2px;min-width:30px;line-height:1.15}
 .grid th small{display:block;font-size:.85em;font-weight:400}
+.dayrow{display:flex;gap:6px;margin-top:8px}
+.dayb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#0C2230;color:var(--muted);font-weight:700;font-size:calc(14px*var(--z))}
+.dayb.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .grid th.today{color:var(--gold)}
 .grid td.nm{text-align:left;padding:7px 8px;min-width:128px;max-width:170px;position:sticky;left:0;background:var(--slate);z-index:2;font-size:calc(13.5px*var(--z))}
 .grid th.nm{position:sticky;left:0;z-index:3;text-align:left;padding-left:8px}
@@ -670,7 +673,11 @@ const ekey=(i,P)=>(!P.weekly||isShortCycle(i))?P.key:cycleKey(i.freq,P.fri,0);
 const isDone=(i,P)=>S.entries[i.id+'|'+ekey(i,P)]===true;
 const isNA=(i,P)=>S.entries[i.id+'|'+ekey(i,P)]==='na';
 /* Does this item count toward the score of period P? */
-const scored=(i,P)=>P.weekly?isShortCycle(i):isDue(i.freq,P.m,i.target_month);
+/* Days of the week an item is due (days = '12345', 1 = Mon ... 7 = Sun). Only daily items on daily cards use it; blank = every day. */
+const isoDow=d=>((d.getDay()+6)%7)+1;
+const hasDays=i=>!!i.days&&i.days.length<7&&isDaily()&&i.freq==='d';
+const onDay=(i,P)=>!hasDays(i)||P.kind!=='daily'||i.days.indexOf(String(isoDow(P.mon)))>=0;
+const scored=(i,P)=>P.weekly?(isShortCycle(i)&&onDay(i,P)):isDue(i.freq,P.m,i.target_month);
 const catTitle=c=>isWeekly()?String.fromCharCode(65+S.cats.indexOf(c))+'. '+c.name:c.name;
 
 /* ===================================================================
@@ -921,6 +928,7 @@ async function loadCard(synced){
     tod:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.tod!=null?x.tod:(L.tod!=null?L.tod:null); })(),
     icon:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.icon!=null?x.icon:(L.icon!=null?L.icon:null); })(),
     color:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.color!=null?x.color:(L.color!=null?L.color:null); })(),
+    days:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.days!=null?x.days:(L.days!=null?L.days:null); })(),
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
@@ -1008,6 +1016,28 @@ function setSched(id,which,part,val){
 function setField(id,field,val){
   const patch={}; patch[field]=val; S.iconPick=null; patchItem(id,patch,patch);
 }
+function toggleDay(id,n){
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  const cur=(it.days||'1234567').split('').filter(Boolean);
+  const k=String(n), at=cur.indexOf(k);
+  if(at>=0){ if(cur.length===1) return; cur.splice(at,1); } else cur.push(k);
+  const v=cur.sort().join('');
+  patchItem(id,{days:v},{days:v});
+}
+function setDays(id,v){ patchItem(id,{days:v},{days:v}); }
+const DAYLET=['M','T','W','T','F','S','S'];
+function daysRow(i){
+  const cur=i.days||'1234567';
+  const b=DAYLET.map((l,n)=>'<button class="dayb'+(cur.indexOf(String(n+1))>=0?' on':'')+'" onclick="toggleDay(\''+i.id+'\','+(n+1)+')" aria-label="'+DOWLATE[n+1]+'">'+l+'</button>').join('');
+  const pre=(v,t)=>'<button class="pick" style="padding:6px 10px;font-size:calc(13px*var(--z))" onclick="setDays(\''+i.id+'\',\''+v+'\')">'+t+'</button>';
+  return '<div class="srow" style="display:block"><span class="sk">Days</span><div class="dayrow">'+b+'</div><div style="display:flex;gap:6px;margin-top:8px">'+pre('1234567','Every day')+pre('12345','Mon–Fri')+pre('135','Mon Wed Fri')+pre('67','Weekends')+'</div></div>';
+}
+function daysText(i){
+  if(!hasDays(i)) return '';
+  if(i.days==='12345') return 'Mon–Fri';
+  if(i.days==='67') return 'Sat, Sun';
+  return i.days.split('').map(n=>DOWSHORT[+n]==='the weekend'?'Sat':DOWSHORT[+n]).join(' ');
+}
 function toggleIconPick(id){ S.iconPick=(S.iconPick===id)?null:id; render(); }
 async function setGlobalFields(id){
   if(!confirm('Make this item\'s repeat, due, late, time of day and icon the default for every user? People who already changed theirs keep theirs.')) return;
@@ -1042,7 +1072,7 @@ function renderSheet(){
     +row('Color',swatches)
     +row('Section','<select class="fsel" style="width:auto;max-width:210px" onchange="setField(\''+i.id+'\',\'category_id\',this.value)">'+cats+'</select>')
     +'</div>'
-    +'<div class="sheetcard">'+row('Repeats',parts.repeat)
+    +'<div class="sheetcard">'+row('Repeats',parts.repeat)+(isDaily()&&i.freq==='d'?daysRow(i):'')
     +(schedApplies(i)?row('Due',parts.due)+row('Late after',parts.late):'')+'</div>'
     +'<div class="sheetcard"><div class="srow" style="border:0;padding-bottom:6px"><span class="sk">Time of day</span></div><div class="tpills">'
     +TODS.map(o=>'<button class="tp'+(t===o[0]?' on':'')+'" onclick="setField(\''+i.id+'\',\'tod\',\''+o[0]+'\')">'+o[1]+'</button>').join('')+'</div></div>'
@@ -1073,7 +1103,7 @@ function schedParts(i){
 /* Due / late only matter where an answer belongs to a longer period than the card's own. */
 const schedApplies=i=>isWeekly()&&i.freq!=='d'&&!(i.freq==='w'&&!isDaily());
 function schedSummary(i){
-  return 'Repeats '+FREQ[i.freq]+(schedApplies(i)?' &middot; Due '+whenText(i,dueAt(i),false)+' &middot; Late after '+whenText(i,lateAt(i),true):'');
+  return 'Repeats '+FREQ[i.freq]+(daysText(i)?' &middot; '+daysText(i):'')+(schedApplies(i)?' &middot; Due '+whenText(i,dueAt(i),false)+' &middot; Late after '+whenText(i,lateAt(i),true):'');
 }
 function toggleSel(id){
   const it=S.items.find(i=>i.id===id);
@@ -1141,7 +1171,7 @@ function setFreq(id,f){
   if(PERIOD[f]&&!tm) tm=spreadTargetMonth(f,liveItems().filter(x=>x.freq===f).length);
   if(!PERIOD[f]) tm=null;
   /* due / late mean different things per cadence, so they go back to the defaults */
-  patchItem(id,{frequency:F2DB[f],target_month:tm,due_at:null,late_at:null},{freq:f,target_month:tm,due_at:null,late_at:null});
+  patchItem(id,{frequency:F2DB[f],target_month:tm,due_at:null,late_at:null,days:null},{freq:f,target_month:tm,due_at:null,late_at:null,days:null});
 }
 function saveName(id,v){
   const val=(v||'').trim(), it=S.items.find(i=>i.id===id);
@@ -1172,8 +1202,8 @@ async function addItem(catId){
     }).select().single());
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
       renamed_label:null,lib_label:null,lib_short:null,lib_code:null,freq:f,target_month:tm,is_selected:true,
-      sort_order:row.sort_order,removed_at:null});
-    render();
+      sort_order:row.sort_order,removed_at:null,days:null});
+    if(isDaily()&&f==='d') openEdit(row.id); else render();   /* daily items: open the edit screen so days can be picked */
   }catch(e){}
 }
 async function resetCard(){
@@ -1345,7 +1375,7 @@ const isResolved=r=>{ const v=rowVal(r); return v===true||v==='na'; };
 function dayRowsData(P,counted){
   const rows=[];
   S.cats.forEach(c=>{
-    catItems(c.id).filter(i=>i.is_selected&&isShortCycle(i)).forEach(i=>rows.push({it:i,key:ekey(i,P),right:'',credit:''}));
+    catItems(c.id).filter(i=>i.is_selected&&isShortCycle(i)&&onDay(i,P)).forEach(i=>rows.push({it:i,key:ekey(i,P),right:'',credit:''}));
     extraRows(c,P,counted).forEach(x=>{
       const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
       rows.push({it:x.it,key:x.key,right:rowTag(x.it,x.key,P.fri,prior),credit:P.key});
@@ -1382,7 +1412,7 @@ function checkin(s){
   else{
     let hidTotal=0;
     S.cats.forEach(c=>{
-      let mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
+      let mine=catItems(c.id).filter(i=>i.is_selected&&(!W||(isShortCycle(i)&&onDay(i,P))));
       let extra=extraRows(c,P,counted);
       const nAll=mine.length+extra.length;
       if(!nAll) return;
