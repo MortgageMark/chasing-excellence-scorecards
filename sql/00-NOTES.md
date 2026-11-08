@@ -20,6 +20,7 @@ idempotent — safe to re-run.
 | `13-due-days.sql` | `due_dow` on items (weekly items can be due on a chosen day, e.g. the weekend); copy / promote functions carry it |
 | `14-due-late.sql` | `due_at` / `late_at` on every item (editable due and late for every cadence); copy / promote functions carry them |
 | `15-time-of-day-icons.sql` | `tod` and `icon` on items (time-of-day groups and emoji icons), starting icons / times for the shared templates, `sc_set_global_fields()` for admins; copy / promote functions carry them |
+| `16-item-color.sql` | optional `color` per item; carried by copy / promote and by the admin default |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must

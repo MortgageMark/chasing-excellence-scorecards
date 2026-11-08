@@ -106,6 +106,27 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .st{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:calc(16px*var(--z));font-weight:700}
 .st.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .st.nap{border-style:dashed;font-size:calc(10.5px*var(--z));font-weight:600;color:var(--muted)}
+.sheet{position:fixed;inset:0;z-index:70;background:var(--ink);flex-direction:column}
+.sheethead{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;flex:none}
+.sheetx{width:48px;height:48px;border-radius:50%;background:var(--slate);color:var(--bone);font-size:calc(20px*var(--z));flex:none}
+.sheettitle{flex:1;text-align:center;font-family:'League Spartan',system-ui,sans-serif;font-weight:600;font-size:calc(19px*var(--z));padding-right:48px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheetbody{flex:1;overflow-y:auto;padding:6px 16px calc(110px + env(safe-area-inset-bottom));max-width:480px;width:100%;margin:0 auto}
+.sheetcard{background:var(--slate);border-radius:20px;padding:4px 16px;margin-bottom:14px}
+.srow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.srow:last-child{border-bottom:0}
+.sk{font-weight:600;font-size:calc(16px*var(--z))}
+.sv2{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px;min-width:0}
+.nameline{gap:14px}
+.iconbtn2{flex:none;width:64px;height:64px;border-radius:16px;border:1.5px dashed var(--gold);font-size:34px;display:grid;place-items:center;background:transparent}
+.sheetname{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--bone);font:inherit;font-size:calc(18px*var(--z));font-weight:600;padding:8px 0}
+.swrow2{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;max-width:230px}
+.swrow2 .sw{width:30px;height:30px}
+.swrow2 .sw.auto{background:transparent;border:1.5px dashed var(--muted);color:var(--muted);font-size:13px;font-weight:700}
+.tpills{display:flex;flex-wrap:wrap;gap:8px;padding:0 0 14px}
+.tp{padding:11px 16px;border-radius:999px;background:var(--ink);border:1px solid var(--line);color:var(--muted);font-size:calc(15px*var(--z));font-weight:500}
+.tp.on{background:var(--gold);border-color:var(--gold);color:var(--ink);font-weight:700}
+.sheetfoot{position:absolute;left:0;right:0;bottom:0;padding:14px 16px calc(14px + env(safe-area-inset-bottom));background:linear-gradient(rgba(16,41,55,0),var(--ink) 35%);display:flex;justify-content:center}
+.sheetfoot button{width:min(300px,100%);padding:16px;border-radius:999px;background:var(--gold);color:var(--ink);font-weight:700;font-size:calc(17px*var(--z))}
 .catfold{width:100%;text-align:left;align-items:center;gap:10px;padding:8px 0;color:inherit}
 .catfold .chev{flex:none;width:18px;color:var(--muted);font-size:calc(16px*var(--z))}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 18px}
@@ -268,6 +289,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
   </div></div>
   <div class="wrap" id="app"></div>
   <nav class="bottomnav" id="bottomNav" style="display:none"></nav>
+  <div class="sheet" id="sheet" style="display:none"></div>
 </div>
 <div id="saving"></div>
 
@@ -288,7 +310,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=31;
+const APP_RELEASE=32;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -412,7 +434,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, collapsed:{}, todColors:null, look:'sections', hideDone:false, score:'count', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, editItem:null, collapsed:{}, todColors:null, look:'clean', hideDone:true, score:'off', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -835,6 +857,7 @@ async function loadCard(synced){
     late_at:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.late_at!=null?x.late_at:(L.late_at!=null?L.late_at:null); })(),
     tod:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.tod!=null?x.tod:(L.tod!=null?L.tod:null); })(),
     icon:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.icon!=null?x.icon:(L.icon!=null?L.icon:null); })(),
+    color:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.color!=null?x.color:(L.color!=null?L.color:null); })(),
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
@@ -933,9 +956,41 @@ async function setGlobalFields(id){
     saving('on','Saved for everyone');
   }catch(e){ console.error(e); }
 }
-function toggleSched(id){ S.schedOpen=(S.schedOpen===id)?null:id; render(); }
+function toggleSched(id){ openEdit(id); }
+/* ---- Edit screen: tap an item's pencil (or its schedule line) on the Items tab ---- */
+function openEdit(id){ S.editItem=id; S.iconPick=null; render(); }
+function closeEdit(){ S.editItem=null; S.iconPick=null; render(); }
+function renderSheet(){
+  let el=null; try{ el=document.getElementById('sheet'); }catch(e){} if(!el) return;
+  const i=S.editItem?S.items.find(x=>x.id===S.editItem):null;
+  if(!i){ el.style.display='none'; el.innerHTML=''; try{ document.body.style.overflow=''; }catch(e){} return; }
+  const prev=el.querySelector('.sheetbody'), keep=prev?prev.scrollTop:0;
+  const parts=schedParts(i), t=todOf(i);
+  const row=(k,v)=>'<div class="srow"><span class="sk">'+k+'</span><span class="sv2">'+v+'</span></div>';
+  const swatches='<div class="swrow2"><button class="sw auto'+(!i.color?' on':'')+'" title="Use the time-of-day color" onclick="setField(\''+i.id+'\',\'color\',\'\')">A</button>'
+    +TOD_PALETTE.map(c=>'<button class="sw'+(i.color===c?' on':'')+'" style="background:'+c+'" onclick="setField(\''+i.id+'\',\'color\',\''+c+'\')"></button>').join('')+'</div>';
+  const cats=S.cats.map(c=>'<option value="'+c.id+'" '+(i.category_id===c.id?'selected':'')+'>'+esc(catTitle(c))+'</option>').join('');
+  let h='<div class="sheethead"><button class="sheetx" onclick="closeEdit()" aria-label="Close">&#10005;</button><div class="sheettitle">'+(i.icon?esc(i.icon)+' ':'')+esc(label(i))+'</div></div>'
+    +'<div class="sheetbody">'
+    +'<div class="sheetcard"><div class="srow nameline"><button class="iconbtn2" onclick="toggleIconPick(\''+i.id+'\')">'+(i.icon?esc(i.icon):'+')+'</button>'
+    +'<input class="sheetname" id="sheetName" value="'+esc(label(i))+'" onchange="saveName(\''+i.id+'\',this.value)" placeholder="Name"></div>'
+    +(S.iconPick===i.id?'<div class="iconpick" style="padding:0 0 12px">'+ICONS.map(e=>'<button onclick="setField(\''+i.id+'\',\'icon\',\''+e+'\')">'+e+'</button>').join('')+'<button class="none" onclick="setField(\''+i.id+'\',\'icon\',\'\')">No icon</button></div>':'')
+    +(adminHere()&&i.library_item_id?'<div class="srow"><button class="pick" style="color:var(--gold)" onclick="saveGlobalName(\''+i.id+'\',document.getElementById(\'sheetName\').value)">Rename for everyone</button></div>':'')
+    +row('Color',swatches)
+    +row('Section','<select class="fsel" style="width:auto;max-width:210px" onchange="setField(\''+i.id+'\',\'category_id\',this.value)">'+cats+'</select>')
+    +'</div>'
+    +'<div class="sheetcard">'+row('Repeats',parts.repeat)
+    +(schedApplies(i)?row('Due',parts.due)+row('Late after',parts.late):'')+'</div>'
+    +'<div class="sheetcard"><div class="srow" style="border:0;padding-bottom:6px"><span class="sk">Time of day</span></div><div class="tpills">'
+    +TODS.map(o=>'<button class="tp'+(t===o[0]?' on':'')+'" onclick="setField(\''+i.id+'\',\'tod\',\''+o[0]+'\')">'+o[1]+'</button>').join('')+'</div></div>'
+    +(adminHere()&&i.library_item_id?'<button class="pick" style="width:100%;color:var(--gold);margin-bottom:12px" onclick="setGlobalFields(\''+i.id+'\')">Make these settings the default for everyone</button>':'')
+    +(!i.library_item_id?'<button class="pick" style="width:100%;color:var(--alert)" onclick="deleteItem(\''+i.id+'\');closeEdit()">Delete this item</button>':'')
+    +'</div><div class="sheetfoot"><button onclick="closeEdit()">Done</button></div>';
+  el.innerHTML=h; el.style.display='flex';
+  try{ document.body.style.overflow='hidden'; const b=el.querySelector('.sheetbody'); if(b) b.scrollTop=keep; }catch(e){}
+}
 /* Rows of the Repeats / Due / Late editor for one item. */
-function schedEditor(i){
+function schedParts(i){
   const f=i.freq, p=CYC[f]||1;
   const sel=(which,part,opts,cur)=>'<select class="fsel" style="width:auto;min-width:0" onchange="setSched(\''+i.id+'\',\''+which+'\',\''+part+'\',this.value)">'
     +opts.map(o=>'<option value="'+o[0]+'" '+(o[0]===cur?'selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
@@ -947,16 +1002,10 @@ function schedEditor(i){
     if(f==='m') return sel(which,'v',days,cur);
     return sel(which,'m',mons,Math.floor(cur/100))+' '+sel(which,'d',days,cur%100||1);
   };
-  const row=(k,v)=>'<span class="k">'+k+'</span><span>'+v+'</span>';
-  return '<div class="sched" onclick="event.stopPropagation()">'
-    +row('Repeats','<select class="fsel" style="width:auto" onchange="setFreq(\''+i.id+'\',this.value)">'+freqKeys().map(x=>'<option value="'+x+'" '+(i.freq===x?'selected':'')+'>'+FREQ[x]+'</option>').join('')+'</select>')
-    +(schedApplies(i)?row('Due',field('due',dueAt(i)))+row('Late after',field('late',lateAt(i))):'')
-    +row('Time of day','<select class="fsel" style="width:auto" onchange="setField(\''+i.id+'\',\'tod\',this.value)">'+TODS.map(o=>'<option value="'+o[0]+'" '+(todOf(i)===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select>')
-    +row('Icon','<button class="fsel" style="width:auto;font-size:calc(22px*var(--z));padding:4px 14px" onclick="toggleIconPick(\''+i.id+'\')">'+(i.icon?esc(i.icon):'+')+'</button>')
-    +(S.iconPick===i.id?'<div class="iconpick">'+ICONS.map(e=>'<button onclick="setField(\''+i.id+'\',\'icon\',\''+e+'\')">'+e+'</button>').join('')
-        +'<button class="none" onclick="setField(\''+i.id+'\',\'icon\',\'\')">No icon</button></div>':'')
-    +(adminHere()&&i.library_item_id?'<button class="pick" style="grid-column:1/3;color:var(--gold)" onclick="setGlobalFields(\''+i.id+'\')">Make these settings the default for everyone</button>':'')
-    +'</div>';
+  return {
+    repeat:'<select class="fsel" style="width:auto" onchange="setFreq(\''+i.id+'\',this.value)">'+freqKeys().map(x=>'<option value="'+x+'" '+(i.freq===x?'selected':'')+'>'+FREQ[x]+'</option>').join('')+'</select>',
+    due:field('due',dueAt(i)), late:field('late',lateAt(i))
+  };
 }
 /* Due / late only matter where an answer belongs to a longer period than the card's own. */
 const schedApplies=i=>isWeekly()&&i.freq!=='d'&&!(i.freq==='w'&&!isDaily());
@@ -1130,7 +1179,7 @@ function stepPeriod(d){
 let SWIPED=0;
 function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
-  const t=todOf(i), tint=t!=='any'?' style="background:linear-gradient('+todBg(t)+','+todBg(t)+'),var(--slate)"':'';
+  const t=todOf(i), tc=i.color||(t!=='any'?todColors()[t]:null), tint=tc?' style="background:linear-gradient('+tc+'2B,'+tc+'2B),var(--slate)"':'';
   const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':'<span class="st"></span>');
   const act=due?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
   return '<div class="swrow'+(due?' swp':'')+'"><div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
@@ -1513,11 +1562,10 @@ function itemsScreen(){
         +(i.icon?'<span class="ico" onclick="toggleSel(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
         +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
         +(fullQ(i)?'<span style="display:block;font-size:calc(13px*var(--z));color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
-        +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
+        +'<button class="trkbtn" title="Edit" onclick="openEdit(\''+i.id+'\')">&#9998;</button>'
         +(!i.library_item_id?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
         +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
-        +'<button class="schedsum" onclick="toggleSched(\''+i.id+'\')">'+schedSummary(i)+' <span>'+(S.schedOpen===i.id?'&#9652;':'&#9662;')+'</span></button>'
-        +(S.schedOpen===i.id?schedEditor(i):'')
+        +'<button class="schedsum" onclick="openEdit(\''+i.id+'\')">'+schedSummary(i)+' <span>&#8250;</span></button>'
         +'</div>';
     });
     if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
@@ -1811,7 +1859,8 @@ function renderNav(tabs){
 }
 function render(){
   const app=$("app");
-  if(S.tab!=='items') S.keepShown={};
+  if(S.tab!=='items'){ S.keepShown={}; S.editItem=null; }
+  renderSheet();
   setHeader();
   if(S.tab==='settings'){
     renderNav((S.template&&S.card)?scorecardTabs():homeTabs());
