@@ -31,6 +31,22 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .top-sp{flex:1}
 .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:15px}
 .iconbtn:hover{color:var(--bone);border-color:var(--muted)}
+.avatar{width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--ink);font-weight:800;font-size:15px;display:grid;place-items:center;text-transform:uppercase;flex:none}
+.menu{position:absolute;right:12px;top:58px;width:240px;background:var(--slate);border:1px solid var(--line);border-radius:12px;box-shadow:0 12px 40px rgba(0,0,0,.45);padding:6px;z-index:40}
+.menu .who{padding:10px 12px;font-size:12px;color:var(--muted);border-bottom:1px solid var(--line);margin-bottom:4px;word-break:break-all}
+.menu button{display:block;width:100%;text-align:left;padding:11px 12px;border-radius:8px;font-size:14px;color:var(--bone)}
+.menu button:hover{background:var(--raise)}
+.menu button.danger{color:var(--alert)}
+.overlay{position:fixed;inset:0;background:rgba(5,10,16,.72);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:40px 16px;overflow:auto}
+.modal{background:var(--slate);border:1px solid var(--line);border-radius:14px;width:100%;max-width:440px;padding:20px}
+.modal h2{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:20px;margin:0 0 14px}
+.modal label{display:block;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:14px 0 6px}
+.modal input,.modal select,.modal textarea,.formfld{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:var(--bone);font:inherit;font-size:14px}
+.modal .row{display:flex;gap:8px;margin-top:16px}
+.modal .row button{flex:1;padding:12px;border-radius:10px;font-weight:600;font-size:14px;background:var(--ink);border:1px solid var(--line);color:var(--bone)}
+.modal .row button.primary{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+.modal .msg{font-size:12.5px;color:var(--muted);margin-top:8px;min-height:16px}
+.cardact{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .h1{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:30px;line-height:1.05;letter-spacing:-.02em;margin:26px 0 4px}
 .sub{color:var(--muted);font-size:13.5px;margin-bottom:22px}
 .eyebrow{font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -193,8 +209,15 @@ label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
   <div class="top"><div class="top-in">
     <a href="/" id="homeLink" title="All scorecards" style="text-decoration:none;color:inherit;display:block"><div class="brandmark">Chasing Excellence</div><div class="brandsub">Scorecards</div></a>
     <div class="top-sp"></div>
-    <button class="iconbtn" id="signOutBtn" title="Sign out">&#9211;</button>
+    <button class="avatar" id="avatarBtn" title="Account" aria-haspopup="true">?</button>
+    <div class="menu" id="userMenu" style="display:none">
+      <div class="who" id="menuWho"></div>
+      <button id="menuHome">All scorecards</button>
+      <button id="menuSettings">Settings</button>
+      <button id="menuOut" class="danger">Sign out</button>
+    </div>
   </div></div>
+  <div class="overlay" id="settingsOverlay" style="display:none"><div class="modal" id="settingsBody"></div></div>
   <div class="wrap" id="app"></div>
 </div>
 <div id="saving"></div>
@@ -216,7 +239,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=19;
+const APP_RELEASE=20;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -312,7 +335,15 @@ $("loginBtn").addEventListener("click",doAuth);
 $("forgotLink").addEventListener("click",e=>{e.preventDefault();setAuthMode("reset");});
 $("modeLink").addEventListener("click",e=>{e.preventDefault();setAuthMode(authMode==="signin"?"signup":"signin");});
 $("homeLink").addEventListener("click",e=>{e.preventDefault(); if(typeof goHome==="function"&&S.profile) goHome();});
-$("signOutBtn").addEventListener("click",async()=>{ await SB.auth.signOut(); location.reload(); });
+/* ---- Account menu + settings ---- */
+function closeMenu(){ $("userMenu").style.display="none"; }
+$("avatarBtn").addEventListener("click",e=>{ e.stopPropagation(); const m=$("userMenu"); m.style.display=m.style.display==="none"?"block":"none"; });
+document.addEventListener("click",e=>{ if(!$("userMenu").contains(e.target)) closeMenu(); });
+$("menuOut").addEventListener("click",async()=>{ await SB.auth.signOut(); location.reload(); });
+$("menuHome").addEventListener("click",()=>{ closeMenu(); if(S.profile) goHome(); });
+$("menuSettings").addEventListener("click",()=>{ closeMenu(); openSettings(); });
+$("settingsOverlay").addEventListener("click",e=>{ if(e.target===$("settingsOverlay")) closeSettings(); });
+function closeSettings(){ $("settingsOverlay").style.display="none"; }
 
 /* ===================================================================
    CONSTANTS - the prototype's short frequency codes map to the enum in
@@ -338,7 +369,7 @@ const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
   card:null, items:[], entries:{}, credit:{}, keepShown:{}, onlyUsing:true,          /* entries: "itemId|period" -> bool */
-  tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null,
+  tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
 
@@ -385,13 +416,21 @@ function catItems(catId){
    ticked against their own period, any time during it, and in the first-
    Friday week of a period the app asks about the one that just ended.
    =================================================================== */
-const isWeekly=()=>!!(S.template&&S.template.check_in_period==='weekly');
+/* check_in_period: 'monthly' (0-10 scores, one entry per month), 'weekly' or 'daily'. Weekly and daily
+   share one style: percentages, an optional section for longer-cycle items. isWeekly() means "that style". */
+const kind=()=>(S.template&&S.template.check_in_period)||'monthly';
+const isWeekly=()=>kind()!=='monthly';
+const isDaily=()=>kind()==='daily';
+const PWORD=()=>isDaily()?'day':(isWeekly()?'week':'month');
+const PNOUN=()=>isDaily()?'today':'this week';
+const DOW=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
 const ymd=d=>d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
 const addDays=(d,n)=>{const x=new Date(d.getFullYear(),d.getMonth(),d.getDate());x.setDate(x.getDate()+n);return x;};
 const mondayOf=d=>addDays(d,-((d.getDay()+6)%7));
 const shortDate=d=>MON[d.getMonth()]+' '+d.getDate();
-const isShortCycle=i=>i.freq==='d'||i.freq==='w';
-const CYC={m:1,q:3,s:6,a:12};
+/* "Short" items are scored every period: daily + weekly items on a weekly card, daily items on a daily card. */
+const isShortCycle=i=>isDaily()?i.freq==='d':(i.freq==='d'||i.freq==='w');
+const CYC={w:0,m:1,q:3,s:6,a:12};
 /* ISO week of the year (weeks start Monday; week 1 holds the year's first Thursday). */
 function isoWeek(mon){
   const thu=addDays(mon,3);
@@ -403,17 +442,24 @@ function mkPWeek(mon){
   return {weekly:true,key:ymd(mon),mon:mon,fri:fri,y:fri.getFullYear(),m:fri.getMonth(),week:wn,
           label:'W'+wn+': '+shortDate(mon)+' – '+shortDate(addDays(mon,6)),short:'W'+wn};
 }
+function mkPDay(d){
+  return {weekly:true,kind:'daily',key:ymd(d),mon:d,fri:d,y:d.getFullYear(),m:d.getMonth(),
+          label:DOW[d.getDay()]+', '+shortDate(d),short:(d.getMonth()+1)+'/'+d.getDate()};
+}
 function mkPMonth(y,m){ return {weekly:false,key:pkey(y,m),y:y,m:m,label:MON[m]+' '+y,short:MON[m]}; }
-const viewP=()=>isWeekly()?mkPWeek(S.wk||mondayOf(new Date())):mkPMonth(S.view.y,S.view.m);
+const today0=()=>{const n=new Date();return new Date(n.getFullYear(),n.getMonth(),n.getDate());};
+const viewP=()=>isDaily()?mkPDay(S.day||today0()):(isWeekly()?mkPWeek(S.wk||mondayOf(new Date())):mkPMonth(S.view.y,S.view.m));
 /* First day of the month/quarter/half/year that contains the Friday, `back` periods earlier. */
 function cycleStart(freq,fri,back){
+  if(freq==='w') return addDays(mondayOf(fri),-7*back);
   const p=CYC[freq];
   return new Date(fri.getFullYear(),fri.getMonth()-fri.getMonth()%p-back*p,1);
 }
-const cycleKey=(freq,fri,back)=>{const d=cycleStart(freq,fri,back);return pkey(d.getFullYear(),d.getMonth());};
+const cycleKey=(freq,fri,back)=>{const d=cycleStart(freq,fri,back);return freq==='w'?ymd(d):pkey(d.getFullYear(),d.getMonth());};
 function cycleName(freq,d){
   const y=d.getFullYear(), m=d.getMonth();
-  return freq==='m'?MON[m]+' '+y : freq==='q'?'Q'+(Math.floor(m/3)+1)+' '+y
+  return freq==='w'?'W'+isoWeek(d)+' ('+shortDate(d)+' – '+shortDate(addDays(d,6))+')'
+       : freq==='m'?MON[m]+' '+y : freq==='q'?'Q'+(Math.floor(m/3)+1)+' '+y
        : freq==='s'?(m<6?'1st':'2nd')+' half of '+y : ''+y;
 }
 /* The entry key an item is answered under, for the period being viewed. */
@@ -439,7 +485,7 @@ const catTitle=c=>isWeekly()?String.fromCharCode(65+S.cats.indexOf(c))+'. '+c.na
    and the period did not end before the card was started) */
 function closingFor(it,P){
   const p=CYC[it.freq];
-  if(!p||!(P.fri.getDate()<=7&&P.fri.getMonth()%p===0)) return false;
+  if(isDaily()||!p||!(P.fri.getDate()<=7&&P.fri.getMonth()%p===0)) return false;
   const startD=S.card?new Date(S.card.started_at+"T00:00:00"):P.fri;
   return cycleStart(it.freq,P.fri,1)>=cycleStart(it.freq,startD,0);
 }
@@ -449,7 +495,7 @@ function longCounted(P){
   const out={};
   const push=(it,key)=>{ (out[it.category_id]||(out[it.category_id]=[])).push({it:it,key:key}); };
   liveItems().forEach(it=>{
-    if(!it.is_selected||isShortCycle(it)||!CYC[it.freq]) return;
+    if(!it.is_selected||isShortCycle(it)||CYC[it.freq]===undefined) return;
     const ck=cycleKey(it.freq,P.fri,0), pk=cycleKey(it.freq,P.fri,1);
     const credited=k=>S.entries[it.id+'|'+k]===true&&S.credit[it.id+'|'+k]===P.key;
     if(closingFor(it,P)){
@@ -571,6 +617,7 @@ async function loadAll(){
   const {data:prof,error:pe}=await SB.rpc("sc_bootstrap_profile",{p_timezone:tz});
   if(pe) throw pe;
   S.profile=Array.isArray(prof)?prof[0]:prof;
+  { const em=(S.profile&&S.profile.email)||''; $("avatarBtn").textContent=(em.charAt(0)||'?'); $("menuWho").textContent=em; }
   /* Admins (sql/08) can promote their own questions into the shared template. */
   try{ const {data:adm,error:ae}=await SB.rpc("sc_is_admin"); S.isAdmin=!ae&&adm===true; }catch(e){ S.isAdmin=false; }
 
@@ -596,12 +643,19 @@ async function openTemplate(id){
   S.library=S.allLib.filter(i=>catIds[i.category_id]);
   S.card=S.cards.find(c=>c.template_id===id)||null;
   S.items=[]; S.entries={}; S.credit={};
-  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.sortMode=defSort(); S.editing=null;
+  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.day=today0(); S.sortMode=defSort(); S.editing=null;
   if(S.card){
     await loadCard();
     const used={}; S.library.forEach(l=>used[l.category_id]=1); liveItems().forEach(i=>used[i.category_id]=1);
-    S.cats=S.cats.filter(c=>used[c.id]);
+    if(!S.template.owner) S.cats=S.cats.filter(c=>used[c.id]);
   }
+}
+/* Re-read everything (after creating, renaming or deleting) and reopen a scorecard, or go home. */
+async function refreshData(openId,tab){
+  await loadAll();
+  if(openId&&S.templates.some(t=>t.id===openId)){ await openTemplate(openId); if(tab) S.tab=tab; }
+  else { S.template=null; S.card=null; }
+  render();
 }
 async function goTemplate(id){
   $("app").innerHTML='<div class="empty">Loading...</div>';
@@ -821,6 +875,14 @@ async function resetCard(){
    SCREENS
    =================================================================== */
 function periodBar(){
+  if(isDaily()){
+    const st=S.card?new Date(S.card.started_at+"T00:00:00"):today0();
+    const atStart=ymd(S.day)<=ymd(st), atNow=ymd(S.day)>=ymd(today0());
+    return '<div class="monthbar">'
+      +'<button onclick="stepPeriod(-1)" '+(atStart?'disabled':'')+' title="Previous day">&lsaquo;</button>'
+      +'<div class="mlbl">'+mkPDay(S.day).label+(atNow?'':' <span class="pill due">Backfill</span>')+'</div>'
+      +'<button onclick="stepPeriod(1)" '+(atNow?'disabled':'')+' title="Next day">&rsaquo;</button></div>';
+  }
   if(isWeekly()){
     const start=mondayOf(S.card?new Date(S.card.started_at+"T00:00:00"):new Date());
     const cur=mondayOf(new Date());
@@ -839,6 +901,7 @@ function periodBar(){
     +'<button onclick="stepPeriod(1)" '+(atNow?'disabled':'')+' title="Next month">&rsaquo;</button></div>';
 }
 function stepPeriod(d){
+  if(isDaily()){ S.day=addDays(S.day,d); render(); return; }
   if(isWeekly()){ S.wk=addDays(S.wk,7*d); render(); return; }
   let m=S.view.m+d,y=S.view.y;
   if(m<0){m=11;y--} if(m>11){m=0;y++}
@@ -857,7 +920,7 @@ function checkin(s){
   const P=viewP(), W=P.weekly;
   let h=periodBar();
   h+='<div class="note">Tap once for <b>yes</b>, twice for <b>N/A</b>, three times to clear. '
-    +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is this week\'s items. The optional monthly, quarterly and yearly ones below only count when you tick yes, or in the week they\'re due.'
+    +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is '+(isDaily()?'today\'s':'this week\'s')+' items. The optional ones from your longer list only count when you tick yes'+(isDaily()?'.':', or in the week they\'re due.')
        :'Items outside their cycle and items marked N/A are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.')+'</div>';
   let any=false;
   const counted=W?longCounted(P):{};
@@ -868,14 +931,14 @@ function checkin(s){
     if(!mine.length&&!extra.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
     h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct))+'</div></div>'
-      +'<div class="catmeta">'+(W?cs.sel+' this week'+(cs.xdue?' + '+cs.xdue+' due or ticked from your longer list':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
+      +'<div class="catmeta">'+(W?cs.sel+' '+PNOUN()+(cs.xdue?' + '+cs.xdue+' due or ticked from your longer list':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
       const due=W?true:isDue(i.freq,P.m,i.target_month);
       h+=itemBtn(i,ekey(i,P),due,due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'));
     });
     if(extra.length){
-      h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">From your monthly / quarterly / yearly list &mdash; due or ticked this week</div>';
+      h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">From your longer list &mdash; due or ticked '+PNOUN()+'</div>';
       extra.forEach(x=>{ h+=itemBtn(x.it,x.key,true,cycleName(x.it.freq,new Date(x.key+'T00:00:00')),P.key); });
     }
     h+='</div>';
@@ -888,6 +951,7 @@ function checkin(s){
 /* Weekly template only: the optional monthly / quarterly / 6-month / yearly items. */
 function longCycle(P,counted){
   const groups=[['m','Monthly','month'],['q','Quarterly','quarter'],['s','Every 6 months','half-year'],['a','Yearly','year']];
+  if(isDaily()) groups.unshift(['w','Weekly','week']);
   const catPos=id=>S.cats.findIndex(c=>c.id===id);
   let h='',any=false;
   const shown={};
@@ -900,14 +964,13 @@ function longCycle(P,counted){
     if(!any){
       any=true;
       h+='<div class="seglbl" style="margin-top:30px">Beyond the week &middot; optional</div>'
-        +'<div class="note" style="margin-top:8px">Tick one whenever you do it, any week. A yes adds to that week\'s score; leaving one blank costs nothing until it\'s due. '
-        +'On the first Friday of a new period the one that just ended becomes due, and counts if you haven\'t done it.</div>';
+        +'<div class="note" style="margin-top:8px">'+(isDaily()?'Tick one whenever you do it. A yes adds to that day\'s score; leaving one blank costs nothing.':'Tick one whenever you do it, any week. A yes adds to that week\'s score; leaving one blank costs nothing until it\'s due. On the first Friday of a new period the one that just ended becomes due, and counts if you haven\'t done it.')+'</div>';
     }
     const p=CYC[f], fri=P.fri;
-    const closing=fri.getDate()<=7&&fri.getMonth()%p===0;
+    const closing=p>0&&!isDaily()&&fri.getDate()<=7&&fri.getMonth()%p===0;
     const blocks=(closing?[1]:[]).concat([0]);
     blocks.forEach(back=>{
-      const start=cycleStart(f,fri,back), key=pkey(start.getFullYear(),start.getMonth());
+      const start=cycleStart(f,fri,back), key=cycleKey(f,fri,back);
       const nm=cycleName(f,start);
       const na=items.filter(i=>S.entries[i.id+'|'+key]==='na').length;
       const done=items.filter(i=>S.entries[i.id+'|'+key]===true).length;
@@ -949,6 +1012,16 @@ function wheel(s){
    the latest 12 weeks so the charts stay readable. */
 function periodsSinceStart(){
   const out=[];
+  if(isDaily()){
+    let d=new Date(S.card.started_at+"T00:00:00");
+    while(ymd(d)<=ymd(S.day)){
+      const P=mkPDay(d);
+      out.push({P:P,label:P.short,y:P.y,m:P.m,s:score(P)});
+      d=addDays(d,1);
+      if(out.length>800) break;
+    }
+    return out.slice(-14);
+  }
   if(isWeekly()){
     let mon=mondayOf(new Date(S.card.started_at+"T00:00:00"));
     while(mon<=S.wk){
@@ -971,7 +1044,7 @@ function periodsSinceStart(){
 }
 
 function history(){
-  const ms=periodsSinceStart(), U=isWeekly()?'week':'month';
+  const ms=periodsSinceStart(), U=PWORD(), UC=U.charAt(0).toUpperCase()+U.slice(1);
   if(!ms.length) return '<div class="empty">No history yet.</div>';
   const labels=ms.map(x=>x.label);
   const vals=ms.map(x=>x.s.overall);
@@ -1005,7 +1078,7 @@ function history(){
       +'<div class="stat"><div class="sl">Biggest slide</div><div class="sv" style="font-size:17px;color:'+(dn.delta<0?'var(--alert)':'var(--muted)')+'">'+esc(dn.c.name.replace('Family: ',''))+'<span class="sm">'+(dn.delta>=0?'+':'')+dfmt(dn.delta)+' since '+labels[0]+'</span></div></div></div>';
   }
 
-  h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, '+(isWeekly()?'week by week':'month by month')+'</div>';
+  h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, '+U+' by '+U+'</div>';
   rows.forEach(r=>{
     const col=r.cur<.5?'#E0705F':(r.cur>=.85?'#3FA88F':'#4C9BE0');
     h+='<div class="ctrend"><div class="cth"><div class="ctn">'+esc(catTitle(r.c))+'</div><div class="ctd">'
@@ -1016,7 +1089,7 @@ function history(){
       +'<div class="ctfoot">'+r.last.done+' of '+r.last.due+' due this '+U+' &middot; '+r.last.sel+' of '+r.last.total+' selected</div></div>';
   });
 
-  h+='<div class="eyebrow" style="margin:26px 0 12px">'+(isWeekly()?'Week by week':'Month by month')+'</div><div class="mgrid">';
+  h+='<div class="eyebrow" style="margin:26px 0 12px">'+UC+' by '+U+'</div><div class="mgrid">';
   for(let i=ms.length-1;i>=0;i--){const x=ms[i];
     h+='<div class="mcard '+((x.P.key===viewP().key)?'cur':'')+'"><div class="mn">'+x.label+'</div>'
       +'<div class="ms">'+ten(x.s.overall)+'</div><div class="mc">'+x.s.tDone+' of '+x.s.tDue+'</div>'
@@ -1036,7 +1109,7 @@ function history(){
 
 function itemsScreen(){
   let h='<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>&#9998;</b>, change the frequency, and add your own.'
-    +(S.isAdmin?'<br><br><b style="color:var(--gold)">Admin:</b> a gold toggle at the end of each row shows where a question lives. <b>On</b> = it is part of the global template that every user gets. <b>Off</b> = it is only on your scorecard; turn it on to share it. When you edit wording with &#9998;, <b>Everyone</b> changes it for all users and <b>Just me</b> changes only your own copy (tagged <i>Edited</i>).':'')+'</div>';
+    +(adminHere()?'<br><br><b style="color:var(--gold)">Admin:</b> a gold toggle at the end of each row shows where a question lives. <b>On</b> = it is part of the global template that every user gets. <b>Off</b> = it is only on your scorecard; turn it on to share it. When you edit wording with &#9998;, <b>Everyone</b> changes it for all users and <b>Just me</b> changes only your own copy (tagged <i>Edited</i>).':'')+'</div>';
   h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg">';
   [['freq','Frequency'],['az','A – Z'],['manual','My order']].forEach(function(p){
     h+='<button class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
@@ -1050,14 +1123,14 @@ function itemsScreen(){
       +'<div class="pickrow">'
       +(S.onlyUsing?'':'<button class="pick" '+(nOn===all.length?'disabled':'')+' onclick="pickAll(\''+c.id+'\',true)">Select all</button>')
       +'<button class="pick" '+(nOn===0?'disabled':'')+' onclick="pickAll(\''+c.id+'\',false)">Clear all</button>'
-      +(S.isAdmin&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
+      +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
     mine.forEach(i=>{
       if(S.editing===i.id){
         h+='<div class="selrow on"><input class="renameinp" id="rn" value="'+esc(label(i))+'"'
           +' onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){S.editing=null;render()}"'
           +' onblur="saveName(\''+i.id+'\',this.value)">'
-          +(S.isAdmin&&i.library_item_id
+          +(adminHere()&&i.library_item_id
              ?'<button class="trkbtn" style="width:auto;padding:0 8px" title="Only on your scorecard" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">Just me</button>'
               +'<button class="trkbtn" style="width:auto;padding:0 8px;color:var(--gold);border-color:var(--gold)" title="Changes it for every user" onmousedown="saveGlobalName(\''+i.id+'\',document.getElementById(\'rn\').value)">Everyone</button>'
              :'<button class="trkbtn" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">✓</button>')
@@ -1084,9 +1157,13 @@ function itemsScreen(){
     });
     if(!mine.length) h+='<div style="font-size:12.5px;color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
     h+='</div><div class="addwrap"><input id="ci-'+c.id+'" placeholder="Add your own..." onkeydown="if(event.key===\'Enter\')addItem(\''+c.id+'\')">'
-      +'<select id="cf-'+c.id+'">'+freqKeys().map(f=>'<option value="'+f+'" '+(f===(isWeekly()?'w':'m')?'selected':'')+'>'+FREQ[f]+'</option>').join('')+'</select>'
+      +'<select id="cf-'+c.id+'">'+freqKeys().map(f=>'<option value="'+f+'" '+(f===(isDaily()?'d':(isWeekly()?'w':'m'))?'selected':'')+'>'+FREQ[f]+'</option>').join('')+'</select>'
       +'<button onclick="addItem(\''+c.id+'\')">Add</button></div></div>';
   });
+  if(S.template.owner){
+    h+='<div class="seglbl">Add a section</div><div class="addwrap"><input id="newSec" placeholder="e.g. Prospecting" onkeydown="if(event.key===\'Enter\')addSection()"><button onclick="addSection()">Add</button></div>';
+    if(S.cats.length<3) h+='<div style="font-size:12px;color:var(--muted);margin-top:6px">The Score tab draws its shape from at least three sections.</div>';
+  }
   h+='<button class="resetbtn" onclick="resetCard()">Reset this scorecard to the template</button>';
   return h;
 }
@@ -1096,7 +1173,8 @@ const freqKeys=()=>Object.keys(FREQ);
 /* Admin only: a question an admin added ("Yours") can be made part of the shared
    template. Only questions promoted this way (code 'custom-...') can be switched back. */
 const isGlobal=i=>!!i.library_item_id;
-const canGlobal=i=>S.isAdmin;
+const adminHere=()=>S.isAdmin&&!(S.template&&S.template.owner);
+const canGlobal=i=>adminHere();
 async function saveGlobalName(id,v){
   const val=(v||'').trim();
   S.editing=null;
@@ -1193,21 +1271,116 @@ async function saveDefaultOrder(catId){
     saving('on','Default order saved');
   }catch(e){ console.error(e); }
 }
+async function addSection(){
+  const inp=$("newSec"), name=((inp&&inp.value)||'').trim(); if(!name) return;
+  try{
+    await run(SB.rpc("sc_add_category",{p_template:S.template.id,p_name:name}));
+    await refreshData(S.template.id,'items');
+  }catch(e){ console.error(e); }
+}
 function setSort(m){ S.sortMode=m; S.editing=null; render(); }
+
+/* ---- Version stamp: the build time, shown as YYYY/MMDD HH:MM in the viewer's own time ---- */
+function fmtBuild(id){
+  const m=/^(\d{4})(\d{2})(\d{2})(\d{2})(\d{2})/.exec(id||'');
+  if(!m) return 'dev build';
+  const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5])), p=n=>String(n).padStart(2,'0');
+  return d.getFullYear()+'/'+p(d.getMonth()+1)+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes());
+}
+const footerHtml=()=>'<div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:30px">Version '+esc(fmtBuild(BUILD_ID))+'</div>';
+
+/* ---- Settings ---- */
+function openSettings(){
+  const email=(S.profile&&S.profile.email)||'', tz=(S.profile&&S.profile.timezone)||'';
+  $("settingsBody").innerHTML='<h2>Settings</h2>'
+    +'<label>Account</label><div style="font-size:14px;word-break:break-all">'+esc(email)+'</div>'
+    +'<label>Time zone</label><div style="font-size:14px">'+esc(tz||'—')+'</div>'
+    +'<label>Change password</label>'
+    +'<input type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
+    +'<input type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
+    +'<div class="row"><button class="primary" onclick="changePassword()">Update password</button></div>'
+    +'<label>App version</label><div style="font-size:14px">'+esc(fmtBuild(BUILD_ID))+' <span style="color:var(--muted)">(your local time)</span></div>'
+    +'<div class="row"><button onclick="checkUpdate()">Check for updates</button></div>'
+    +'<div class="msg" id="stMsg"></div>'
+    +'<div class="row" style="margin-top:6px"><button onclick="closeSettings()">Close</button></div>';
+  $("settingsOverlay").style.display="flex";
+}
+async function changePassword(){
+  const a=$("stPw1").value, b=$("stPw2").value, msg=$("stMsg");
+  if(a.length<8){ msg.textContent="Use at least 8 characters."; return; }
+  if(a!==b){ msg.textContent="The two passwords don't match."; return; }
+  const {error}=await SB.auth.updateUser({password:a});
+  msg.textContent=error?error.message:"Password updated.";
+  if(!error){ $("stPw1").value=""; $("stPw2").value=""; }
+}
+async function checkUpdate(){
+  const msg=$("stMsg"); msg.textContent="Checking...";
+  try{
+    const r=await fetch("/version.json",{cache:"no-store"}); const j=await r.json();
+    if(j&&j.build&&j.build!==BUILD_ID){ msg.textContent="A newer version is available. Reloading..."; setTimeout(()=>location.reload(),600); }
+    else msg.textContent="You're on the latest version.";
+  }catch(e){ msg.textContent="Couldn't check right now."; }
+}
+
+/* ---- Your own scorecards: new, copy, rename, delete ---- */
+function startNew(){ S.form={type:'new'}; render(); }
+function startCopy(id){ const t=S.templates.find(x=>x.id===id); S.form={type:'copy',src:id,name:'Copy of '+(t?t.name:''),period:t?t.check_in_period:'weekly'}; render(); }
+function homeForm(){
+  const f=S.form, cp=f.type==='copy', per=f.period||'weekly';
+  const opt=(v,l)=>'<option value="'+v+'" '+(per===v?'selected':'')+'>'+l+'</option>';
+  return '<div class="card"><div class="eyebrow" style="margin-bottom:4px">'+(cp?'Copy a scorecard':'New scorecard')+'</div>'
+    +(cp?'<div style="font-size:12.5px;color:var(--muted);line-height:1.5">Your current picks, renames, order and added items come with the copy. Check-ins start fresh.</div>':'')
+    +'<div class="seglbl">Name</div><input class="formfld" id="fName" value="'+esc(f.name||'')+'" placeholder="e.g. Daily Habits">'
+    +'<div class="seglbl">How often will you check in?</div><select class="formfld" id="fPeriod">'+opt('daily','Every day (daily habit tracker)')+opt('weekly','Every week')+opt('monthly','Every month')+'</select>'
+    +(cp?'':'<div class="seglbl">Starting sections (optional, one per line)</div><textarea class="formfld" id="fSecs" rows="4" placeholder="Prospecting&#10;Follow-up&#10;Marketing"></textarea>')
+    +'<div class="settingsmsg" id="fMsg" style="font-size:12.5px;color:var(--alert);min-height:16px;margin-top:8px"></div>'
+    +'<div style="display:flex;gap:8px;margin-top:6px"><button class="bigbtn" style="flex:1" onclick="createScorecard()">'+(cp?'Make a copy':'Create')+'</button>'
+    +'<button class="resetbtn" style="flex:none;width:auto;margin-top:0;padding:0 18px" onclick="S.form=null;render()">Cancel</button></div></div>';
+}
+async function createScorecard(){
+  const f=S.form, name=($("fName").value||'').trim(), period=$("fPeriod").value, msg=$("fMsg");
+  if(!name){ msg.textContent='Give it a name.'; return; }
+  msg.textContent='';
+  try{
+    let id;
+    if(f.type==='copy') id=await run(SB.rpc("sc_copy_template",{p_source:f.src,p_name:name,p_period:period}));
+    else{
+      const secs=(($("fSecs").value)||'').split(/\n|,/).map(x=>x.trim()).filter(Boolean);
+      id=await run(SB.rpc("sc_create_template",{p_name:name,p_period:period,p_sections:secs}));
+    }
+    S.form=null;
+    await refreshData(id);
+  }catch(e){ msg.textContent=(e&&e.message)||'Could not create it.'; }
+}
+async function renameScorecard(id){
+  const t=S.templates.find(x=>x.id===id); if(!t) return;
+  const n=prompt('Rename this scorecard',t.name); if(n===null||!n.trim()) return;
+  try{ await run(SB.rpc("sc_rename_template",{p_id:id,p_name:n.trim()})); await refreshData(null); }catch(e){}
+}
+async function deleteScorecard(id){
+  const t=S.templates.find(x=>x.id===id); if(!t) return;
+  if(!confirm('Delete "'+t.name+'" and all of its check-ins? This cannot be undone.')) return;
+  try{ await run(SB.rpc("sc_delete_template",{p_id:id})); await refreshData(null); }catch(e){}
+}
 
 function render(){
   const app=$("app");
   if(S.tab!=='items') S.keepShown={};
   if(!S.template){
     let h='<div class="h1">Scorecards</div><div class="sub">Choose a scorecard &middot; signed in as '+esc(S.profile.email||'')+'</div>';
+    if(S.form) h+=homeForm();
     S.templates.forEach(t=>{
       const started=S.cards.some(c=>c.template_id===t.id);
-      h+='<button class="card" style="display:block;width:100%;text-align:left;cursor:pointer;color:inherit;font:inherit" onclick="goTemplate(\''+t.id+'\')">'
-        +'<div class="eyebrow" style="margin-bottom:6px">'+(started?'In progress':'Not started')+'</div>'
+      h+='<div class="card"><div style="cursor:pointer" onclick="goTemplate(\''+t.id+'\')">'
+        +'<div class="eyebrow" style="margin-bottom:6px">'+(t.owner?'Yours &middot; ':'')+({daily:'Daily',weekly:'Weekly',monthly:'Monthly'}[t.check_in_period]||'Monthly')+' check-in &middot; '+(started?'In progress':'Not started')+'</div>'
         +'<div style="font-size:17px;font-weight:700;margin-bottom:6px">'+esc(t.name)+'</div>'
-        +'<div style="font-size:13.5px;line-height:1.5;color:var(--muted)">'+esc(t.description||'')+'</div></button>';
+        +'<div style="font-size:13.5px;line-height:1.5;color:var(--muted)">'+esc(t.description||'')+'</div></div>'
+        +'<div class="cardact"><button class="pick" onclick="startCopy(\''+t.id+'\')">Copy</button>'
+        +(t.owner?'<button class="pick" onclick="renameScorecard(\''+t.id+'\')">Rename</button><button class="pick" style="color:var(--alert)" onclick="deleteScorecard(\''+t.id+'\')">Delete</button>':'')
+        +'</div></div>';
     });
-    app.innerHTML=h+'<div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:30px">v'+APP_RELEASE+' &middot; '+esc(BUILD_ID)+'</div>';
+    if(!S.form) h+='<button class="bigbtn" onclick="startNew()">+ New scorecard</button>';
+    app.innerHTML=h+footerHtml();
     return;
   }
   const back='';
@@ -1234,7 +1407,7 @@ function render(){
      : S.tab==='score'   ? wheel(s)
      : S.tab==='history' ? history()
      :                     itemsScreen();
-  h+='<div style="text-align:center;font-size:10.5px;color:var(--muted);margin-top:30px">v'+APP_RELEASE+' &middot; '+esc(BUILD_ID)+'</div>';
+  h+=footerHtml();
   app.innerHTML=h;
 }
 

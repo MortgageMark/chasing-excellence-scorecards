@@ -14,6 +14,9 @@ idempotent — safe to re-run.
 | `07-weekly-checkins.sql` | `sc_templates.check_in_period`; entries may be dated a Monday (weekly) or the 1st (monthly). Sales & Marketing = weekly |
 | `08-admin-global-items.sql` | `sc_admins`, `sc_is_admin()`, `sc_set_global()`: an admin can promote their own question into the shared template |
 | `09-default-order.sql` | `sc_set_default_order()`: an admin saves a category's order as the template default |
+| `10-admin-edit-global.sql` | `sc_edit_global()`: an admin changes a template question's wording for everyone |
+| `11-life-balance-weekly.sql` | Life Balance becomes a weekly check-in |
+| `12-your-own-scorecards.sql` | `sc_templates.owner`, `daily` check-ins, and `sc_create_template` / `sc_copy_template` / `sc_add_category` / `sc_rename_template` / `sc_delete_template`: users make their own private scorecards |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must
