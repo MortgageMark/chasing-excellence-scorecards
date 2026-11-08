@@ -111,7 +111,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .mv{flex:none;display:flex;flex-direction:column;gap:2px}
 .mv button{width:24px;height:12px;border:1px solid var(--line);border-radius:4px;color:var(--muted);font-size:7px;line-height:1;display:grid;place-items:center;padding:0}
 .mv button:disabled{opacity:.3}
-.selrow.dragging{opacity:.7;background:var(--raise);outline:1px solid var(--accent)}
+.selrow.dragging{opacity:.8;background:var(--raise);outline:1px solid var(--accent);position:relative;z-index:5;box-shadow:0 6px 18px rgba(0,0,0,.4)}
+.selrow.drop-before{box-shadow:0 -2px 0 var(--accent)}
+.selrow.drop-after{box-shadow:0 2px 0 var(--accent)}
 .gtog{width:32px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
 .gtog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
 .gtog.on{background:rgba(224,178,76,.3)}
@@ -239,7 +241,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=21;
+const APP_RELEASE=22;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -1232,32 +1234,49 @@ function moveItem(id,dir){
   ids.splice(j,0,ids.splice(i,1)[0]);
   return applyOrder(it.category_id,ids);
 }
+/* Drag to reorder. The grabbed row follows the pointer with a CSS transform and is never moved in
+   the DOM until you let go (moving the element that holds the pointer breaks the drag on desktop). */
 let DRAG=null;
 function dragStart(e,catId){
   e.preventDefault();
   const h=e.currentTarget, row=h.closest('[data-row]');
-  DRAG={catId:catId,row:row,list:row.parentNode};
+  DRAG={catId:catId,row:row,list:row.parentNode,startY:e.clientY,y:e.clientY,scroll0:window.scrollY,before:null,timer:null,grip:h,pid:e.pointerId};
   row.classList.add('dragging');
-  h.setPointerCapture(e.pointerId);
-  h.onpointermove=dragMove; h.onpointerup=dragEnd; h.onpointercancel=dragEnd;
+  document.body.style.userSelect='none';
+  try{ h.setPointerCapture(e.pointerId); }catch(err){}
+  window.addEventListener('pointermove',dragMove,{passive:false});
+  window.addEventListener('pointerup',dragEnd);
+  window.addEventListener('pointercancel',dragEnd);
+  DRAG.timer=setInterval(dragTick,30);
 }
-function dragMove(e){
-  if(!DRAG) return;
-  const y=e.clientY;
-  if(y<90) window.scrollBy(0,-12); else if(y>window.innerHeight-90) window.scrollBy(0,12);
-  let before=null;
-  const rows=DRAG.list.querySelectorAll('[data-row]');
+function dragMove(e){ if(!DRAG) return; e.preventDefault(); DRAG.y=e.clientY; dragTick(); }
+function dragTick(){
+  const d=DRAG; if(!d) return;
+  if(d.y<90) window.scrollBy(0,-14); else if(d.y>window.innerHeight-90) window.scrollBy(0,14);
+  d.row.style.transform='translateY('+((d.y-d.startY)+(window.scrollY-d.scroll0))+'px)';
+  const rows=[].filter.call(d.list.querySelectorAll('[data-row]'),r=>r!==d.row);
+  rows.forEach(r=>r.classList.remove('drop-before','drop-after'));
+  d.before=null;
   for(let k=0;k<rows.length;k++){
-    if(rows[k]===DRAG.row) continue;
     const b=rows[k].getBoundingClientRect();
-    if(y<b.top+b.height/2){ before=rows[k]; break; }
+    if(d.y<b.top+b.height/2){ d.before=rows[k]; break; }
   }
-  if(before) DRAG.list.insertBefore(DRAG.row,before); else DRAG.list.appendChild(DRAG.row);
+  if(d.before) d.before.classList.add('drop-before'); else if(rows.length) rows[rows.length-1].classList.add('drop-after');
 }
 function dragEnd(){
-  if(!DRAG) return;
-  const d=DRAG; DRAG=null; d.row.classList.remove('dragging');
-  const ids=[].map.call(d.list.querySelectorAll('[data-row]'),r=>r.getAttribute('data-row'));
+  const d=DRAG; if(!d) return; DRAG=null;
+  clearInterval(d.timer);
+  window.removeEventListener('pointermove',dragMove);
+  window.removeEventListener('pointerup',dragEnd);
+  window.removeEventListener('pointercancel',dragEnd);
+  try{ d.grip.releasePointerCapture(d.pid); }catch(err){}
+  document.body.style.userSelect='';
+  d.row.classList.remove('dragging'); d.row.style.transform='';
+  const rows=[].filter.call(d.list.querySelectorAll('[data-row]'),r=>r!==d.row);
+  rows.forEach(r=>r.classList.remove('drop-before','drop-after'));
+  const ids=rows.map(r=>r.getAttribute('data-row'));
+  const at=d.before?ids.indexOf(d.before.getAttribute('data-row')):ids.length;
+  ids.splice(at,0,d.row.getAttribute('data-row'));
   applyOrder(d.catId,ids);
 }
 /* Admin: make this category's order the default for the shared template. */
