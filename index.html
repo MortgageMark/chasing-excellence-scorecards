@@ -106,6 +106,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .st{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:calc(16px*var(--z));font-weight:700}
 .st.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .st.nap{border-style:dashed;font-size:calc(10.5px*var(--z));font-weight:600;color:var(--muted)}
+.catfold{width:100%;text-align:left;align-items:center;gap:10px;padding:8px 0;color:inherit}
+.catfold .chev{flex:none;width:18px;color:var(--muted);font-size:calc(16px*var(--z))}
 .pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 18px}
 .pills::-webkit-scrollbar{display:none}
 .pl{flex:none;padding:10px 16px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:calc(14px*var(--z));font-weight:500;white-space:nowrap}
@@ -286,7 +288,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=30;
+const APP_RELEASE=31;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -410,7 +412,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, todColors:null, look:'sections', hideDone:false, score:'count', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, collapsed:{}, todColors:null, look:'sections', hideDone:false, score:'count', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -997,6 +999,11 @@ function setLook(k){
 function toggleHideDone(){ S.hideDone=!S.hideDone; savePrefs(); render(); }
 function cycleScore(){ S.score=S.score==='count'?'pct':(S.score==='pct'?'off':'count'); savePrefs(); render(); }
 const fmtScore=(d,t)=>S.score==='off'?'':(S.score==='pct'?(t?Math.round(100*d/t)+'%':'—'):d+'/'+t);
+/* Items screen: fold a section away. Remembered on this device. */
+try{ S.collapsed=JSON.parse(localStorage.getItem('ces-collapsed')||'{}')||{}; }catch(e){ S.collapsed={}; }
+function saveFold(){ try{ localStorage.setItem('ces-collapsed',JSON.stringify(S.collapsed)); }catch(e){} }
+function toggleCat(id){ if(S.collapsed[id]) delete S.collapsed[id]; else S.collapsed[id]=1; saveFold(); S.editing=null; render(); }
+function foldAll(on){ S.collapsed={}; if(on) S.cats.forEach(c=>{ S.collapsed[c.id]=1; }); saveFold(); S.editing=null; render(); }
 function setOnlyUsing(){
   S.onlyUsing=!S.onlyUsing; S.keepShown={}; S.editing=null;
   try{ localStorage.setItem('ces-only-using',S.onlyUsing?'1':'0'); }catch(e){}
@@ -1470,11 +1477,15 @@ function itemsScreen(){
   h+='</div>';
   h+='<div class="selrow '+(S.onlyUsing?'on':'')+'" style="margin-top:14px;cursor:pointer" onclick="setOnlyUsing()">'
     +'<span class="tog"></span><span class="ilabel">Show only what I&rsquo;m using</span></div>';
+  if(S.cats.length>1) h+='<div class="pills" style="padding:10px 0 0"><button class="pl" onclick="foldAll(true)">Collapse all</button><button class="pl" onclick="foldAll(false)">Expand all</button></div>';
   S.cats.forEach(c=>{
     const all=catItems(c.id), mine=shownItems(c.id), nOn=all.filter(i=>i.is_selected).length;
-    h+='<div class="catblock" style="margin-top:24px"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div>'
-      +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);font-weight:600">'+nOn+' of '+all.length+'</div></div>'
-      +'<div class="pickrow">'
+    const col=!!S.collapsed[c.id];
+    h+='<div class="catblock" style="margin-top:24px"><button class="cathead catfold" onclick="toggleCat(\''+c.id+'\')" aria-expanded="'+(!col)+'">'
+      +'<span class="chev">'+(col?'&#9656;':'&#9662;')+'</span><div class="catname">'+esc(catTitle(c))+'</div>'
+      +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);font-weight:600">'+nOn+' of '+all.length+'</div></button>';
+    if(col){ h+='</div>'; return; }
+    h+='<div class="pickrow">'
       +(S.onlyUsing?'':'<button class="pick" '+(nOn===all.length?'disabled':'')+' onclick="pickAll(\''+c.id+'\',true)">Select all</button>')
       +'<button class="pick" '+(nOn===0?'disabled':'')+' onclick="pickAll(\''+c.id+'\',false)">Clear all</button>'
       +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
