@@ -22,6 +22,7 @@ idempotent — safe to re-run.
 | `15-time-of-day-icons.sql` | `tod` and `icon` on items (time-of-day groups and emoji icons), starting icons / times for the shared templates, `sc_set_global_fields()` for admins; copy / promote functions carry them |
 | `16-item-color.sql` | optional `color` per item; carried by copy / promote and by the admin default |
 | `17-days-of-week.sql` | optional `days` per item (e.g. `12345` = Mon-Fri); carried by copy / promote and by the admin default |
+| `18-day-order.sql` | `day_order` per item: its place inside Morning / Afternoon / Evening / Anytime (Time of day sort + Today) |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must

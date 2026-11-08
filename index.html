@@ -79,7 +79,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .dcell .dc.zero{border-color:var(--muted)}
 .daylabel{display:flex;align-items:center;gap:10px;margin:8px 2px 16px;font-size:calc(15px*var(--z));font-weight:600}
 .dayprog{margin-left:auto;color:var(--muted);font-weight:500;font-size:calc(14px*var(--z))}
-.todhead{display:flex;justify-content:space-between;align-items:center;border:1px solid;border-radius:12px;padding:11px 14px;margin:18px 0 8px;font-weight:600;font-size:calc(15px*var(--z))}
+.todhead{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:4px 4px 8px;margin:22px 0 8px;font-weight:600;font-size:calc(14px*var(--z));color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
 .todhead b{font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:2px;background:var(--slate);border:1px solid var(--line);border-radius:11px;padding:3px;margin:18px 0 22px}
 .tab{flex:1;padding:13px 2px;border-radius:8px;font-size:calc(13px*var(--z));font-weight:500;color:var(--muted);transition:.14s;white-space:nowrap}
@@ -992,7 +992,7 @@ async function loadCard(synced){
     color:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.color!=null?x.color:(L.color!=null?L.color:null); })(),
     days:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.days!=null?x.days:(L.days!=null?L.days:null); })(),
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
-    is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
+    is_selected:x.is_selected, sort_order:x.sort_order, day_order:x.day_order, removed_at:x.removed_at
   }));
   S.items.forEach(i=>{ if(i.icon==null) i.icon=guessIcon(label(i)); });
   S.entries={}; S.credit={};
@@ -1362,7 +1362,7 @@ function stepPeriod(d){
 let SWIPED=0;
 function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
-  const t=todOf(i), tc=i.color||(t!=='any'?todColors()[t]:null), tint=tc?' style="background:linear-gradient('+tc+'2B,'+tc+'2B),var(--slate)"':'';
+  const t=todOf(i), tc=i.color||null, tint=tc?' style="background:linear-gradient('+tc+'2B,'+tc+'2B),var(--slate)"':'';
   const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':'<span class="st"></span>');
   const fut=isFutureDay(), act=(due&&!fut)?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
   return '<div class="swrow'+((due&&!fut)?' swp':'')+'"><div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
@@ -1484,16 +1484,18 @@ function dayRowsData(P,counted){
   return rows;
 }
 /* "Time of day" shows Morning / Afternoon / Evening headers; "Clean" is the same order with no headers. */
+const todKey=i=>i.day_order!=null?i.day_order:100000+Math.max(0,S.cats.findIndex(c=>c.id===i.category_id))*1000+(i.sort_order||0);
+function todList(slot){ return liveItems().filter(i=>todOf(i)===slot).sort((a,b)=>todKey(a)-todKey(b)); }
 function rowsView(P,counted,headers){
   const all=dayRowsData(P,counted), rows=S.hideDone?all.filter(r=>!isResolved(r)):all, hid=all.length-rows.length;
-  const slot=(list,t)=>list.filter(r=>todOf(r.it)===t);
+  const slot=(list,t)=>{ const l=list.filter(r=>todOf(r.it)===t); return S.sortMode==='tod'?l.slice().sort((a,b)=>todKey(a.it)-todKey(b.it)):l; };
   let h='';
   TODS.forEach(t=>{
     const inSlot=slot(all,t[0]), shown=slot(rows,t[0]);
     if(!inSlot.length) return;
     if(headers){
-      const col=todColors()[t[0]], done=inSlot.filter(r=>rowVal(r)===true).length, tot=inSlot.filter(r=>rowVal(r)!=='na').length;
-      h+='<div class="todhead" style="background:'+col+'33;border-color:'+col+'66"><span>'+t[2]+' '+t[1]+'</span><b>'+fmtScore(done,tot)+'</b></div>';
+      const done=inSlot.filter(r=>rowVal(r)===true).length, tot=inSlot.filter(r=>rowVal(r)!=='na').length;
+      h+='<div class="todhead"><span>'+t[2]+' '+t[1]+'</span><b>'+fmtScore(done,tot)+'</b></div>';
       if(!shown.length) h+='<div class="allclear">All done &#10003;</div>';
     }
     shown.forEach(r=>{ h+=itemBtn(r.it,r.key,true,r.right,r.credit); });
@@ -1847,6 +1849,21 @@ function histTrends(){
   return h+'</div>';
 }
 
+function itemRow(i,groupId,catName){
+  const tag=(!i.library_item_id&&!adminHere())?'<span class="custom-tag">Yours</span>'
+           :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
+  const need=groupId.indexOf('tod:')===0?'tod':'manual';
+  return '<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
+    +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
+    +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
+    +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+tag
+    +'<span class="isub">'+schedSummary(i)+(catName?' &middot; '+esc(catName):'')+'</span>'
+    +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
+    +((!i.library_item_id&&!adminHere())?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
+    +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
+    +'<span class="grip'+(S.sortMode===need?'':' dim')+'" title="Drag to reorder" onpointerdown="dragStart(event,\''+groupId+'\')">&#8801;</span>'
+    +'</div>';
+}
 function itemsScreen(){
   const sorts=[['manual','My order'],['active','Active first'],['freq','Frequency'],['tod','Time of day'],['az','A – Z']];
   const allCol=S.cats.length>1&&S.cats.every(c=>S.collapsed[c.id]);
@@ -1855,6 +1872,15 @@ function itemsScreen(){
     +'<button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>'
     +'<div class="itop2"><button class="chip'+(S.onlyUsing?' on':'')+'" onclick="setOnlyUsing()">Only what I&rsquo;m using</button>'
     +(S.cats.length>1?'<button class="chip" onclick="foldAll('+(!allCol)+')">'+(allCol?'Expand all':'Collapse all')+'</button>':'')+'</div>';
+  if(S.sortMode==='tod'){
+    const catOf={}; S.cats.forEach(c=>{ catOf[c.id]=c.name; });
+    TODS.forEach(t=>{
+      const all=todList(t[0]), mine=S.onlyUsing?all.filter(i=>i.is_selected||S.keepShown[i.id]):all;
+      if(!mine.length) return;
+      h+='<div class="todhead" style="margin-top:20px"><span>'+t[2]+' '+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
+        +'<div style="display:flex;flex-direction:column;gap:2px">'+mine.map(i=>itemRow(i,'tod:'+t[0],catOf[i.category_id])).join('')+'</div>';
+    });
+  } else
   S.cats.forEach(c=>{
     const all=catItems(c.id), mine=shownItems(c.id), nOn=all.filter(i=>i.is_selected).length;
     const col=!!S.collapsed[c.id];
@@ -1865,32 +1891,7 @@ function itemsScreen(){
     h+='<div class="pickrow">'
       +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
-    mine.forEach(i=>{
-      if(S.editing===i.id){
-        h+='<div class="selrow on"><input class="renameinp" id="rn" value="'+esc(label(i))+'"'
-          +' onkeydown="if(event.key===\'Enter\')this.blur();if(event.key===\'Escape\'){S.editing=null;render()}"'
-          +' onblur="saveName(\''+i.id+'\',this.value)">'
-          +(adminHere()&&i.library_item_id
-             ?'<button class="trkbtn" style="width:auto;padding:0 8px" title="Only on your scorecard" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">Just me</button>'
-              +'<button class="trkbtn" style="width:auto;padding:0 8px;color:var(--gold);border-color:var(--gold)" title="Changes it for every user" onmousedown="saveGlobalName(\''+i.id+'\',document.getElementById(\'rn\').value)">Everyone</button>'
-             :'<button class="trkbtn" onmousedown="saveName(\''+i.id+'\',document.getElementById(\'rn\').value)">✓</button>')
-          +'</div>';
-        return;
-      }
-      const tag=(!i.library_item_id&&!adminHere())?'<span class="custom-tag">Yours</span>'
-               :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
-      const canMove=!S.editing, pos=mine.indexOf(i);
-      h+='<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
-        +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
-        +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
-        +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+tag
-        +'<span class="isub">'+schedSummary(i)+'</span>'
-        +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
-        +((!i.library_item_id&&!adminHere())?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
-        +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
-        +(canMove?'<span class="grip'+(S.sortMode==='manual'?'':' dim')+'" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
-        +'</div>';
-    });
+    mine.forEach(i=>{ h+=itemRow(i,c.id); });
     if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
     h+='</div></div>';
   });
@@ -1950,7 +1951,22 @@ async function setGlobalNow(id,on){
 }
 /* ---- Reordering (Items screen, "My order" only) ---------------------------
    sort_order is per user item. Moving renumbers the category 0..n-1. */
+async function applyTodOrder(slot,ids){
+  const list=todList(slot);
+  if(ids.length<list.length){
+    const vis={}; ids.forEach(x=>vis[x]=1);
+    let k=0; ids=list.map(x=>vis[x.id]?ids[k++]:x.id);
+  }
+  const changes=[];
+  ids.forEach((id,n)=>{ const it=S.items.find(x=>x.id===id); if(it&&it.day_order!==n) changes.push({it:it,was:it.day_order,n:n}); });
+  changes.forEach(c=>{ c.it.day_order=c.n; }); render();
+  if(!changes.length) return;
+  try{
+    await Promise.all(changes.map(c=>run(SB.from("sc_user_scorecard_items").update({day_order:c.n}).eq("id",c.it.id))));
+  }catch(e){ changes.forEach(c=>{ c.it.day_order=c.was; }); render(); }
+}
 async function applyOrder(catId,ids){
+  if(catId.indexOf('tod:')===0) return applyTodOrder(catId.slice(4),ids);
   const list=catItems(catId);
   if(ids.length<list.length){   /* only the visible rows were reordered: hidden ones keep their slots */
     const vis={}; ids.forEach(x=>vis[x]=1);
@@ -1977,7 +1993,8 @@ function moveItem(id,dir){
 let DRAG=null;
 function dragStart(e,catId){
   e.preventDefault();
-  if(S.sortMode!=='manual'){ setSort('manual'); return; }   /* first touch switches to My order; drag again */
+  const need=catId.indexOf('tod:')===0?'tod':'manual';
+  if(S.sortMode!==need){ setSort(need); return; }   /* first touch switches sort; drag again */
   const h=e.currentTarget, row=h.closest('[data-row]');
   DRAG={catId:catId,row:row,list:row.parentNode,startY:e.clientY,y:e.clientY,scroll0:window.scrollY,before:null,timer:null,grip:h,pid:e.pointerId};
   row.classList.add('dragging');
