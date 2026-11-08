@@ -26,7 +26,7 @@ index.html          the whole app
 sw.js, manifest.json, icon-*.png, apple-touch-icon.png, favicon-32.png
 ce-mark-gold.png, ce-mark-white.png    brand monograms (header/icons)
 sql/00-NOTES.md     list of every SQL file — READ before touching the DB
-sql/01..16          idempotent migrations (all applied through 16 once Mark has run it)
+sql/01..17          idempotent migrations (Mark has run all through 17)
 sql/99-rls-tests.sql  regression suite, rollback-only; run after policy/helper changes
 ```
 
@@ -45,6 +45,9 @@ Navy `#102937` base (`--ink`), `--slate #163347`, `--raise #1C4259`, `--line #2A
 - Settings page: account, show-longer / due-only toggles, text size, time-of-day colors, open-this-device-to (start scorecard), change password, version / check for updates.
 - Deep link `?s=<templateId>`; preferences in localStorage (`ces-*` keys).
 
+### Built: days of the week
+Daily items on daily scorecards can be limited to chosen days (`days` column, e.g. `12345` = Mon-Fri, 1=Mon..7=Sun, blank = every day). Edit screen has M T W T F S S bubbles plus presets. Off days are hidden on Today, left out of the score, and show "–" in the Grid. New daily items open the edit screen so days can be picked. SQL 17.
+
 ### Built: History tab (Trends / Grid / Calendar)
 - **Grid tracker**: items down, days across (daily cards: month or week; weekly: weeks of the month; monthly: months of the year). Tap = done, or switch to "Tap = N/A". Row and column totals, perfect/best periods, Print button (landscape print CSS hides nav).
 - **Calendar**: month of days coloured by score (daily = that day, weekly = that week's score); monthly cards show a year of months. Tap a day to open it in Check-in/Today.
@@ -58,6 +61,9 @@ Explicitly skipped for now: goal-value counts, reminders, item start/end dates.
 - Real browser: Playwright + Chromium are preinstalled (`require('playwright')`, `chromium.launch()`), good for screenshots and mouse/touch tests.
 - SQL: validate against a throwaway local Postgres 16 before giving it to Mark.
 - iOS notes: no `viewport-fit=cover`, opaque status bar, safe-area paddings. Bump the SW cache name only if cached asset names change.
+
+## Supabase access
+Mark connected the Supabase connector on claude.ai (project DailyTimeTracker). If its tools are available in the session, apply new SQL files yourself (show Mark the SQL first, validate before running, run `sql/99-rls-tests.sql` after policy changes) instead of asking him to paste. If the tools are not loaded, fall back to rule 2 above.
 
 ## Database rules
 - Everything `sc_`-prefixed. The tracker's `public.profiles` is NOT an auth user; this app has `sc_profiles`.
