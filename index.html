@@ -17,7 +17,8 @@
 <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Ported from life-balance-scorecard-prototype.html. Palette is spec section 2. */
-:root{--z:1;--ink:#102937;--slate:#163347;--raise:#1C4259;--line:#2A4A5E;--bone:#EEF3F3;--muted:#8FA6B3;--accent:#48A0CE;--alert:#E0705F;--track:#3FA88F;--gold:#D9A441;--r:14px}
+:root{--z:1;--ink:#102937;--slate:#163347;--raise:#1C4259;--line:#2A4A5E;--bone:#EEF3F3;--muted:#8FA6B3;--accent:#48A0CE;--alert:#E0705F;--track:#3FA88F;--gold:#D9A441;--well:#0C2230;--navbg:rgba(22,33,45,.96);--r:14px}
+:root[data-theme=light]{--ink:#F2F5F7;--slate:#FFFFFF;--raise:#E1EAEF;--line:#C8D5DD;--bone:#102937;--muted:#587080;--accent:#1F7FB0;--alert:#C4503F;--track:#2B8A72;--gold:#A87614;--well:#E8EEF2;--navbg:rgba(255,255,255,.96)}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-size:calc(16px*var(--z));background:var(--ink);color:var(--bone);font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;padding:0 0 calc(120px + env(safe-area-inset-bottom))}
@@ -58,7 +59,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .card{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;width:100%;text-align:left;display:block}
 .pill{font-size:calc(12px*var(--z));letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:4px 9px;border-radius:100px}
 .pill.due{background:rgba(72,160,206,.14);color:var(--accent)}
-.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:min(440px,calc(100% - 20px));z-index:30;display:flex;gap:2px;background:rgba(22,33,45,.96);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:26px;padding:6px;box-shadow:0 10px 34px rgba(0,0,0,.5)}
+.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:min(440px,calc(100% - 20px));z-index:30;display:flex;gap:2px;background:var(--navbg);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:26px;padding:6px;box-shadow:0 10px 34px rgba(0,0,0,.5)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 7px;border-radius:20px;color:var(--muted);font-size:calc(11px*var(--z));font-weight:500}
 .nb.on{background:var(--raise);color:var(--accent)}
 .nb svg{display:block}
@@ -169,12 +170,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 /* ---- History: grid tracker + month calendar ---- */
 .wrap.wide{max-width:1100px}
 .hseg{display:flex;gap:6px;margin-bottom:14px}
-.hseg button{flex:1;padding:11px 4px;border-radius:9px;font-size:calc(14.5px*var(--z));font-weight:600;color:var(--muted);background:#0C2230;border:1px solid var(--line)}
+.hseg button{flex:1;padding:11px 4px;border-radius:9px;font-size:calc(14.5px*var(--z));font-weight:600;color:var(--muted);background:var(--well);border:1px solid var(--line)}
 .hseg button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent)}
 .gnav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
 .gnav .gt{flex:1;text-align:center;font-family:'League Spartan',system-ui,sans-serif;font-weight:600;font-size:calc(19px*var(--z))}
 .gtools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
-.gtools button{padding:8px 12px;border-radius:9px;font-size:calc(13.5px*var(--z));font-weight:600;color:var(--muted);background:#0C2230;border:1px solid var(--line)}
+.gtools button{padding:8px 12px;border-radius:9px;font-size:calc(13.5px*var(--z));font-weight:600;color:var(--muted);background:var(--well);border:1px solid var(--line)}
 .gtools button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent)}
 .gridscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--slate)}
 table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
@@ -182,7 +183,7 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .grid th{background:var(--raise);color:var(--muted);font-weight:600;padding:5px 2px;min-width:30px;line-height:1.15}
 .grid th small{display:block;font-size:.85em;font-weight:400}
 .dayrow{display:flex;gap:6px;margin-top:8px}
-.dayb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:#0C2230;color:var(--muted);font-weight:700;font-size:calc(14px*var(--z))}
+.dayb{width:38px;height:38px;border-radius:50%;border:1px solid var(--line);background:var(--well);color:var(--muted);font-weight:700;font-size:calc(14px*var(--z))}
 .dayb.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .grid th.today{color:var(--gold)}
 .grid td.nm{text-align:left;padding:7px 8px;min-width:128px;max-width:170px;position:sticky;left:0;background:var(--slate);z-index:2;font-size:calc(13.5px*var(--z))}
@@ -190,9 +191,9 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .grid tr.cat td{background:var(--raise);color:var(--gold);font-size:calc(11.5px*var(--z));letter-spacing:.12em;text-transform:uppercase;font-weight:700;text-align:left;padding:5px 8px;position:static}
 .grid td.c{height:34px;min-width:30px;cursor:pointer;color:var(--ink);font-weight:800}
 .grid td.c.on{background:var(--track)}
-.grid td.c.na{background:#0C2230;color:var(--muted);font-weight:600;font-size:calc(10px*var(--z))}
+.grid td.c.na{background:var(--well);color:var(--muted);font-weight:600;font-size:calc(10px*var(--z))}
 .grid td.c.fut{opacity:.35;cursor:default}
-.grid td.c.off{color:var(--line);cursor:default;background:#0C2230}
+.grid td.c.off{color:var(--line);cursor:default;background:var(--well)}
 .grid td.tot,.grid th.tot{background:var(--raise);color:var(--bone);font-weight:700;min-width:44px;padding:0 4px}
 .grid tr.sum td{background:var(--raise);font-weight:700;color:var(--bone);height:30px}
 .gsum{margin-top:14px}
@@ -274,7 +275,7 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .note b{color:var(--accent);font-weight:600}
 .empty{text-align:center;color:var(--muted);font-size:calc(15px*var(--z));padding:30px 20px;line-height:1.6}
 .seg{display:flex;gap:7px;margin-top:12px}
-.seg button{flex:1;padding:15px 4px;border-radius:9px;font-size:calc(15px*var(--z));font-weight:500;color:var(--muted);background:#0C2230;border:1px solid var(--line);transition:.14s}
+.seg button{flex:1;padding:15px 4px;border-radius:9px;font-size:calc(15px*var(--z));font-weight:500;color:var(--muted);background:var(--well);border:1px solid var(--line);transition:.14s}
 .seg button:hover{color:var(--bone);border-color:#3E6178}
 .seg button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent);font-weight:600}
 .seglbl{font-size:calc(12px*var(--z));letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:22px}
@@ -295,12 +296,12 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .ctvals span.now{color:var(--bone)}
 .ctfoot{font-size:calc(13px*var(--z));color:var(--muted);margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
 .pickrow{display:flex;gap:7px;margin:-2px 0 10px}
-.pick{padding:11px 16px !important;font-size:calc(13px*var(--z));color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 11px;background:#0C2230;transition:.14s}
+.pick{padding:11px 16px !important;font-size:calc(13px*var(--z));color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 11px;background:var(--well);transition:.14s}
 .pick:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
 .pick:disabled{opacity:.32;cursor:default}
-.resetbtn{width:100%;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:calc(15px*var(--z));background:#0C2230;transition:.14s}
+.resetbtn{width:100%;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:calc(15px*var(--z));background:var(--well);transition:.14s}
 .resetbtn:hover{color:var(--alert);border-color:var(--alert)}
-.renameinp{flex:1;background:#0C2230;border:1px solid var(--accent);border-radius:8px;padding:8px 10px;color:var(--bone);font:inherit;font-size:calc(15.5px*var(--z));min-width:0}
+.renameinp{flex:1;background:var(--well);border:1px solid var(--accent);border-radius:8px;padding:8px 10px;color:var(--bone);font:inherit;font-size:calc(15.5px*var(--z));min-width:0}
 .bigbtn{width:100%;padding:18px;border-radius:11px;background:var(--accent);color:var(--ink);font-weight:600;font-size:calc(16.5px*var(--z))}
 .bigbtn:disabled{opacity:.55;cursor:default}
 #saving{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;background:var(--raise);border:1px solid var(--line);border-radius:100px;padding:8px 16px;font-size:calc(13.5px*var(--z));color:var(--muted);display:none}
@@ -492,6 +493,13 @@ const TEXT_Z={standard:1,large:1.12,xl:1.25};
 function textSize(){ try{ return localStorage.getItem('ces-text')||'standard'; }catch(e){ return 'standard'; } }
 function applyTextSize(){ try{ document.documentElement.style.setProperty('--z',TEXT_Z[textSize()]||1); }catch(e){} }
 applyTextSize();
+function theme(){ try{ return localStorage.getItem('ces-theme')==='light'?'light':'dark'; }catch(e){ return 'dark'; } }
+function applyTheme(){ try{
+  const t=theme(); document.documentElement.setAttribute('data-theme',t);
+  const m=document.querySelector('meta[name=theme-color]'); if(m) m.setAttribute('content',t==='light'?'#F2F5F7':'#102937');
+}catch(e){} }
+applyTheme();
+function setTheme(k){ try{ localStorage.setItem('ces-theme',k); }catch(e){} applyTheme(); render(); }
 const now=new Date();
 const NOW={y:now.getFullYear(),m:now.getMonth()};          /* m is 0-based */
 const pkey=(y,m)=>y+'-'+String(m+1).padStart(2,'0')+'-01'; /* sc_entries.period_start */
@@ -1812,7 +1820,6 @@ function itemsScreen(){
       +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);font-weight:600">'+nOn+' of '+all.length+'</div></button>';
     if(col){ h+='</div>'; return; }
     h+='<div class="pickrow">'
-      +(S.onlyUsing?'':'<button class="pick" '+(nOn===all.length?'disabled':'')+' onclick="pickAll(\''+c.id+'\',true)">Select all</button>')
       +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
     mine.forEach(i=>{
@@ -2010,13 +2017,10 @@ function settingsHtml(){
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Text size</div>'
     +'<select class="formfld" id="stText" onchange="setTextSize(this.value)">'
     +[['standard','Standard'],['large','Large'],['xl','Extra large']].map(o=>'<option value="'+o[0]+'" '+(textSize()===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Appearance</div><div class="seg" style="margin-top:6px">'
+    +[['dark','Dark'],['light','Light']].map(o=>'<button class="'+(theme()===o[0]?'on':'')+'" onclick="setTheme(\''+o[0]+'\')">'+o[1]+'</button>').join('')+'</div></div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Time-of-day colors</div>'
     +TODS.map(t=>'<div class="todcol"><span>'+t[2]+' '+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')+'</div>';
-  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">App version</div>'
-    +'<div style="font-size:calc(16px*var(--z));font-variant-numeric:tabular-nums">'+esc(fmtBuild(BUILD_ID))+'</div>'
-    +'<div style="font-size:calc(13px*var(--z));color:var(--muted)">Your local time</div>'
-    +'<div class="cardact"><button class="pick" onclick="checkUpdate()">Check for updates</button></div>'
-    +'<div id="stMsg" style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;min-height:18px"></div></div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Change password</div>'
     +'<input class="formfld" type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
     +'<input class="formfld" type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
@@ -2025,6 +2029,11 @@ function settingsHtml(){
     +'<div style="font-size:calc(16px*var(--z));word-break:break-all">'+esc(email)+'</div>'
     +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:4px">Time zone: '+esc(tz||'—')+'</div>'
     +'<div class="cardact"><button class="pick" style="color:var(--alert)" onclick="signOut()">Sign out</button></div></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">App version</div>'
+    +'<div style="font-size:calc(16px*var(--z));font-variant-numeric:tabular-nums">'+esc(fmtBuild(BUILD_ID))+'</div>'
+    +'<div style="font-size:calc(13px*var(--z));color:var(--muted)">Your local time</div>'
+    +'<div class="cardact"><button class="pick" onclick="checkUpdate()">Check for updates</button></div>'
+    +'<div id="stMsg" style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;min-height:18px"></div></div>';
   return h;
 }
 function setTodColor(slot,hex){
