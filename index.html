@@ -79,7 +79,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .dcell .dc.zero{border-color:var(--muted)}
 .daylabel{display:flex;align-items:center;gap:10px;margin:8px 2px 16px;font-size:calc(15px*var(--z));font-weight:600}
 .dayprog{margin-left:auto;color:var(--muted);font-weight:500;font-size:calc(14px*var(--z))}
-.todhead{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid var(--line);padding:4px 4px 8px;margin:22px 0 8px;font-weight:600;font-size:calc(14px*var(--z));color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.todhead{display:flex;justify-content:space-between;align-items:baseline;border:0;background:none;padding:0 4px;margin:24px 0 6px;font-weight:700;font-size:calc(12.5px*var(--z));color:var(--muted);letter-spacing:.12em;text-transform:uppercase}
+.todhead b{font-weight:600;letter-spacing:0}
 .todhead b{font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:2px;background:var(--slate);border:1px solid var(--line);border-radius:11px;padding:3px;margin:18px 0 22px}
 .tab{flex:1;padding:13px 2px;border-radius:8px;font-size:calc(13px*var(--z));font-weight:500;color:var(--muted);transition:.14s;white-space:nowrap}
@@ -1495,7 +1496,7 @@ function rowsView(P,counted,headers){
     if(!inSlot.length) return;
     if(headers){
       const done=inSlot.filter(r=>rowVal(r)===true).length, tot=inSlot.filter(r=>rowVal(r)!=='na').length;
-      h+='<div class="todhead"><span>'+t[2]+' '+t[1]+'</span><b>'+fmtScore(done,tot)+'</b></div>';
+      h+='<div class="todhead"><span>'+t[1]+'</span><b>'+fmtScore(done,tot)+'</b></div>';
       if(!shown.length) h+='<div class="allclear">All done &#10003;</div>';
     }
     shown.forEach(r=>{ h+=itemBtn(r.it,r.key,true,r.right,r.credit); });
@@ -1877,7 +1878,7 @@ function itemsScreen(){
     TODS.forEach(t=>{
       const all=todList(t[0]), mine=S.onlyUsing?all.filter(i=>i.is_selected||S.keepShown[i.id]):all;
       if(!mine.length) return;
-      h+='<div class="todhead" style="margin-top:20px"><span>'+t[2]+' '+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
+      h+='<div class="todhead" style="margin-top:20px"><span>'+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
         +'<div style="display:flex;flex-direction:column;gap:2px">'+mine.map(i=>itemRow(i,'tod:'+t[0],catOf[i.category_id])).join('')+'</div>';
     });
   } else
@@ -2090,7 +2091,7 @@ function settingsHtml(){
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Appearance</div><div class="seg" style="margin-top:6px">'
     +[['dark','Dark'],['light','Light']].map(o=>'<button class="'+(theme()===o[0]?'on':'')+'" onclick="setTheme(\''+o[0]+'\')">'+o[1]+'</button>').join('')+'</div></div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Time-of-day colors</div>'
-    +TODS.map(t=>'<div class="todcol"><span>'+t[2]+' '+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')+'</div>';
+    +TODS.map(t=>'<div class="todcol"><span>'+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')+'</div>';
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Change password</div>'
     +'<input class="formfld" type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
     +'<input class="formfld" type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
