@@ -120,7 +120,12 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .nameline{gap:14px}
 .isub{display:block;font-size:calc(13px*var(--z));color:var(--muted);font-weight:400;margin-top:3px}
 .ilabel{cursor:pointer}
-.addplus{flex:none;width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--ink);font-size:30px;font-weight:600;line-height:1;display:grid;place-items:center}
+.addplus{flex:none;width:38px;height:38px;border-radius:50%;background:var(--accent);color:var(--ink);font-size:26px;font-weight:600;line-height:1;display:grid;place-items:center}
+.itop{display:flex;gap:10px;align-items:center}
+.itop select{flex:1;min-width:0;padding:9px 10px;font-size:calc(14px*var(--z))}
+.itop2{display:flex;gap:8px;margin:8px 0 0;flex-wrap:wrap}
+.chip{padding:7px 12px;border-radius:100px;border:1px solid var(--line);background:var(--well);color:var(--muted);font-size:calc(13px*var(--z));font-weight:600}
+.chip.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent)}
 .iconbtn2{flex:none;width:64px;height:64px;border-radius:16px;border:1.5px dashed var(--gold);font-size:34px;display:grid;place-items:center;background:transparent}
 .sheetname{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--bone);font:inherit;font-size:calc(18px*var(--z));font-weight:600;padding:8px 0}
 .swrow2{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;max-width:230px}
@@ -1073,9 +1078,7 @@ function daysRow(i){
 }
 function daysText(i){
   if(!hasDays(i)) return '';
-  if(i.days==='12345') return 'Mon–Fri';
-  if(i.days==='67') return 'Sun, Sat';
-  return DAYORDER.filter(n=>i.days.indexOf(String(n))>=0).map(n=>DOWSHORT[n]==='the weekend'?'Sat':DOWSHORT[n]).join(' ');
+  return DAYORDER.filter(n=>i.days.indexOf(String(n))>=0).map(n=>DAYLET[n-1]).join(' ');
 }
 function toggleIconPick(id){ S.iconPick=(S.iconPick===id)?null:id; render(); }
 async function setGlobalFields(id){
@@ -1802,20 +1805,17 @@ function histTrends(){
 }
 
 function itemsScreen(){
-  let h='<div class="note" style="display:flex;align-items:center;gap:12px"><div style="flex:1">Turn on what applies. Tap a name to edit it. Drag &#8801; to reorder.'
-    +(adminHere()?'<br><br><b style="color:var(--gold)">Admin:</b> the gold toggle at the end of each row is on when the question is part of the global template every user gets.':'')
-    +'</div><button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>';
-  h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg" style="flex-wrap:wrap">';
-  [['manual','My order'],['active','Active first'],['freq','Frequency'],['tod','Time of day'],['az','A – Z']].forEach(function(p){
-    h+='<button style="flex:1 1 30%" class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
-  h+='</div>';
-  h+='<div class="selrow '+(S.onlyUsing?'on':'')+'" style="margin-top:14px;cursor:pointer" onclick="setOnlyUsing()">'
-    +'<span class="tog"></span><span class="ilabel">Show only what I&rsquo;m using</span></div>';
-  if(S.cats.length>1) h+='<div class="pills" style="padding:10px 0 0"><button class="pl" onclick="foldAll(true)">Collapse all</button><button class="pl" onclick="foldAll(false)">Expand all</button></div>';
+  const sorts=[['manual','My order'],['active','Active first'],['freq','Frequency'],['tod','Time of day'],['az','A – Z']];
+  const allCol=S.cats.length>1&&S.cats.every(c=>S.collapsed[c.id]);
+  let h='<div class="itop"><select class="fsel" aria-label="Sort within each category" onchange="setSort(this.value)">'
+    +sorts.map(p=>'<option value="'+p[0]+'" '+(S.sortMode===p[0]?'selected':'')+'>Sort: '+p[1]+'</option>').join('')+'</select>'
+    +'<button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>'
+    +'<div class="itop2"><button class="chip'+(S.onlyUsing?' on':'')+'" onclick="setOnlyUsing()">Only what I&rsquo;m using</button>'
+    +(S.cats.length>1?'<button class="chip" onclick="foldAll('+(!allCol)+')">'+(allCol?'Expand all':'Collapse all')+'</button>':'')+'</div>';
   S.cats.forEach(c=>{
     const all=catItems(c.id), mine=shownItems(c.id), nOn=all.filter(i=>i.is_selected).length;
     const col=!!S.collapsed[c.id];
-    h+='<div class="catblock" style="margin-top:24px"><button class="cathead catfold" onclick="toggleCat(\''+c.id+'\')" aria-expanded="'+(!col)+'">'
+    h+='<div class="catblock" style="margin-top:16px"><button class="cathead catfold" onclick="toggleCat(\''+c.id+'\')" aria-expanded="'+(!col)+'">'
       +'<span class="chev">'+(col?'&#9656;':'&#9662;')+'</span><div class="catname">'+esc(catTitle(c))+'</div>'
       +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);font-weight:600">'+nOn+' of '+all.length+'</div></button>';
     if(col){ h+='</div>'; return; }
