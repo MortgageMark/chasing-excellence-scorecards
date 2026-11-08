@@ -69,6 +69,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .wkarrow{width:30px;height:48px;color:var(--muted);font-size:calc(24px*var(--z));flex:none}
 .wkarrow:disabled{opacity:.25}
 .dcell{flex:0 0 54px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 3px 7px;border-radius:24px;scroll-snap-align:center}
+.dcell.fut{opacity:.65}
 .dcell.sel{background:var(--raise);outline:1px solid var(--line)}
 .dcell .dl{font-size:calc(13px*var(--z));color:var(--muted)}
 .dcell .dc{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:calc(15px*var(--z));font-weight:600;border:2px solid var(--line);color:var(--bone)}
@@ -257,6 +258,7 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:.18s}
 .selrow.on .tog{background:rgba(72,160,206,.3)}
 .selrow.on .tog::after{transform:translateX(20px);background:var(--accent)}
+.grip.dim{opacity:.55}
 .grip{flex:none;width:34px;padding:8px 0;text-align:center;color:var(--muted);font-size:calc(18px*var(--z));line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .mv{flex:none;display:flex;flex-direction:column;gap:2px}
 .mv button{width:34px;height:20px;border:1px solid var(--line);border-radius:4px;color:var(--muted);font-size:calc(12px*var(--z));line-height:1;display:grid;place-items:center;padding:0}
@@ -518,7 +520,7 @@ const S={
   template:null, cats:[], library:[],
   card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, editItem:null, collapsed:{}, todColors:null, look:'clean', hideDone:true, score:'off', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
-  sortMode:'freq', editing:null, busy:false
+  sortMode:'freq', editing:null, busy:false, adminNew:{}
 };
 
 /* ===================================================================
@@ -641,7 +643,23 @@ function guessIcon(name){
   for(let k=0;k<ICON_GUESS.length;k++){ if(new RegExp(ICON_GUESS[k][0]).test(t)) return ICON_GUESS[k][1]; }
   return '✅';
 }
-const ICONS=['🙏','💧','🛏️','😴','🧘','🚶','🏃','🚴','💪','🏋️','🥗','🍳','🍎','☕','💊','🚿','⚖️','📖','✍️','📝','🧠','🎧','📞','💬','📧','✉️','📣','🎥','📅','🎯','📈','💰','❤️','💑','👪','🤝','⛪','🌱','☀️','🌙','⭐','🏠','🧹','🛒','🎁','📱','✅','🏆','🥤','🍽️','🥦','🍌','🥑','🍇','🛌','⏰','⌚','🧴','🪥','🦷','🩺','🧘‍♀️','🤸','⚽','🏀','🏊','⛰️','🧗','🥾','🎾','⛳','🎨','🎸','🎹','🎤','📚','🎓','🔬','💡','💻','🖥️','⌨️','📊','🗂️','📁','🧾','💵','🏦','💳','📈','🔑','🏡','🛠️','🔧','🚗','✈️','🧺','🪴','🐕','🐈','👶','👫','🎉','🤗','🙌','👍','🔥','🚀','🌟','💎','🎖️','🥇','📍','🗓️','🔔','📌','🧭','🕊️','✝️','📿','🌅','🌳','🌊','🌈'];
+const ICON_DATA=[
+['🙏','pray prayer devotion faith worship thank gratitude'],['✝️','cross jesus christian church faith'],['📖','bible book read scripture devotional verse study'],['⛪','church service worship'],['📿','rosary beads prayer'],['🕊️','peace dove spirit'],['😇','angel blessing'],['🕯️','candle quiet'],
+['👄','lips kiss kisses mouth'],['💋','kiss lips lipstick'],['❤️','love heart spouse marriage'],['💑','couple date romance'],['💏','kiss couple'],['😘','kiss blow'],['🥰','love affection'],['🤗','hug hugs embrace'],['💞','hearts love'],['💍','ring marriage wedding anniversary'],['🌹','rose romance flowers'],['💐','flowers bouquet'],['🍷','wine drink alcohol date'],['🥂','toast celebrate cheers'],
+['🗣️','speak speaking talk say voice words kind words'],['💬','chat message talk text conversation'],['👂','listen ear hear'],['🎤','microphone speak speech sing'],['📣','megaphone announce marketing'],['🙊','quiet silence'],['📢','announce loudspeaker'],
+['🍽️','plate dinner date night meal eat restaurant'],['🍴','fork knife eat dinner'],['🥗','salad healthy eat'],['🍳','breakfast egg cook'],['🍎','apple fruit healthy'],['🥦','broccoli vegetables'],['🥑','avocado'],['🍌','banana'],['🍇','grapes fruit'],['☕','coffee'],['🥤','drink cup smoothie'],['💧','water hydrate'],['🍕','pizza'],['🍔','burger'],['🍰','cake dessert birthday'],['🥩','steak protein meat'],['🍗','chicken protein'],['🥚','egg protein'],
+['🗂️','binder files folder documents paperwork organize'],['📁','folder files'],['📋','clipboard checklist paperwork form'],['📄','document paper page'],['📑','documents papers'],['📒','ledger notebook binder'],['📓','notebook journal'],['📔','notebook'],['📚','books study learn'],['🗒️','notepad notes'],['📝','write notes memo'],['✍️','write journal sign'],['🖊️','pen write'],['📌','pin'],['📎','paperclip attach'],['🗃️','file box cabinet'],['🧾','receipt expenses'],['🔖','bookmark'],
+['💪','strong strength workout gym muscle'],['🏋️','weights lift gym'],['🏃','run running jog'],['🚶','walk walking steps'],['🚴','bike cycle ride'],['🏊','swim swimming'],['🧘','meditate yoga stretch calm'],['🧘‍♀️','yoga meditate'],['🤸','mobility flexibility'],['⚽','soccer sports'],['🏀','basketball'],['🏈','football'],['⚾','baseball'],['🎾','tennis'],['⛳','golf'],['🥾','hike hiking boots'],['⛰️','mountain climb hike'],['🧗','climb'],['🏆','trophy win'],['🥇','gold medal first'],['🎖️','medal award'],['🎯','target goal aim'],
+['🛏️','bed sleep'],['😴','sleep tired rest'],['🛌','sleep bed rest'],['⏰','alarm wake clock'],['⌚','watch time'],['⏳','fast fasting hourglass wait'],['🕒','time clock'],['📅','calendar plan date schedule'],['🗓️','calendar planner'],['🔔','bell reminder'],
+['🚿','shower cold'],['🛁','bath soak'],['🧖','sauna sweat steam spa'],['🧴','lotion sunscreen'],['🪥','toothbrush teeth brush'],['🦷','dentist teeth tooth'],['🩺','doctor checkup physical health'],['💊','vitamin pill medicine supplement'],['💉','shot bloodwork blood vaccine'],['🩸','blood'],['👁️','eye exam vision'],['🧠','brain mind therapy think'],['⚖️','scale weigh balance'],['🌡️','temperature'],
+['👪','family kids children'],['👶','baby child'],['👧','daughter girl'],['👦','son boy'],['🧒','child kid'],['👫','couple friends'],['👭','friends'],['🤝','handshake friend partner meet network'],['👥','people team group'],['🙌','celebrate praise win'],['👏','applause clap thanks'],['👍','thumbs up good'],['🎉','party celebrate'],['🎁','gift present surprise'],['🎂','birthday cake'],['🎈','balloon party'],
+['📞','call phone'],['📱','phone mobile'],['☎️','telephone call'],['📧','email'],['✉️','letter mail card note'],['📨','message send'],['📬','mailbox'],['🎥','video camera film'],['📷','photo camera'],['🎧','headphones podcast listen music'],['🎙️','podcast microphone record'],['🎵','music song'],['🎸','guitar music'],['🎹','piano keys'],['🎨','art paint creative'],['🎭','theater drama'],
+['💰','money savings finance'],['💵','cash dollars'],['💳','credit card'],['🏦','bank'],['📈','chart growth stocks invest'],['📉','decline chart'],['📊','stats report numbers'],['🪙','coin'],['💎','diamond value'],['🏡','home house'],['🏠','house home'],['🔑','key'],['🛠️','tools fix repair'],['🔧','wrench tool'],['🧹','clean sweep chores'],['🧺','laundry basket'],['🛒','shopping groceries cart'],['🚗','car drive'],['✈️','plane travel trip fly'],['🧳','luggage trip vacation'],['🏖️','beach vacation'],['⛺','camping tent'],['🗺️','map trip'],['🧭','compass direction'],
+['💻','computer laptop work'],['🖥️','desktop computer'],['⌨️','keyboard type'],['🔬','science'],['💡','idea light'],['🎓','graduate learn school class'],['🏫','school'],['🚀','launch grow rocket'],['🔥','fire streak hot'],['⭐','star'],['🌟','shine star'],['✅','check done'],['☑️','checkbox'],['❌','no cross'],['📍','location pin'],['🔒','lock secure'],['🛡️','shield protect insurance'],['⚙️','settings gear'],['🔄','repeat cycle'],
+['🌱','grow plant seedling'],['🌳','tree outdoors nature'],['🪴','plant'],['☀️','sun morning'],['🌤️','afternoon sun'],['🌙','moon night evening'],['🌅','sunrise morning'],['🌊','ocean wave'],['🌈','rainbow'],['🌸','flower'],['🍀','clover luck'],['🐕','dog pet walk'],['🐈','cat pet'],['🐴','horse'],['🎣','fishing'],['🏕️','camp'],
+['🧩','puzzle'],['🎲','game dice'],['♟️','chess'],['🎮','video game'],['📺','tv television'],['📵','no phone unplug screens'],['🔕','silent mute'],['🚫','no stop avoid'],['🛑','stop']
+];
+const ICONS=ICON_DATA.map(x=>x[0]);
 
 /* ---- Due and late ------------------------------------------------------------------
    Each answer belongs to a period (a week, month, quarter...). Defaults: it is due on the first day
@@ -1023,6 +1041,7 @@ async function adopt(){
 
 async function tick(itemId,period,creditWeek,force){
   const it=S.items.find(i=>i.id===itemId); if(!it) return;
+  if(isFutureDay()) return;
   const k=itemId+'|'+period;
   const prev=S.entries[k], prevCredit=S.credit[k];
   /* Tap or swipe right: done (again = undo). Swipe left: not applicable (again = undo). */
@@ -1080,6 +1099,11 @@ function daysText(i){
   if(!hasDays(i)) return '';
   return DAYORDER.filter(n=>i.days.indexOf(String(n))>=0).map(n=>DAYLET[n-1]).join(' ');
 }
+function filterIcons(q){
+  const g=document.getElementById('iconGrid'); if(!g) return;
+  const w=(q||'').toLowerCase().split(/\s+/).filter(Boolean);
+  [].forEach.call(g.querySelectorAll('button[data-k]'),b=>{ const k=b.getAttribute('data-k'); b.style.display=w.every(x=>k.indexOf(x)>=0)?'':'none'; });
+}
 function toggleIconPick(id){ S.iconPick=(S.iconPick===id)?null:id; render(); }
 async function setGlobalFields(id){
   if(!confirm('Make this item\'s repeat, due, late, time of day and icon the default for every user? People who already changed theirs keep theirs.')) return;
@@ -1094,7 +1118,12 @@ async function setGlobalFields(id){
 function toggleSched(id){ openEdit(id); }
 /* ---- Edit screen: tap an item's pencil (or its schedule line) on the Items tab ---- */
 function openEdit(id){ S.editItem=id; S.iconPick=null; render(); }
-function closeEdit(){ S.editItem=null; S.iconPick=null; render(); }
+function closeEdit(){
+  const id=S.editItem; S.editItem=null; S.iconPick=null; render();
+  /* an item the admin just created keeps whatever they set in the edit screen as the template default */
+  const it=id&&S.adminNew[id]&&S.items.find(x=>x.id===id);
+  if(it&&it.library_item_id&&adminHere()) run(SB.rpc("sc_set_global_fields",{p_item:id})).catch(function(){});
+}
 function openNew(){ S.newItem={cat:S.cats[0]&&S.cats[0].id}; S.editItem=null; render(); }
 function closeNew(){ S.newItem=null; render(); }
 function newItemSheet(el){
@@ -1127,7 +1156,7 @@ function renderSheet(){
     +'<div class="sheetbody">'
     +'<div class="sheetcard"><div class="srow nameline"><button class="iconbtn2" onclick="toggleIconPick(\''+i.id+'\')">'+(i.icon?esc(i.icon):'+')+'</button>'
     +'<input class="sheetname" id="sheetName" value="'+esc(label(i))+'" onchange="saveName(\''+i.id+'\',this.value)" placeholder="Name"></div>'
-    +(S.iconPick===i.id?'<div class="iconpick" style="padding:0 0 12px">'+ICONS.map(e=>'<button onclick="setField(\''+i.id+'\',\'icon\',\''+e+'\')">'+e+'</button>').join('')+'<button class="none" onclick="setField(\''+i.id+'\',\'icon\',\'\')">No icon</button></div>':'')
+    +(S.iconPick===i.id?'<input class="formfld" id="iconSearch" placeholder="Search icons (e.g. kiss, dinner, bible)" oninput="filterIcons(this.value)" style="margin:0 0 10px"><div class="iconpick" id="iconGrid" style="padding:0 0 12px">'+ICON_DATA.map(e=>'<button data-k="'+e[1]+'" onclick="setField(\''+i.id+'\',\'icon\',\''+e[0]+'\')">'+e[0]+'</button>').join('')+'<button class="none" onclick="setField(\''+i.id+'\',\'icon\',\'\')">No icon</button></div>':'')
     +(adminHere()&&i.library_item_id?'<div class="srow"><button class="pick" style="color:var(--gold)" onclick="saveGlobalName(\''+i.id+'\',document.getElementById(\'sheetName\').value)">Rename for everyone</button></div>':'')
     +row('Color',swatches)
     +row('Section','<select class="fsel" style="width:auto;max-width:210px" onchange="setField(\''+i.id+'\',\'category_id\',this.value)">'+cats+'</select>')
@@ -1260,6 +1289,7 @@ async function addItem(catId,text){
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
       icon:guessIcon(text),renamed_label:null,lib_label:null,lib_short:null,lib_code:null,freq:f,target_month:tm,is_selected:true,
       sort_order:row.sort_order,removed_at:null,days:null});
+    if(adminHere()){ S.adminNew[row.id]=1; await setGlobalNow(row.id,true); }   /* the admin's additions join the shared template automatically */
     openEdit(row.id);   /* open the edit screen so repeats, days and icon can be picked */
   }catch(e){}
 }
@@ -1331,12 +1361,13 @@ function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
   const t=todOf(i), tc=i.color||(t!=='any'?todColors()[t]:null), tint=tc?' style="background:linear-gradient('+tc+'2B,'+tc+'2B),var(--slate)"':'';
   const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':'<span class="st"></span>');
-  const act=due?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
-  return '<div class="swrow'+(due?' swp':'')+'"><div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
+  const fut=isFutureDay(), act=(due&&!fut)?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
+  return '<div class="swrow'+((due&&!fut)?' swp':'')+'"><div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
     +'<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'"'+tint+act+'>'
     +(i.icon?'<span class="ico">'+esc(i.icon)+'</span>':'')+'<span class="ilabel">'+esc(label(i))+(right?'<span class="sub">'+right+'</span>':'')+'</span>'
     +state+'</button></div>';
 }
+const isFutureDay=()=>isDaily()&&S.tab==='checkin'&&!!S.day&&ymd(S.day)>ymd(today0());
 function rowTap(el){ if(Date.now()-SWIPED<500) return; tick(el.dataset.id,el.dataset.key,el.dataset.cr); }
 let SW=null;
 try{
@@ -1392,20 +1423,21 @@ function extraRows(c,P,counted){
    done, red ring = a past day with nothing done. Tap a day to open it. */
 function dayStrip(s){
   const today=today0(), startD=new Date(S.card.started_at+"T00:00:00");
-  let first=addDays(today,-120); if(ymd(first)<ymd(startD)) first=startD;
+  let first=addDays(today,-120), floor=addDays(startD,-30); if(ymd(first)<ymd(floor)) first=floor;
+  const last=addDays(today,14);
   let h='<div class="daystrip"><div class="days" id="daysScroll" onscroll="S.stripScroll=this.scrollLeft">';
-  for(let d=first; ymd(d)<=ymd(today); d=addDays(d,1)){
-    const key=ymd(d), sel=key===ymd(S.day), sc=score(mkPDay(d));
+  for(let d=first; ymd(d)<=ymd(last); d=addDays(d,1)){
+    const key=ymd(d), sel=key===ymd(S.day), fut=key>ymd(today), sc=score(mkPDay(d));
     let st='none', pct=0;
-    if(sc.tDue){ pct=Math.round(100*sc.tDone/sc.tDue); st=sc.tDone>=sc.tDue?'full':(sc.tDone>0?'part':(key<ymd(today)?'miss':'zero')); }
-    h+='<button class="dcell'+(sel?' sel':'')+'" onclick="pickDay(\''+key+'\')">'
+    if(!fut&&sc.tDue){ pct=Math.round(100*sc.tDone/sc.tDue); st=sc.tDone>=sc.tDue?'full':(sc.tDone>0?'part':(key<ymd(today)?'miss':'zero')); }
+    h+='<button class="dcell'+(sel?' sel':'')+(fut?' fut':'')+'" onclick="pickDay(\''+key+'\')">'
       +'<span class="dl">'+DOW[d.getDay()].slice(0,2)+'</span>'
       +'<span class="dc '+st+'" style="--p:'+pct+'">'+(st==='full'?'&#10003;':d.getDate())+'</span></button>';
   }
   h+='</div></div>';
   const isToday=ymd(S.day)===ymd(today);
   h+='<div class="daylabel"><span>'+DOWLATE[S.day.getDay()||7]+', '+shortDate(S.day)+'</span>'
-    +(isToday?'<span class="pill due">Today</span>':'<span class="pill due">Backfill</span>')
+    +(isToday?'<span class="pill due">Today</span>':(ymd(S.day)>ymd(today)?'<span class="pill due">Preview</span>':'<span class="pill due">Backfill</span>'))
     +(S.score==='off'?'':'<span class="dayprog">'+(S.score==='pct'?(s.tDue?Math.round(100*s.tDone/s.tDue)+'%':'—'):s.tDone+' of '+s.tDue)+'</span>')+'</div>';
   return h;
 }
@@ -1834,18 +1866,18 @@ function itemsScreen(){
           +'</div>';
         return;
       }
-      const tag=!i.library_item_id?'<span class="custom-tag">Yours</span>'
+      const tag=(!i.library_item_id&&!adminHere())?'<span class="custom-tag">Yours</span>'
                :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
-      const canMove=S.sortMode==='manual'&&!S.editing, pos=mine.indexOf(i);
+      const canMove=!S.editing, pos=mine.indexOf(i);
       h+='<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
         +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
         +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+tag
         +'<span class="isub">'+schedSummary(i)+'</span>'
         +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
-        +(!i.library_item_id?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
+        +((!i.library_item_id&&!adminHere())?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
         +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
-        +(canMove?'<span class="grip" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
+        +(canMove?'<span class="grip'+(S.sortMode==='manual'?'':' dim')+'" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
         +'</div>';
     });
     if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
@@ -1859,7 +1891,10 @@ function itemsScreen(){
   return h;
 }
 /* Every scorecard opens in "My order": the template's order until the user moves things. */
-function defSort(){ return 'manual'; }
+function defSort(){
+  try{ const v=localStorage.getItem('ces-sort-'+(S.template&&S.template.id)); if(['manual','active','freq','tod','az'].indexOf(v)>=0) return v; }catch(e){}
+  return 'manual';
+}
 const freqKeys=()=>Object.keys(FREQ);
 /* Admin only: a question an admin added ("Yours") can be made part of the shared
    template. Only questions promoted this way (code 'custom-...') can be switched back. */
@@ -1886,6 +1921,9 @@ async function toggleGlobal(id){
   const on=!isGlobal(it);
   if(!confirm(on?'Add "'+label(it)+'" to the global template? Every user will get this question.'
                  :'Remove "'+label(it)+'" from the global template? Other users will stop seeing it. It stays on your own scorecard.')) return;
+  await setGlobalNow(id,on);
+}
+async function setGlobalNow(id,on){
   try{
     await run(SB.rpc("sc_set_global",{p_item:id,p_on:on}));
     const tid=S.template.id, tab=S.tab, sort=S.sortMode;
@@ -1928,6 +1966,7 @@ function moveItem(id,dir){
 let DRAG=null;
 function dragStart(e,catId){
   e.preventDefault();
+  if(S.sortMode!=='manual'){ setSort('manual'); return; }   /* first touch switches to My order; drag again */
   const h=e.currentTarget, row=h.closest('[data-row]');
   DRAG={catId:catId,row:row,list:row.parentNode,startY:e.clientY,y:e.clientY,scroll0:window.scrollY,before:null,timer:null,grip:h,pid:e.pointerId};
   row.classList.add('dragging');
@@ -1986,7 +2025,7 @@ async function addSection(){
     await refreshData(S.template.id,'items');
   }catch(e){ console.error(e); }
 }
-function setSort(m){ S.sortMode=m; S.editing=null; render(); }
+function setSort(m){ S.sortMode=m; S.editing=null; try{ localStorage.setItem('ces-sort-'+S.template.id,m); }catch(e){} render(); }
 
 /* ---- Version stamp: the build time, shown as YYYY/MMDD HH:MM in the viewer's own time ---- */
 function fmtBuild(id){
