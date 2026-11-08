@@ -241,7 +241,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=22;
+const APP_RELEASE=23;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -370,7 +370,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, onlyUsing:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, onlyUsing:true, showLonger:false,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -789,6 +789,13 @@ function toggleSel(id){
 }
 /* "Show only what I'm using" hides switched-off items on the Items tab. Remembered in this browser. */
 try{ if(localStorage.getItem('ces-only-using')==='0') S.onlyUsing=false; }catch(e){}
+/* Check-in: also list the weekly / monthly / longer items inside each section. Remembered in this browser. */
+try{ if(localStorage.getItem('ces-show-longer')==='1') S.showLonger=true; }catch(e){}
+function setShowLonger(){
+  S.showLonger=!S.showLonger;
+  try{ localStorage.setItem('ces-show-longer',S.showLonger?'1':'0'); }catch(e){}
+  render();
+}
 function setOnlyUsing(){
   S.onlyUsing=!S.onlyUsing; S.keepShown={}; S.editing=null;
   try{ localStorage.setItem('ces-only-using',S.onlyUsing?'1':'0'); }catch(e){}
@@ -924,11 +931,28 @@ function checkin(s){
   h+='<div class="note">Tap once for <b>yes</b>, twice for <b>N/A</b>, three times to clear. '
     +(W?'N/A items are <b>greyed out and don\'t count</b>. Your score is '+(isDaily()?'today\'s':'this week\'s')+' items. The optional ones from your longer list only count when you tick yes'+(isDaily()?'.':', or in the week they\'re due.')
        :'Items outside their cycle and items marked N/A are <b>greyed out and don\'t count</b>. The denominator is what you selected, not the whole library.')+'</div>';
+  if(W){
+    h+='<div class="selrow '+(S.showLonger?'on':'')+'" style="margin:-6px 0 16px;cursor:pointer" onclick="setShowLonger()">'
+      +'<span class="tog"></span><span class="ilabel">Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section</span></div>';
+  }
   let any=false;
   const counted=W?longCounted(P):{};
   S.cats.forEach(c=>{
     const mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
-    const extra=counted[c.id]||[];
+    let extra=counted[c.id]||[];
+    /* "Show weekly / monthly items in each section": add this period's longer-cycle items to the
+       section too, so they can be ticked in place. Items already counted keep their row. */
+    if(W&&S.showLonger){
+      const have={}; extra.forEach(x=>{ have[x.it.id+'|'+x.key]=1; });
+      const add=[];
+      catItems(c.id).forEach(i=>{
+        if(!i.is_selected||isShortCycle(i)||CYC[i.freq]===undefined) return;
+        const k=cycleKey(i.freq,P.fri,0);
+        if(!have[i.id+'|'+k]) add.push({it:i,key:k});
+      });
+      const order={}; catItems(c.id).forEach((i,n)=>{ order[i.id]=n; });
+      extra=extra.concat(add).sort((x,y)=>(order[x.it.id]-order[y.it.id])||(x.key<y.key?-1:1));
+    }
     if(liveItems().some(i=>i.category_id===c.id&&i.is_selected)) any=true;
     if(!mine.length&&!extra.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
@@ -940,8 +964,11 @@ function checkin(s){
       h+=itemBtn(i,ekey(i,P),due,due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'));
     });
     if(extra.length){
-      h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">From your longer list &mdash; due or ticked '+PNOUN()+'</div>';
-      extra.forEach(x=>{ h+=itemBtn(x.it,x.key,true,cycleName(x.it.freq,new Date(x.key+'T00:00:00')),P.key); });
+      h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">'+(S.showLonger?'Weekly, monthly &amp; longer &mdash; tick when you do them':'From your longer list &mdash; due or ticked '+PNOUN())+'</div>';
+      extra.forEach(x=>{
+        const cur=x.key===cycleKey(x.it.freq,P.fri,0);
+        h+=itemBtn(x.it,x.key,true,cur?FREQ[x.it.freq]:cycleName(x.it.freq,new Date(x.key+'T00:00:00')),P.key);
+      });
     }
     h+='</div>';
   });
