@@ -1204,6 +1204,9 @@ try{ if(localStorage.getItem('ces-only-using')==='0') S.onlyUsing=false; }catch(
 /* Check-in: also list the weekly / monthly / longer items inside each section. Remembered in this browser. */
 try{ if(localStorage.getItem('ces-show-longer')==='0') S.showLonger=false; }catch(e){}
 try{ if(localStorage.getItem('ces-due-only')==='0') S.dueOnly=false; }catch(e){}
+S.longerWhen='weekends';
+try{ if(localStorage.getItem('ces-longer-when')==='daily') S.longerWhen='daily'; }catch(e){}
+function setLongerWhen(v){ S.longerWhen=v; try{ localStorage.setItem('ces-longer-when',v); }catch(e){} render(); }
 try{
   const lk=localStorage.getItem('ces-look'); if(lk==='clean'||lk==='sections'||lk==='time') S.look=lk;
   if(localStorage.getItem('ces-hide')==='1') S.hideDone=true;
@@ -1417,6 +1420,8 @@ function extraRows(c,P,counted){
   }
   /* "Only show what's due now" (daily cards): hide longer items whose due day has not arrived. */
   if(W&&S.dueOnly&&isDaily()) extra=extra.filter(x=>rowState(x.it,x.key,P.fri)!=='notdue');
+  /* Daily cards: monthly / quarterly items show on weekends, 6-month / yearly on the first weekend of the month (Settings can turn this off). */
+  if(W&&isDaily()&&S.longerWhen==='weekends') extra=extra.filter(x=>longerToday(x.it,P.fri));
   return extra;
 }
 /* Daily cards: the days as a row you scroll sideways. Full = everything done, partial ring = some
@@ -1457,6 +1462,12 @@ function lookBar(){
     +'<span class="plsep"></span>'
     +'<button class="pl'+(S.hideDone?' on':'')+'" onclick="toggleHideDone()">'+(S.hideDone?'&#10003; Done hidden':'Hide done')+'</button>'
     +'<button class="pl" onclick="cycleScore()">'+sc+'</button></div>';
+}
+function longerToday(it,d){
+  if(it.freq==='w'||it.freq==='d') return true;
+  const dow=d.getDay(), dom=d.getDate();
+  if(it.freq==='m'||it.freq==='q') return dow===0||dow===6;
+  return (dow===6&&dom<=7)||(dow===0&&dom<=8);
 }
 const rowVal=r=>S.entries[r.it.id+'|'+r.key];
 const isResolved=r=>{ const v=rowVal(r); return v===true||v==='na'; };
@@ -2047,7 +2058,10 @@ function settingsHtml(){
   if(inCard){
     h+='<div class="card"><div class="eyebrow" style="margin-bottom:10px">This scorecard</div>'
       +sw(S.showLonger,'setShowLonger','Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section')
-      +(isDaily()?sw(S.dueOnly,'setDueOnly','Only show what&rsquo;s due now'):'')+'</div>';
+      +(isDaily()?sw(S.dueOnly,'setDueOnly','Only show what&rsquo;s due now'):'')
+      +(isDaily()?'<div class="seglbl">Show monthly &amp; longer items</div><div class="seg" style="margin-top:6px">'
+        +[['weekends','On weekends'],['daily','Every day']].map(o=>'<button class="'+(S.longerWhen===o[0]?'on':'')+'" onclick="setLongerWhen(\''+o[0]+'\')">'+o[1]+'</button>').join('')
+        +'</div><div style="font-size:calc(13px*var(--z));color:var(--muted);margin-top:8px;line-height:1.45">Weekends: monthly and quarterly items show on Saturday and Sunday; 6-month and yearly items on the first weekend of the month. Done items hide either way.</div>':'')+'</div>';
   }
   h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Open this device to</div>'
     +'<select class="formfld" id="stStart" onchange="setStart(this.value)"><option value="">All scorecards</option>'
