@@ -11,7 +11,7 @@
 
 ## How Mark wants to work (standing rules)
 
-1. **Short replies.** Only say what he needs to know or do. No lists of fixes.
+1. **Short replies.** No recaps or lists of what changed. When work is done, just say "Done. What's next?" and add only questions or suggestions that need his input.
 2. **Any SQL he must run: paste the full SQL in the reply** (in a code block) and say "Supabase → DailyTimeTracker → SQL Editor → paste → Run". Never just name a file.
 3. **Deploy when work is done**: commit on the session's feature branch, push, open a PR, merge to `main` (Netlify deploys). He does not want to be asked each time.
 4. Ask before building big new things only when the choice is genuinely his. Otherwise use judgment ("I trust your judgment").
