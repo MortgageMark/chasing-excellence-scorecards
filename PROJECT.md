@@ -45,10 +45,12 @@ Navy `#102937` base (`--ink`), `--slate #163347`, `--raise #1C4259`, `--line #2A
 - Settings page: account, show-longer / due-only toggles, text size, time-of-day colors, open-this-device-to (start scorecard), change password, version / check for updates.
 - Deep link `?s=<templateId>`; preferences in localStorage (`ces-*` keys).
 
-### Not built yet (agreed next)
-1. **Printable grid tracker** (weekly/monthly; items down the side, days across; tap cells; N/A mark; totals: best day, percentages, perfect days; print CSS).
-2. **Month calendar** (tap a day to jump) — both behind buttons inside the **History** tab.
-3. Stats (monthly rate, streaks, perfect days).
+### Built: History tab (Trends / Grid / Calendar)
+- **Grid tracker**: items down, days across (daily cards: month or week; weekly: weeks of the month; monthly: months of the year). Tap = done, or switch to "Tap = N/A". Row and column totals, perfect/best periods, Print button (landscape print CSS hides nav).
+- **Calendar**: month of days coloured by score (daily = that day, weekly = that week's score); monthly cards show a year of months. Tap a day to open it in Check-in/Today.
+
+### Not built yet
+1. Stats (monthly rate, streaks, perfect days) beyond what Grid/Calendar show.
 Explicitly skipped for now: goal-value counts, reminders, item start/end dates.
 
 ## Testing (do this before pushing)
