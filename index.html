@@ -555,8 +555,7 @@ function catItems(catId){
   const az=(a,b)=>label(a).localeCompare(label(b));
   if(S.sortMode==='az')     return list.slice().sort(az);
   if(S.sortMode==='manual') return list.slice().sort((a,b)=>a.sort_order-b.sort_order||az(a,b));
-  if(S.sortMode==='active') return list.slice().sort((a,b)=>(b.is_selected?1:0)-(a.is_selected?1:0)||a.sort_order-b.sort_order||az(a,b));
-  if(S.sortMode==='tod'){ const t=i=>{ const k=TODS.findIndex(x=>x[0]===todOf(i)); return k<0?9:k; }; return list.slice().sort((a,b)=>t(a)-t(b)||a.sort_order-b.sort_order||az(a,b)); }
+  if(S.sortMode==='tod'||S.sortMode==='active'){ const t=i=>{ const k=TODS.findIndex(x=>x[0]===todOf(i)); return k<0?9:k; }; return list.slice().sort((a,b)=>t(a)-t(b)||a.sort_order-b.sort_order||az(a,b)); }
   return list.slice().sort((a,b)=>FO[a.freq]-FO[b.freq]||az(a,b));
 }
 /* An entry is true (yes), false/missing (no) or 'na' (not applicable).
@@ -1489,7 +1488,7 @@ const todKey=i=>i.day_order!=null?i.day_order:100000+Math.max(0,S.cats.findIndex
 function todList(slot){ return liveItems().filter(i=>todOf(i)===slot).sort((a,b)=>todKey(a)-todKey(b)); }
 function rowsView(P,counted,headers){
   const all=dayRowsData(P,counted), rows=S.hideDone?all.filter(r=>!isResolved(r)):all, hid=all.length-rows.length;
-  const slot=(list,t)=>{ const l=list.filter(r=>todOf(r.it)===t); return S.sortMode==='tod'?l.slice().sort((a,b)=>todKey(a.it)-todKey(b.it)):l; };
+  const slot=(list,t)=>{ const l=list.filter(r=>todOf(r.it)===t); return (S.sortMode==='tod'||S.sortMode==='active')?l.slice().sort((a,b)=>todKey(a.it)-todKey(b.it)):l; };
   let h='';
   TODS.forEach(t=>{
     const inSlot=slot(all,t[0]), shown=slot(rows,t[0]);
@@ -1853,7 +1852,7 @@ function histTrends(){
 function itemRow(i,groupId,catName){
   const tag=(!i.library_item_id&&!adminHere())?'<span class="custom-tag">Yours</span>'
            :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
-  const need=groupId.indexOf('tod:')===0?'tod':'manual';
+  const need=groupId.indexOf('tod:')===0?S.sortMode:'manual';
   return '<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
     +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
     +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
@@ -1866,17 +1865,17 @@ function itemRow(i,groupId,catName){
     +'</div>';
 }
 function itemsScreen(){
-  const sorts=[['manual','My order'],['active','Active first'],['freq','Frequency'],['tod','Time of day'],['az','A – Z']];
+  const sorts=[['tod','Time of day (no sections)'],['active','Active only (no sections)'],['manual','My order'],['freq','Frequency'],['az','A – Z']];
   const allCol=S.cats.length>1&&S.cats.every(c=>S.collapsed[c.id]);
   let h='<div class="itop"><select class="fsel" aria-label="Sort within each category" onchange="setSort(this.value)">'
     +sorts.map(p=>'<option value="'+p[0]+'" '+(S.sortMode===p[0]?'selected':'')+'>Sort: '+p[1]+'</option>').join('')+'</select>'
     +'<button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>'
     +'<div class="itop2"><button class="chip'+(S.onlyUsing?' on':'')+'" onclick="setOnlyUsing()">Only what I&rsquo;m using</button>'
     +(S.cats.length>1?'<button class="chip" onclick="foldAll('+(!allCol)+')">'+(allCol?'Expand all':'Collapse all')+'</button>':'')+'</div>';
-  if(S.sortMode==='tod'){
-    const catOf={}; S.cats.forEach(c=>{ catOf[c.id]=c.name; });
+  if(S.sortMode==='tod'||S.sortMode==='active'){
+    const only=S.sortMode==='active', catOf={}; S.cats.forEach(c=>{ catOf[c.id]=c.name; });
     TODS.forEach(t=>{
-      const all=todList(t[0]), mine=S.onlyUsing?all.filter(i=>i.is_selected||S.keepShown[i.id]):all;
+      const all=todList(t[0]), mine=(only||S.onlyUsing)?all.filter(i=>i.is_selected||(!only&&S.keepShown[i.id])):all;
       if(!mine.length) return;
       h+='<div class="todhead" style="margin-top:20px"><span>'+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
         +'<div style="display:flex;flex-direction:column;gap:2px">'+mine.map(i=>itemRow(i,'tod:'+t[0],catOf[i.category_id])).join('')+'</div>';
@@ -1994,8 +1993,8 @@ function moveItem(id,dir){
 let DRAG=null;
 function dragStart(e,catId){
   e.preventDefault();
-  const need=catId.indexOf('tod:')===0?'tod':'manual';
-  if(S.sortMode!==need){ setSort(need); return; }   /* first touch switches sort; drag again */
+  const flat=catId.indexOf('tod:')===0;
+  if(flat?(S.sortMode!=='tod'&&S.sortMode!=='active'):S.sortMode!=='manual'){ setSort(flat?'tod':'manual'); return; }   /* first touch switches sort; drag again */
   const h=e.currentTarget, row=h.closest('[data-row]');
   DRAG={catId:catId,row:row,list:row.parentNode,startY:e.clientY,y:e.clientY,scroll0:window.scrollY,before:null,timer:null,grip:h,pid:e.pointerId};
   row.classList.add('dragging');
