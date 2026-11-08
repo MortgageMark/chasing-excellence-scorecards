@@ -17,6 +17,7 @@ idempotent — safe to re-run.
 | `10-admin-edit-global.sql` | `sc_edit_global()`: an admin changes a template question's wording for everyone |
 | `11-life-balance-weekly.sql` | Life Balance becomes a weekly check-in |
 | `12-your-own-scorecards.sql` | `sc_templates.owner`, `daily` check-ins, and `sc_create_template` / `sc_copy_template` / `sc_add_category` / `sc_rename_template` / `sc_delete_template`: users make their own private scorecards |
+| `13-due-days.sql` | `due_dow` on items (weekly items can be due on a chosen day, e.g. the weekend); copy / promote functions carry it |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must

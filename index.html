@@ -216,6 +216,7 @@ label{display:block;font-size:12px;color:var(--muted);margin:0 0 6px}
       <div class="who" id="menuWho"></div>
       <button id="menuHome">All scorecards</button>
       <button id="menuLonger" style="display:none"></button>
+      <button id="menuDue" style="display:none"></button>
       <button id="menuSettings">Settings</button>
       <button id="menuOut" class="danger">Sign out</button>
     </div>
@@ -242,7 +243,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=24;
+const APP_RELEASE=25;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -342,6 +343,7 @@ $("homeLink").addEventListener("click",e=>{e.preventDefault(); if(typeof goHome=
 function closeMenu(){ $("userMenu").style.display="none"; }
 $("avatarBtn").addEventListener("click",e=>{ e.stopPropagation(); const m=$("userMenu"); if(m.style.display==="none") refreshMenu(); m.style.display=m.style.display==="none"?"block":"none"; });
 $("menuLonger").addEventListener("click",()=>{ closeMenu(); setShowLonger(); });
+$("menuDue").addEventListener("click",()=>{ closeMenu(); setDueOnly(); });
 document.addEventListener("click",e=>{ if(!$("userMenu").contains(e.target)) closeMenu(); });
 $("menuOut").addEventListener("click",async()=>{ await SB.auth.signOut(); location.reload(); });
 $("menuHome").addEventListener("click",()=>{ closeMenu(); if(S.profile) goHome(); });
@@ -372,7 +374,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, onlyUsing:true, showLonger:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -465,6 +467,45 @@ function cycleName(freq,d){
   return freq==='w'?'W'+isoWeek(d)+' ('+shortDate(d)+' – '+shortDate(addDays(d,6))+')'
        : freq==='m'?MON[m]+' '+y : freq==='q'?'Q'+(Math.floor(m/3)+1)+' '+y
        : freq==='s'?(m<6?'1st':'2nd')+' half of '+y : ''+y;
+}
+/* ---- Due and late ------------------------------------------------------------------
+   Each answer belongs to a period (a week, month, quarter...). Defaults: it is due on the first day
+   of the period and late after the last day (weekly: due Monday, late after Sunday). A weekly item can
+   be given another due day (due_dow: 1 Mon ... 7 Sun, 6 = the weekend), e.g. "Call Family" due Saturday. */
+const DOWSHORT=['','Mon','Tue','Wed','Thu','Fri','the weekend','Sun'];
+const dueDow=it=>it.due_dow||1;
+function instanceDates(it,key){
+  const st=new Date(key+'T00:00:00');
+  if(it.freq==='w') return {due:addDays(st,dueDow(it)-1),late:addDays(st,6)};
+  const p=CYC[it.freq]||1;
+  return {due:st,late:new Date(st.getFullYear(),st.getMonth()+p,0)};
+}
+/* 'done' | 'na' | 'notdue' | 'due' | 'late' for one answer, as of the day being viewed. */
+function rowState(it,key,ref){
+  const v=S.entries[it.id+'|'+key];
+  if(v===true) return 'done';
+  if(v==='na') return 'na';
+  const d=instanceDates(it,key), r=ymd(ref);
+  return r<ymd(d.due)?'notdue':(r>ymd(d.late)?'late':'due');
+}
+/* Small text on the right of a longer-cycle row. */
+function rowTag(it,key,ref,isPrior){
+  const st=rowState(it,key,ref), d=instanceDates(it,key);
+  const late='<span style="color:var(--alert);font-weight:600">Late</span>';
+  if(isPrior) return (st==='late'?late+' &middot; ':'')+cycleName(it.freq,new Date(key+'T00:00:00'));
+  if(st==='notdue') return 'Due '+(it.freq==='w'?DOWSHORT[dueDow(it)]:shortDate(d.due));
+  return FREQ[it.freq]+(it.freq==='w'&&dueDow(it)>1?' &middot; due '+DOWSHORT[dueDow(it)]:'');
+}
+/* Unanswered items from the period just before this one: they are Late until done. */
+function lateRows(P,catId){
+  const out=[], startD=S.card?new Date(S.card.started_at+"T00:00:00"):P.fri;
+  catItems(catId).forEach(i=>{
+    if(!i.is_selected||isShortCycle(i)||CYC[i.freq]===undefined) return;
+    if(cycleStart(i.freq,P.fri,1)<cycleStart(i.freq,startD,0)) return;
+    const k=cycleKey(i.freq,P.fri,1), v=S.entries[i.id+'|'+k];
+    if(v!==true&&v!=='na') out.push({it:i,key:k});
+  });
+  return out;
 }
 /* The entry key an item is answered under, for the period being viewed. */
 const ekey=(i,P)=>(!P.weekly||isShortCycle(i))?P.key:cycleKey(i.freq,P.fri,0);
@@ -718,6 +759,7 @@ async function loadCard(synced){
     lib_label:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].label:null,
     lib_short:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].short_label:null,
     lib_code:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].code:null,
+    due_dow:(x.due_dow!=null?x.due_dow:((x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].due_dow:null)),
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
@@ -795,6 +837,7 @@ async function patchItem(itemId,patch,localPatch){
   try{ await run(SB.from("sc_user_scorecard_items").update(patch).eq("id",itemId)); }
   catch(e){ Object.assign(it,before); render(); }
 }
+function setDue(id,v){ const n=parseInt(v,10); patchItem(id,{due_dow:n},{due_dow:n}); }
 function toggleSel(id){
   const it=S.items.find(i=>i.id===id);
   if(it.is_selected) S.keepShown[id]=1;   /* stays on screen until you leave Items, so it can be undone */
@@ -804,6 +847,12 @@ function toggleSel(id){
 try{ if(localStorage.getItem('ces-only-using')==='0') S.onlyUsing=false; }catch(e){}
 /* Check-in: also list the weekly / monthly / longer items inside each section. Remembered in this browser. */
 try{ if(localStorage.getItem('ces-show-longer')==='0') S.showLonger=false; }catch(e){}
+try{ if(localStorage.getItem('ces-due-only')==='0') S.dueOnly=false; }catch(e){}
+function setDueOnly(){
+  S.dueOnly=!S.dueOnly;
+  try{ localStorage.setItem('ces-due-only',S.dueOnly?'1':'0'); }catch(e){}
+  refreshMenu(); render();
+}
 function setShowLonger(){
   S.showLonger=!S.showLonger;
   try{ localStorage.setItem('ces-show-longer',S.showLonger?'1':'0'); }catch(e){}
@@ -814,6 +863,7 @@ function refreshMenu(){
   const b=$("menuLonger"); if(!b) return;
   const on=!!(S.template&&isWeekly());
   b.style.display=on?"block":"none";
+  const d=$("menuDue"); if(d){ const don=!!(S.template&&isDaily()); d.style.display=don?"block":"none"; if(don) d.innerHTML=(S.dueOnly?'&#9745;':'&#9744;')+' Only show what&rsquo;s due now'; }
   if(on) b.innerHTML=(S.showLonger?'&#9745;':'&#9744;')+' Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section';
 }
 function setOnlyUsing(){
@@ -963,9 +1013,12 @@ function checkin(s){
         const k=cycleKey(i.freq,P.fri,0);
         if(!have[i.id+'|'+k]) add.push({it:i,key:k});
       });
+      lateRows(P,c.id).forEach(x=>{ if(!have[x.it.id+'|'+x.key]) add.push(x); });
       const order={}; catItems(c.id).forEach((i,n)=>{ order[i.id]=n; });
       extra=extra.concat(add).sort((x,y)=>(order[x.it.id]-order[y.it.id])||(x.key<y.key?-1:1));
     }
+    /* "Only show what's due now" (daily cards): hide longer items whose due day has not arrived. */
+    if(W&&S.dueOnly&&isDaily()) extra=extra.filter(x=>rowState(x.it,x.key,P.fri)!=='notdue');
     if(liveItems().some(i=>i.category_id===c.id&&i.is_selected)) any=true;
     if(!mine.length&&!extra.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
@@ -979,8 +1032,8 @@ function checkin(s){
     if(extra.length){
       h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">'+(S.showLonger?'Weekly, monthly &amp; longer &mdash; tick when you do them':'From your longer list &mdash; due or ticked '+PNOUN())+'</div>';
       extra.forEach(x=>{
-        const cur=x.key===cycleKey(x.it.freq,P.fri,0);
-        h+=itemBtn(x.it,x.key,true,cur?FREQ[x.it.freq]:cycleName(x.it.freq,new Date(x.key+'T00:00:00')),P.key);
+        const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
+        h+=itemBtn(x.it,x.key,true,rowTag(x.it,x.key,P.fri,prior),P.key);
       });
     }
     h+='</div>';
@@ -1017,7 +1070,7 @@ function longCycle(P,counted){
       const na=items.filter(i=>S.entries[i.id+'|'+key]==='na').length;
       const done=items.filter(i=>S.entries[i.id+'|'+key]===true).length;
       const isClose=back===1;
-      const vis=items.filter(i=>!shown[i.id+'|'+key]);
+      const vis=items.filter(i=>!shown[i.id+'|'+key]&&!(S.dueOnly&&isDaily()&&rowState(i,key,P.fri)==='notdue'));
       if(!vis.length) return;
       h+='<div class="catblock" style="margin-top:14px'+(isClose?';border:1px solid var(--gold);border-radius:12px;padding:12px':'')+'">'
         +'<div class="cathead"><div class="catname" style="font-size:'+(isClose?'15':'14')+'px">'
@@ -1189,7 +1242,11 @@ function itemsScreen(){
           +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
         +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
-        +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
+        +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')
+        +(isDaily()&&i.freq==='w'?'<span style="display:block;margin-top:5px;font-size:11.5px;color:var(--muted);font-weight:400" onclick="event.stopPropagation()">Due '
+          +'<select class="fsel" style="width:auto" onchange="setDue(\''+i.id+'\',this.value)">'
+          +[[1,'Monday'],[2,'Tuesday'],[3,'Wednesday'],[4,'Thursday'],[5,'Friday'],[6,'the weekend'],[7,'Sunday']].map(o=>'<option value="'+o[0]+'" '+(dueDow(i)===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')
+          +'</select> &middot; late after Sunday</span>':'')+'</span>'
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +(!i.library_item_id?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
         +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
