@@ -163,6 +163,69 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .histcard{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;margin-bottom:14px}
 .hrow{display:flex;align-items:center;gap:12px;padding:9px 0}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+/* ---- History: grid tracker + month calendar ---- */
+.wrap.wide{max-width:1100px}
+.hseg{display:flex;gap:6px;margin-bottom:14px}
+.hseg button{flex:1;padding:11px 4px;border-radius:9px;font-size:calc(14.5px*var(--z));font-weight:600;color:var(--muted);background:#0C2230;border:1px solid var(--line)}
+.hseg button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent)}
+.gnav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.gnav .gt{flex:1;text-align:center;font-family:'League Spartan',system-ui,sans-serif;font-weight:600;font-size:calc(19px*var(--z))}
+.gtools{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.gtools button{padding:8px 12px;border-radius:9px;font-size:calc(13.5px*var(--z));font-weight:600;color:var(--muted);background:#0C2230;border:1px solid var(--line)}
+.gtools button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent)}
+.gridscroll{overflow-x:auto;-webkit-overflow-scrolling:touch;border:1px solid var(--line);border-radius:12px;background:var(--slate)}
+table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums}
+.grid th,.grid td{border:1px solid var(--line);text-align:center;padding:0;font-size:calc(12.5px*var(--z))}
+.grid th{background:var(--raise);color:var(--muted);font-weight:600;padding:5px 2px;min-width:30px;line-height:1.15}
+.grid th small{display:block;font-size:.85em;font-weight:400}
+.grid th.today{color:var(--gold)}
+.grid td.nm{text-align:left;padding:7px 8px;min-width:128px;max-width:170px;position:sticky;left:0;background:var(--slate);z-index:2;font-size:calc(13.5px*var(--z))}
+.grid th.nm{position:sticky;left:0;z-index:3;text-align:left;padding-left:8px}
+.grid tr.cat td{background:var(--raise);color:var(--gold);font-size:calc(11.5px*var(--z));letter-spacing:.12em;text-transform:uppercase;font-weight:700;text-align:left;padding:5px 8px;position:static}
+.grid td.c{height:34px;min-width:30px;cursor:pointer;color:var(--ink);font-weight:800}
+.grid td.c.on{background:var(--track)}
+.grid td.c.na{background:#0C2230;color:var(--muted);font-weight:600;font-size:calc(10px*var(--z))}
+.grid td.c.fut{opacity:.35;cursor:default}
+.grid td.c.off{color:var(--line);cursor:default;background:#0C2230}
+.grid td.tot,.grid th.tot{background:var(--raise);color:var(--bone);font-weight:700;min-width:44px;padding:0 4px}
+.grid tr.sum td{background:var(--raise);font-weight:700;color:var(--bone);height:30px}
+.gsum{margin-top:14px}
+.printonly{display:none}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.cal .dh{text-align:center;font-size:calc(11.5px*var(--z));letter-spacing:.1em;color:var(--muted);text-transform:uppercase;padding-bottom:2px}
+.cal button.d{aspect-ratio:1/1;border-radius:9px;border:1px solid var(--line);background:var(--slate);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1px;font-size:calc(14px*var(--z));line-height:1}
+.cal button.d small{font-size:calc(10.5px*var(--z));color:var(--muted);font-weight:600}
+.cal button.d.g{background:rgba(63,168,143,.30);border-color:rgba(63,168,143,.7)}
+.cal button.d.b{background:rgba(72,160,206,.22);border-color:rgba(72,160,206,.6)}
+.cal button.d.r{background:rgba(224,112,95,.22);border-color:rgba(224,112,95,.6)}
+.cal button.d.p{box-shadow:inset 0 0 0 2px var(--gold)}
+.cal button.d.dim{opacity:.35}
+.cal button.d.sel{outline:2px solid var(--accent)}
+.cal .blank{visibility:hidden}
+.calmon{grid-template-columns:repeat(3,1fr)}
+.calmon button.d{aspect-ratio:auto;padding:16px 4px;font-size:calc(15px*var(--z))}
+.legend{display:flex;gap:12px;flex-wrap:wrap;font-size:calc(12px*var(--z));color:var(--muted);margin-top:12px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+@media print{
+  @page{size:landscape;margin:10mm}
+  html,body{background:#fff!important;color:#000!important;padding:0!important}
+  .top,.bottomnav,#saving,.noprint,.footer{display:none!important}
+  .wrap{max-width:none!important;padding:0!important}
+  .printonly{display:block;margin-bottom:8px;font-size:14pt;font-weight:700;color:#000}
+  .gridscroll{overflow:visible;border:none;background:#fff}
+  table.grid{font-size:9pt}
+  .grid th,.grid td{border:1px solid #444!important;color:#000!important;background:#fff!important}
+  .grid th,.grid tr.cat td,.grid td.tot,.grid tr.sum td{background:#e6e6e6!important}
+  .grid td.nm{position:static;max-width:none}
+  .grid th.nm{position:static}
+  .grid td.c{height:24px}
+  .grid td.c.on{background:#bfe6d8!important}
+  .grid td.c.na{background:#f0f0f0!important}
+  .grid td.c.fut{opacity:1}
+  .gsum .stat{border:1px solid #444;background:#fff}
+  .gsum .stat *{color:#000!important}
+}
+
 .mcard{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:12px 8px 8px;text-align:center}
 .mcard.cur{border-color:rgba(72,160,206,.45)}
 .mcard .mn{font-size:calc(13px*var(--z));letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
@@ -1452,8 +1515,145 @@ function periodsSinceStart(){
   return out;
 }
 
-/* (named historyScreen so it does not shadow window.history, which the address-bar updates use) */
+
+/* ===================================================================
+   HISTORY - grid tracker and month calendar (buttons at the top of History)
+   =================================================================== */
+const gwk=()=>S.gwk||mondayOf(new Date());
+const gm=()=>S.gm||(S.gm={y:NOW.y,m:NOW.m});
+const cm=()=>S.cal||(S.cal={y:NOW.y,m:NOW.m});
+const isFutureP=P=>P.weekly?P.mon>today0():P.key>pkey(NOW.y,NOW.m);
+function setHist(v){ S.histView=v; render(); }
+function shiftMonth(o,n){ const d=new Date(o.y,o.m+n,1); o.y=d.getFullYear(); o.m=d.getMonth(); }
+function gridNav(n){
+  if(!isWeekly()) gm().y+=n;
+  else if(isDaily()&&S.gmode==='week') S.gwk=addDays(gwk(),7*n);
+  else shiftMonth(gm(),n);
+  render();
+}
+function calNav(n){ if(!isWeekly()) cm().y+=n; else shiftMonth(cm(),n); render(); }
+function setGmode(v){ S.gmode=v; if(v==='week'){ const n=new Date(); S.gwk=(n.getFullYear()===gm().y&&n.getMonth()===gm().m)?mondayOf(n):mondayOf(new Date(gm().y,gm().m,1)); } render(); }
+function setMark(v){ S.mark=v; render(); }
+function gridTap(id,key){ tick(id,key,null,S.mark==='na'?'na':undefined); }
+function gridCols(){
+  const g=gm();
+  if(isDaily()){
+    if(S.gmode==='week') return [0,1,2,3,4,5,6].map(n=>mkPDay(addDays(gwk(),n)));
+    const dim=new Date(g.y,g.m+1,0).getDate(), out=[];
+    for(let d=1;d<=dim;d++) out.push(mkPDay(new Date(g.y,g.m,d)));
+    return out;
+  }
+  if(isWeekly()){
+    const first=new Date(g.y,g.m,1); let mon=mondayOf(first); if(mon<first) mon=addDays(mon,7);
+    const out=[]; while(mon.getMonth()===g.m){ out.push(mkPWeek(mon)); mon=addDays(mon,7); }
+    return out;
+  }
+  const out=[]; for(let m=0;m<12;m++) out.push(mkPMonth(g.y,m)); return out;
+}
+function gridTitle(){
+  const g=gm();
+  if(!isWeekly()) return ''+g.y;
+  if(isDaily()&&S.gmode==='week'){ const m=gwk(); return shortDate(m)+' – '+shortDate(addDays(m,6)); }
+  return MONFULL[g.m]+' '+g.y;
+}
+function gridHead(P){
+  const t0=today0();
+  if(isDaily()) return '<th class="'+(ymd(P.mon)===ymd(t0)?'today':'')+'">'+DOW[P.mon.getDay()].charAt(0)+'<small>'+P.mon.getDate()+'</small></th>';
+  if(isWeekly()) return '<th class="'+(ymd(P.mon)===ymd(mondayOf(t0))?'today':'')+'">W'+P.week+'<small>'+shortDate(P.mon)+'</small></th>';
+  return '<th class="'+(P.y===NOW.y&&P.m===NOW.m?'today':'')+'">'+MON[P.m]+'</th>';
+}
+function gridTracker(){
+  const cols=gridCols(), U=PWORD(), mark=S.mark||'done';
+  const items=liveItems().filter(i=>i.is_selected&&(!isWeekly()||isShortCycle(i)));
+  if(!items.length) return '<div class="empty">Select some items first (Items tab).</div>';
+  const colDone=cols.map(()=>0), colPoss=cols.map(()=>0);
+  let h='<div class="gnav noprint"><button class="iconbtn" onclick="gridNav(-1)" aria-label="Previous">&lsaquo;</button><div class="gt">'+esc(gridTitle())+'</div><button class="iconbtn" onclick="gridNav(1)" aria-label="Next">&rsaquo;</button></div>';
+  h+='<div class="gtools noprint">';
+  if(isDaily()) h+='<button class="'+(S.gmode==='week'?'':'on')+'" onclick="setGmode(\'month\')">Month</button><button class="'+(S.gmode==='week'?'on':'')+'" onclick="setGmode(\'week\')">Week</button>';
+  h+='<button class="'+(mark==='done'?'on':'')+'" onclick="setMark(\'done\')">Tap = &#10003;</button><button class="'+(mark==='na'?'on':'')+'" onclick="setMark(\'na\')">Tap = N/A</button>'
+    +'<button onclick="window.print()" style="margin-left:auto">&#128424; Print</button></div>';
+  h+='<div class="printonly">'+esc(S.template.name)+' &middot; '+esc(gridTitle())+'</div>';
+  h+='<div class="gridscroll"><table class="grid"><thead><tr><th class="nm">&nbsp;</th>'+cols.map(gridHead).join('')+'<th class="tot">Done</th><th class="tot">%</th></tr></thead><tbody>';
+  let allDone=0, allPoss=0;
+  S.cats.forEach(c=>{
+    const order=catItems(c.id), rows=order.filter(i=>items.indexOf(i)>=0);
+    if(!rows.length) return;
+    h+='<tr class="cat"><td colspan="'+(cols.length+3)+'">'+esc(c.name.replace('Family: ',''))+'</td></tr>';
+    rows.forEach(i=>{
+      let rd=0, rp=0;
+      h+='<tr><td class="nm">'+(i.icon?esc(i.icon)+' ':'')+esc(label(i))+'</td>';
+      cols.forEach((P,ci)=>{
+        if(!scored(i,P)){ h+='<td class="c off">&ndash;</td>'; return; }
+        const key=ekey(i,P), v=S.entries[i.id+'|'+key], fut=isFutureP(P);
+        if(!fut&&v!=='na'){ rp++; colPoss[ci]++; if(v===true){ rd++; colDone[ci]++; } }
+        h+='<td class="c '+(v===true?'on':(v==='na'?'na':''))+(fut?' fut':'')+'"'+(fut?'':' onclick="gridTap(\''+i.id+'\',\''+key+'\')"')+'>'+(v===true?'&#10003;':(v==='na'?'N/A':''))+'</td>';
+      });
+      allDone+=rd; allPoss+=rp;
+      h+='<td class="tot">'+rd+'/'+rp+'</td><td class="tot">'+(rp?Math.round(rd/rp*100)+'%':'&ndash;')+'</td></tr>';
+    });
+  });
+  h+='<tr class="sum"><td class="nm" style="background:var(--raise)">Total</td>'+cols.map((P,ci)=>'<td>'+(colPoss[ci]?colDone[ci]:'')+'</td>').join('')
+    +'<td class="tot">'+allDone+'/'+allPoss+'</td><td class="tot">'+(allPoss?Math.round(allDone/allPoss*100)+'%':'&ndash;')+'</td></tr>';
+  h+='<tr class="sum"><td class="nm" style="background:var(--raise)">%</td>'+cols.map((P,ci)=>'<td>'+(colPoss[ci]?Math.round(colDone[ci]/colPoss[ci]*100):'')+'</td>').join('')+'<td class="tot"></td><td class="tot"></td></tr>';
+  h+='</tbody></table></div>';
+  let best=-1,bi=-1,perfect=0,live=0;
+  cols.forEach((P,ci)=>{ if(!colPoss[ci]) return; live++; if(colDone[ci]>best){best=colDone[ci];bi=ci;} if(colDone[ci]===colPoss[ci]) perfect++; });
+  const bl=bi<0?'':(isDaily()?DOW[cols[bi].mon.getDay()]+' '+cols[bi].mon.getDate():(isWeekly()?'W'+cols[bi].week:MON[cols[bi].m]));
+  h+='<div class="gsum statgrid">'
+    +'<div class="stat"><div class="sl">Overall</div><div class="sv">'+(allPoss?Math.round(allDone/allPoss*100)+'%':'&mdash;')+'<span class="sm">'+allDone+' of '+allPoss+'</span></div></div>'
+    +'<div class="stat"><div class="sl">Perfect '+U+'s</div><div class="sv">'+perfect+'<span class="sm">of '+live+'</span></div></div>'
+    +'<div class="stat"><div class="sl">Best '+U+'</div><div class="sv">'+(bi<0?'&mdash;':best)+'<span class="sm">'+esc(bl)+(bi<0?'':' &middot; '+Math.round(best/colPoss[bi]*100)+'%')+'</span></div></div>'
+    +'<div class="stat"><div class="sl">Average per '+U+'</div><div class="sv">'+(live?(allDone/live).toFixed(1):'&mdash;')+'<span class="sm">items done</span></div></div></div>';
+  return h;
+}
+/* Jump from the calendar to that day / week / month on the check-in tab. */
+function calJump(k){
+  if(!isWeekly()){ const p=k.split('-'); S.view={y:+p[0],m:+p[1]-1}; }
+  else { const d=new Date(k+'T00:00:00'); if(isDaily()) S.day=d; else S.wk=mondayOf(d); }
+  S.tab='checkin'; S.stripScroll=null; window.scrollTo(0,0); render();
+}
+function calCls(sc){ return sc===null?'':(sc>=.85?'g':(sc>=.5?'b':'r')); }
+function monthCalendar(){
+  const c=cm();
+  const startKey=S.card?S.card.started_at:'0000-00-00';
+  let h='<div class="gnav"><button class="iconbtn" onclick="calNav(-1)" aria-label="Previous">&lsaquo;</button><div class="gt">'+(isWeekly()?MONFULL[c.m]+' '+c.y:c.y)+'</div><button class="iconbtn" onclick="calNav(1)" aria-label="Next">&rsaquo;</button></div>';
+  if(!isWeekly()){
+    h+='<div class="cal calmon">';
+    for(let m=0;m<12;m++){
+      const P=mkPMonth(c.y,m), fut=isFutureP(P)||P.key<startKey.slice(0,8)+"01", sc=fut?null:score(P).overall;
+      const cur=(S.view.y===c.y&&S.view.m===m);
+      h+='<button class="d '+calCls(sc)+(fut?' dim':'')+(cur?' sel':'')+'" '+(fut?'disabled':'onclick="calJump(\''+P.key+'\')"')+'>'+MON[m]+'<small>'+(sc===null?'':ten(sc))+'</small></button>';
+    }
+    return h+'</div>';
+  }
+  h+='<div class="cal">'+['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(d=>'<div class="dh">'+d+'</div>').join('');
+  const first=new Date(c.y,c.m,1), dim=new Date(c.y,c.m+1,0).getDate(), t0=today0();
+  for(let i=0;i<(first.getDay()+6)%7;i++) h+='<div class="blank"></div>';
+  let perfect=0,tot=0,n=0; const wkScore={};
+  for(let d=1;d<=dim;d++){
+    const dt=new Date(c.y,c.m,d), k=ymd(dt), fut=dt>t0, before=k<startKey;
+    let sc=null;
+    if(!fut&&!before){
+      if(isDaily()) sc=score(mkPDay(dt)).overall;
+      else{ const mk=ymd(mondayOf(dt)); if(!(mk in wkScore)) wkScore[mk]=score(mkPWeek(mondayOf(dt))).overall; sc=wkScore[mk]; }
+    }
+    if(isDaily()&&sc!==null){ n++; tot+=sc; if(sc>=1) perfect++; }
+    const sel=isDaily()?(S.day&&ymd(S.day)===k):(S.wk&&ymd(S.wk)===ymd(mondayOf(dt)));
+    h+='<button class="d '+calCls(sc)+(sc!==null&&sc>=1&&isDaily()?' p':'')+((fut||before)?' dim':'')+(sel?' sel':'')+'" '+(fut?'disabled':'onclick="calJump(\''+k+'\')"')+'>'+d+'<small>'+(sc===null?'':Math.round(sc*100)+'%')+'</small></button>';
+  }
+  h+='</div><div class="legend"><span><i style="background:rgba(63,168,143,.6)"></i>85%+</span><span><i style="background:rgba(72,160,206,.6)"></i>50&ndash;84%</span><span><i style="background:rgba(224,112,95,.6)"></i>under 50%</span>'+(isDaily()?'<span><i style="background:var(--gold)"></i>perfect</span>':'<span>colour = that week&rsquo;s score</span>')+'</div>';
+  if(isDaily()&&n) h+='<div class="statgrid" style="margin-top:14px"><div class="stat"><div class="sl">Perfect days</div><div class="sv">'+perfect+'<span class="sm">of '+n+'</span></div></div><div class="stat"><div class="sl">Month average</div><div class="sv">'+Math.round(tot/n*100)+'%</div></div></div>';
+  return h+'<div style="font-size:calc(13px*var(--z));color:var(--muted);margin-top:12px">Tap a day to open it.</div>';
+}
 function historyScreen(){
+  const v=S.histView||'trends';
+  const tabs=[['trends','Trends'],['grid','Grid'],['cal','Calendar']];
+  let h='<div class="hseg noprint">'+tabs.map(t=>'<button class="'+(v===t[0]?'on':'')+'" onclick="setHist(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
+  return h+(v==='grid'?gridTracker():(v==='cal'?monthCalendar():histTrends()));
+}
+
+/* (named historyScreen so it does not shadow window.history, which the address-bar updates use) */
+function histTrends(){
   const ms=periodsSinceStart(), U=PWORD(), UC=U.charAt(0).toUpperCase()+U.slice(1);
   if(!ms.length) return '<div class="empty">No history yet.</div>';
   const labels=ms.map(x=>x.label);
@@ -1717,7 +1917,7 @@ function fmtBuild(id){
   const d=new Date(Date.UTC(+m[1],+m[2]-1,+m[3],+m[4],+m[5],m[6]?+m[6]:0)), p=n=>String(n).padStart(2,'0');
   return d.getFullYear()+'/'+p(d.getMonth()+1)+p(d.getDate())+' '+p(d.getHours())+':'+p(d.getMinutes())+(m[6]?':'+p(d.getSeconds()):'');
 }
-const footerHtml=()=>'<div style="text-align:center;font-size:calc(12px*var(--z));color:var(--muted);margin-top:30px">Version '+esc(fmtBuild(BUILD_ID))+'</div>';
+const footerHtml=()=>'<div class="footer" style="text-align:center;font-size:calc(12px*var(--z));color:var(--muted);margin-top:30px">Version '+esc(fmtBuild(BUILD_ID))+'</div>';
 
 /* ---- Settings (a page, reached from the gear in the bottom bar) ---- */
 function openSettings(){ S.tab='settings'; render(); }
@@ -1859,6 +2059,7 @@ function renderNav(tabs){
 }
 function render(){
   const app=$("app");
+  app.classList.toggle('wide',!!(S.template&&S.card&&S.tab==='history'&&S.histView==='grid'));
   if(S.tab!=='items'){ S.keepShown={}; S.editItem=null; }
   renderSheet();
   setHeader();
@@ -1908,8 +2109,10 @@ function render(){
      : S.tab==='history' ? historyScreen()
      :                     itemsScreen();
   h+=footerHtml();
+  const gsEl=document.querySelector('.gridscroll'); const gsLeft=gsEl?gsEl.scrollLeft:0;
   app.innerHTML=h;
   restoreStrip();
+  const gsNew=document.querySelector('.gridscroll'); if(gsNew&&gsLeft) gsNew.scrollLeft=gsLeft;
 }
 
 /* ===================================================================
