@@ -19,7 +19,7 @@ const ASSETS = [
   '/icon-maskable-512.png',
   '/apple-touch-icon.png',
   '/favicon-32.png',
-  '/ce-mark-gold.png'
+  '/ce-mark-gold.png','/ce-mark-blue.png'
 ];
 
 self.addEventListener('install', e => {
