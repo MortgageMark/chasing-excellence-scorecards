@@ -20,7 +20,7 @@
 :root{--z:1;--ink:#0D1620;--slate:#16212D;--raise:#1E2B39;--line:#293949;--bone:#E8EDF2;--muted:#8494A3;--accent:#4C9BE0;--alert:#E0705F;--track:#3FA88F;--gold:#E0A93F;--r:14px}
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{font-size:calc(16px*var(--z));background:var(--ink);color:var(--bone);font-family:'Instrument Sans',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
-body{min-height:100vh;padding:0 0 calc(90px + env(safe-area-inset-bottom))}
+body{min-height:100vh;padding:0 0 calc(120px + env(safe-area-inset-bottom))}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 .wrap{max-width:460px;margin:0 auto;padding:0 18px}
@@ -46,6 +46,8 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .modal .row{display:flex;gap:8px;margin-top:16px}
 .modal .row button{flex:1;padding:12px;border-radius:10px;font-weight:600;font-size:calc(15.5px*var(--z));background:var(--ink);border:1px solid var(--line);color:var(--bone)}
 .modal .row button.primary{background:var(--accent);color:var(--ink);border-color:var(--accent)}
+.todcol{margin:6px 0 12px}.todcol>span{display:block;font-size:calc(14px*var(--z));margin-bottom:6px}.todcol>div{display:flex;flex-wrap:wrap;gap:8px}
+.sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent}.sw.on{border-color:var(--bone)}
 .modal .msg{font-size:calc(13.5px*var(--z));color:var(--muted);margin-top:8px;min-height:16px}
 .cardact{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
 .h1{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(30px*var(--z));line-height:1.05;letter-spacing:-.02em;margin:26px 0 4px}
@@ -54,6 +56,27 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .card{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;width:100%;text-align:left;display:block}
 .pill{font-size:calc(12px*var(--z));letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:4px 9px;border-radius:100px}
 .pill.due{background:rgba(76,155,224,.14);color:var(--accent)}
+.bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:min(440px,calc(100% - 20px));z-index:30;display:flex;gap:2px;background:rgba(22,33,45,.96);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:26px;padding:6px;box-shadow:0 10px 34px rgba(0,0,0,.5)}
+.nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 7px;border-radius:20px;color:var(--muted);font-size:calc(11px*var(--z));font-weight:500}
+.nb.on{background:var(--raise);color:var(--accent)}
+.nb svg{display:block}
+.daystrip{display:flex;align-items:center;gap:2px;margin:6px 0 4px}
+.daystrip .days{flex:1;display:flex;justify-content:space-between}
+.wkarrow{width:30px;height:48px;color:var(--muted);font-size:calc(24px*var(--z));flex:none}
+.wkarrow:disabled{opacity:.25}
+.dcell{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 3px 7px;border-radius:24px;min-width:44px}
+.dcell.sel{background:var(--raise);outline:1px solid var(--line)}
+.dcell.off{opacity:.4}
+.dcell .dl{font-size:calc(13px*var(--z));color:var(--muted)}
+.dcell .dc{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:calc(15px*var(--z));font-weight:600;border:2px solid var(--line);color:var(--bone)}
+.dcell .dc.full{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.dcell .dc.part{border-color:transparent;background:radial-gradient(circle,var(--ink) 57%,transparent 60%),conic-gradient(var(--accent) calc(var(--p)*1%),var(--line) 0)}
+.dcell .dc.miss{border-color:var(--alert);color:var(--alert)}
+.dcell .dc.zero{border-color:var(--muted)}
+.daylabel{display:flex;align-items:center;gap:10px;margin:8px 2px 16px;font-size:calc(15px*var(--z));font-weight:600}
+.dayprog{margin-left:auto;color:var(--muted);font-weight:500;font-size:calc(14px*var(--z))}
+.todhead{display:flex;justify-content:space-between;align-items:center;border:1px solid;border-radius:12px;padding:11px 14px;margin:18px 0 8px;font-weight:600;font-size:calc(15px*var(--z))}
+.todhead b{font-variant-numeric:tabular-nums}
 .tabs{display:flex;gap:2px;background:var(--slate);border:1px solid var(--line);border-radius:11px;padding:3px;margin:18px 0 22px}
 .tab{flex:1;padding:13px 2px;border-radius:8px;font-size:calc(13px*var(--z));font-weight:500;color:var(--muted);transition:.14s;white-space:nowrap}
 .tab.on{background:var(--raise);color:var(--bone)}
@@ -106,6 +129,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .schedsum{flex:0 0 100%;text-align:left;padding:9px 0 5px !important;font-size:calc(13px*var(--z));color:var(--muted);padding:2px 0 0 0;line-height:1.4}
 .schedsum span{color:var(--accent);margin-left:4px}
 .sched{flex:0 0 100%;display:grid;grid-template-columns:96px 1fr;gap:14px 10px;align-items:center;padding:8px 0 4px;border-top:1px solid var(--line);margin-top:4px}
+.ico{font-size:calc(22px*var(--z));line-height:1.1;flex:none;width:32px;text-align:center}
+.iconpick{grid-column:1/3;display:flex;flex-wrap:wrap;gap:6px;padding:4px 0}
+.iconpick button{width:46px;height:46px;border:1px solid var(--line);border-radius:10px;font-size:24px;background:var(--ink)}
+.iconpick button.none{width:auto;padding:0 14px;font-size:calc(14px*var(--z));color:var(--muted)}
 .sched .k{font-size:calc(12px*var(--z));letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .selrow:hover{background:var(--slate)}
 .tog{width:48px;height:28px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
@@ -222,6 +249,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
       <button id="menuHome">All scorecards</button>
       <button id="menuLonger" style="display:none"></button>
       <button id="menuDue" style="display:none"></button>
+      <button id="menuGroup" style="display:none"></button>
       <button id="menuSettings">Settings</button>
       <button id="menuOut" class="danger">Sign out</button>
       <div class="ver" id="menuVer"></div>
@@ -229,6 +257,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
   </div></div>
   <div class="overlay" id="settingsOverlay" style="display:none"><div class="modal" id="settingsBody"></div></div>
   <div class="wrap" id="app"></div>
+  <nav class="bottomnav" id="bottomNav" style="display:none"></nav>
 </div>
 <div id="saving"></div>
 
@@ -249,7 +278,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=28;
+const APP_RELEASE=29;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -350,6 +379,7 @@ function closeMenu(){ $("userMenu").style.display="none"; }
 $("avatarBtn").addEventListener("click",e=>{ e.stopPropagation(); const m=$("userMenu"); if(m.style.display==="none") refreshMenu(); m.style.display=m.style.display==="none"?"block":"none"; });
 $("menuLonger").addEventListener("click",()=>{ closeMenu(); setShowLonger(); });
 $("menuDue").addEventListener("click",()=>{ closeMenu(); setDueOnly(); });
+$("menuGroup").addEventListener("click",()=>{ closeMenu(); setGroupBy(); });
 document.addEventListener("click",e=>{ if(!$("userMenu").contains(e.target)) closeMenu(); });
 $("menuOut").addEventListener("click",async()=>{ await SB.auth.signOut(); location.reload(); });
 $("menuHome").addEventListener("click",()=>{ closeMenu(); if(S.profile) goHome(); });
@@ -385,7 +415,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, groupBy:'section', todColors:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -479,6 +509,18 @@ function cycleName(freq,d){
        : freq==='m'?MON[m]+' '+y : freq==='q'?'Q'+(Math.floor(m/3)+1)+' '+y
        : freq==='s'?(m<6?'1st':'2nd')+' half of '+y : ''+y;
 }
+/* ---- Time of day, colours and icons ---------------------------------------------------- */
+const TODS=[['morning','Morning','☀️'],['afternoon','Afternoon','🌤️'],['evening','Evening','🌙'],['any','Anytime','🕒']];
+const TOD_DEFAULT={morning:'#F2C94C',afternoon:'#4FBF8F',evening:'#7CC4F0',any:'#8494A3'};
+const TOD_PALETTE=['#F2C94C','#F2994A','#EB5757','#E86FA8','#BB6BD9','#7C8CF0','#7CC4F0','#4FBF8F','#8BC34A','#8494A3'];
+const todOf=it=>(it.tod&&it.tod!=='any')?it.tod:'any';
+function todColors(){
+  if(!S.todColors){ let c={}; try{ c=JSON.parse(localStorage.getItem('ces-tod-colors')||'{}'); }catch(e){} S.todColors=Object.assign({},TOD_DEFAULT,c); }
+  return S.todColors;
+}
+const todBg=t=>todColors()[t]+'2B';
+const ICONS=['🙏','💧','🛏️','😴','🧘','🚶','🏃','🚴','💪','🏋️','🥗','🍳','🍎','☕','💊','🚿','⚖️','📖','✍️','📝','🧠','🎧','📞','💬','📧','✉️','📣','🎥','📅','🎯','📈','💰','❤️','💑','👪','🤝','⛪','🌱','☀️','🌙','⭐','🏠','🧹','🛒','🎁','📱','✅','🏆'];
+
 /* ---- Due and late ------------------------------------------------------------------
    Each answer belongs to a period (a week, month, quarter...). Defaults: it is due on the first day
    of the period and late after the last day (weekly: due Monday, late after Sunday). A weekly item can
@@ -795,6 +837,8 @@ async function loadCard(synced){
     lib_code:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].code:null,
     due_at:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.due_at!=null?x.due_at:(x.due_dow!=null?x.due_dow:(L.due_at!=null?L.due_at:L.due_dow!=null?L.due_dow:null)); })(),
     late_at:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.late_at!=null?x.late_at:(L.late_at!=null?L.late_at:null); })(),
+    tod:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.tod!=null?x.tod:(L.tod!=null?L.tod:null); })(),
+    icon:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.icon!=null?x.icon:(L.icon!=null?L.icon:null); })(),
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
@@ -879,6 +923,20 @@ function setSched(id,which,part,val){
   const v=part==='v'?n:((part==='m'?n:Math.floor(cur/100))*100+(part==='d'?n:(cur%100||1)));
   const patch={}; patch[which==='due'?'due_at':'late_at']=v; patchItem(id,patch,patch);
 }
+function setField(id,field,val){
+  const patch={}; patch[field]=val; S.iconPick=null; patchItem(id,patch,patch);
+}
+function toggleIconPick(id){ S.iconPick=(S.iconPick===id)?null:id; render(); }
+async function setGlobalFields(id){
+  if(!confirm('Make this item\'s repeat, due, late, time of day and icon the default for every user? People who already changed theirs keep theirs.')) return;
+  try{
+    await run(SB.rpc("sc_set_global_fields",{p_item:id}));
+    const {data,error}=await SB.from("sc_library_items").select("*").eq("is_active",true).order("sort_order");
+    if(error) throw error;
+    S.allLib=data||[]; S.library=S.allLib.filter(l=>S.cats.some(c=>c.id===l.category_id));
+    saving('on','Saved for everyone');
+  }catch(e){ console.error(e); }
+}
 function toggleSched(id){ S.schedOpen=(S.schedOpen===id)?null:id; render(); }
 /* Rows of the Repeats / Due / Late editor for one item. */
 function schedEditor(i){
@@ -897,6 +955,11 @@ function schedEditor(i){
   return '<div class="sched" onclick="event.stopPropagation()">'
     +row('Repeats','<select class="fsel" style="width:auto" onchange="setFreq(\''+i.id+'\',this.value)">'+freqKeys().map(x=>'<option value="'+x+'" '+(i.freq===x?'selected':'')+'>'+FREQ[x]+'</option>').join('')+'</select>')
     +(schedApplies(i)?row('Due',field('due',dueAt(i)))+row('Late after',field('late',lateAt(i))):'')
+    +row('Time of day','<select class="fsel" style="width:auto" onchange="setField(\''+i.id+'\',\'tod\',this.value)">'+TODS.map(o=>'<option value="'+o[0]+'" '+(todOf(i)===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select>')
+    +row('Icon','<button class="fsel" style="width:auto;font-size:calc(22px*var(--z));padding:4px 14px" onclick="toggleIconPick(\''+i.id+'\')">'+(i.icon?esc(i.icon):'+')+'</button>')
+    +(S.iconPick===i.id?'<div class="iconpick">'+ICONS.map(e=>'<button onclick="setField(\''+i.id+'\',\'icon\',\''+e+'\')">'+e+'</button>').join('')
+        +'<button class="none" onclick="setField(\''+i.id+'\',\'icon\',\'\')">No icon</button></div>':'')
+    +(adminHere()&&i.library_item_id?'<button class="pick" style="grid-column:1/3;color:var(--gold)" onclick="setGlobalFields(\''+i.id+'\')">Make these settings the default for everyone</button>':'')
     +'</div>';
 }
 /* Due / late only matter where an answer belongs to a longer period than the card's own. */
@@ -919,6 +982,12 @@ function setDueOnly(){
   try{ localStorage.setItem('ces-due-only',S.dueOnly?'1':'0'); }catch(e){}
   refreshMenu(); render();
 }
+try{ if(localStorage.getItem('ces-group')==='tod') S.groupBy='tod'; }catch(e){}
+function setGroupBy(){
+  S.groupBy=S.groupBy==='tod'?'section':'tod';
+  try{ localStorage.setItem('ces-group',S.groupBy); }catch(e){}
+  refreshMenu(); render();
+}
 function setShowLonger(){
   S.showLonger=!S.showLonger;
   try{ localStorage.setItem('ces-show-longer',S.showLonger?'1':'0'); }catch(e){}
@@ -930,6 +999,7 @@ function refreshMenu(){
   const b=$("menuLonger"); if(!b) return;
   const on=!!(S.template&&isWeekly());
   b.style.display=on?"block":"none";
+  const gr=$("menuGroup"); if(gr){ const gon=!!(S.template&&isDaily()); gr.style.display=gon?"block":"none"; if(gon) gr.innerHTML=(S.groupBy==='tod'?'&#9745;':'&#9744;')+' Group by time of day'; }
   const d=$("menuDue"); if(d){ const don=!!(S.template&&isDaily()); d.style.display=don?"block":"none"; if(don) d.innerHTML=(S.dueOnly?'&#9745;':'&#9744;')+' Only show what&rsquo;s due now'; }
   if(on) b.innerHTML=(S.showLonger?'&#9745;':'&#9744;')+' Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section';
 }
@@ -1058,36 +1128,92 @@ function stepPeriod(d){
 /* One tickable row. `right` is the small text on the right-hand side. */
 function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
-  return '<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'" '+(due?'onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\')"':'')+'>'
-    +'<span class="box" '+(nap?'style="font-size:calc(12px*var(--z))"':'')+'>'+(on?'✓':(nap?'N/A':''))+'</span><span class="ilabel">'+esc(label(i))+'</span>'
-    +'<span class="freq">'+(nap?'Not applicable':right)+'</span></button>';
+  const t=todOf(i), tint=t!=='any'?' style="background:'+todBg(t)+'"':'';
+  return '<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'"'+tint+' '+(due?'onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\')"':'')+'>'
+    +'<span class="box" '+(nap?'style="font-size:calc(12px*var(--z))"':'')+'>'+(on?'✓':(nap?'N/A':''))+'</span>'
+    +(i.icon?'<span class="ico">'+esc(i.icon)+'</span>':'')+'<span class="ilabel">'+esc(label(i))+'</span>'
+    +((nap||right)?'<span class="freq">'+(nap?'Not applicable':right)+'</span>':'')+'</button>';
+}
+
+/* The longer-cycle rows that belong under a section this week/day: counted ones, plus (if switched on)
+   every longer item of the section and anything Late. */
+function extraRows(c,P,counted){
+  const W=P.weekly; let extra=counted[c.id]||[];
+  if(W&&S.showLonger){
+    const have={}; extra.forEach(x=>{ have[x.it.id+'|'+x.key]=1; });
+    const add=[];
+    catItems(c.id).forEach(i=>{
+      if(!i.is_selected||isShortCycle(i)||CYC[i.freq]===undefined) return;
+      const k=cycleKey(i.freq,P.fri,0);
+      if(!have[i.id+'|'+k]) add.push({it:i,key:k});
+    });
+    lateRows(P,c.id).forEach(x=>{ if(!have[x.it.id+'|'+x.key]) add.push(x); });
+    const order={}; catItems(c.id).forEach((i,n)=>{ order[i.id]=n; });
+    extra=extra.concat(add).sort((x,y)=>(order[x.it.id]-order[y.it.id])||(x.key<y.key?-1:1));
+  }
+  /* "Only show what's due now" (daily cards): hide longer items whose due day has not arrived. */
+  if(W&&S.dueOnly&&isDaily()) extra=extra.filter(x=>rowState(x.it,x.key,P.fri)!=='notdue');
+  return extra;
+}
+/* Daily cards: the week as a row of circles. Full = everything done, partial ring = some done,
+   red ring = a past day with nothing done. Tap a day to open it. */
+function dayStrip(s){
+  const today=today0(), startD=new Date(S.card.started_at+"T00:00:00"), mon=mondayOf(S.day);
+  let h='<div class="daystrip"><button class="wkarrow" title="Previous week" onclick="stepWeekStrip(-1)">&lsaquo;</button><div class="days">';
+  for(let k=0;k<7;k++){
+    const d=addDays(mon,k), key=ymd(d), fut=key>ymd(today), before=key<ymd(startD), sel=key===ymd(S.day);
+    let st='none', pct=0;
+    if(!fut&&!before){
+      const sc=score(mkPDay(d));
+      if(sc.tDue){ pct=Math.round(100*sc.tDone/sc.tDue); st=sc.tDone>=sc.tDue?'full':(sc.tDone>0?'part':(key<ymd(today)?'miss':'zero')); }
+    }
+    h+='<button class="dcell '+(sel?'sel ':'')+(fut||before?'off':'')+'" '+(fut||before?'disabled':'onclick="pickDay(\''+key+'\')"')+'>'
+      +'<span class="dl">'+DOW[d.getDay()].slice(0,2)+'</span>'
+      +'<span class="dc '+st+'" style="--p:'+pct+'">'+(st==='full'?'&#10003;':d.getDate())+'</span></button>';
+  }
+  h+='</div><button class="wkarrow" title="Next week" onclick="stepWeekStrip(1)" '+(ymd(addDays(mon,7))>ymd(today)?'disabled':'')+'>&rsaquo;</button></div>';
+  const isToday=ymd(S.day)===ymd(today);
+  h+='<div class="daylabel"><span>'+DOWLATE[S.day.getDay()||7]+', '+shortDate(S.day)+'</span>'
+    +(isToday?'<span class="pill due">Today</span>':'<span class="pill due">Backfill</span>')
+    +'<span class="dayprog">'+s.tDone+' of '+s.tDue+(s.tDue?' &middot; '+Math.round(100*s.tDone/s.tDue)+'%':'')+'</span></div>';
+  return h;
+}
+function pickDay(key){ S.day=new Date(key+'T00:00:00'); render(); }
+function stepWeekStrip(d){
+  const t=today0(); let n=addDays(S.day,7*d); if(ymd(n)>ymd(t)) n=t;
+  const st=new Date(S.card.started_at+"T00:00:00"); if(ymd(n)<ymd(st)) n=st;
+  S.day=n; render();
+}
+/* "Group by time of day": one list for the day, Morning, Afternoon, Evening, Anytime, mixing all sections. */
+function todView(s,P,counted){
+  const slots={morning:[],afternoon:[],evening:[],any:[]};
+  S.cats.forEach(c=>{
+    catItems(c.id).filter(i=>i.is_selected&&isShortCycle(i)).forEach(i=>slots[todOf(i)].push({it:i,key:ekey(i,P),right:'',credit:''}));
+    extraRows(c,P,counted).forEach(x=>{
+      const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
+      slots[todOf(x.it)].push({it:x.it,key:x.key,right:rowTag(x.it,x.key,P.fri,prior),credit:P.key});
+    });
+  });
+  const col=todColors(); let h='';
+  TODS.forEach(t=>{
+    const rows=slots[t[0]]; if(!rows.length) return;
+    const val=r=>S.entries[r.it.id+'|'+r.key];
+    const done=rows.filter(r=>val(r)===true).length, tot=rows.filter(r=>val(r)!=='na').length;
+    h+='<div class="todhead" style="background:'+col[t[0]]+'33;border-color:'+col[t[0]]+'66"><span>'+t[2]+' '+t[1]+'</span><b>'+done+'/'+tot+'</b></div>';
+    rows.forEach(r=>{ h+=itemBtn(r.it,r.key,true,r.right,r.credit); });
+  });
+  return h;
 }
 
 function checkin(s){
   const P=viewP(), W=P.weekly;
-  let h=periodBar();
-  let any=false;
+  let h=isDaily()?dayStrip(s):periodBar();
+  const any=liveItems().some(i=>i.is_selected);
   const counted=W?longCounted(P):{};
-  S.cats.forEach(c=>{
+  if(isDaily()&&S.groupBy==='tod'){ h+=todView(s,P,counted); }
+  else S.cats.forEach(c=>{
     const mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
-    let extra=counted[c.id]||[];
-    /* "Show weekly / monthly items in each section": add this period's longer-cycle items to the
-       section too, so they can be ticked in place. Items already counted keep their row. */
-    if(W&&S.showLonger){
-      const have={}; extra.forEach(x=>{ have[x.it.id+'|'+x.key]=1; });
-      const add=[];
-      catItems(c.id).forEach(i=>{
-        if(!i.is_selected||isShortCycle(i)||CYC[i.freq]===undefined) return;
-        const k=cycleKey(i.freq,P.fri,0);
-        if(!have[i.id+'|'+k]) add.push({it:i,key:k});
-      });
-      lateRows(P,c.id).forEach(x=>{ if(!have[x.it.id+'|'+x.key]) add.push(x); });
-      const order={}; catItems(c.id).forEach((i,n)=>{ order[i.id]=n; });
-      extra=extra.concat(add).sort((x,y)=>(order[x.it.id]-order[y.it.id])||(x.key<y.key?-1:1));
-    }
-    /* "Only show what's due now" (daily cards): hide longer items whose due day has not arrived. */
-    if(W&&S.dueOnly&&isDaily()) extra=extra.filter(x=>rowState(x.it,x.key,P.fri)!=='notdue');
-    if(liveItems().some(i=>i.category_id===c.id&&i.is_selected)) any=true;
+    const extra=extraRows(c,P,counted);
     if(!mine.length&&!extra.length) return;
     const cs=s.cats.find(x=>x.id===c.id);
     h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct))+'</div></div>'
@@ -1095,7 +1221,7 @@ function checkin(s){
       +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
     mine.forEach(i=>{
       const due=W?true:isDue(i.freq,P.m,i.target_month);
-      h+=itemBtn(i,ekey(i,P),due,due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'));
+      h+=itemBtn(i,ekey(i,P),due,(isDaily()&&i.freq==='d')?'':(due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due')));
     });
     if(extra.length){
       h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">'+(S.showLonger?'Weekly, monthly &amp; longer &mdash; tick when you do them':'From your longer list &mdash; due or ticked '+PNOUN())+'</div>';
@@ -1309,6 +1435,7 @@ function itemsScreen(){
         +(canMove?'<span class="mv"><button title="Move up" '+(pos===0?'disabled':'')+' onclick="moveItem(\''+i.id+'\',-1)">&#9650;</button>'
           +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
+        +(i.icon?'<span class="ico" onclick="toggleSel(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
         +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
         +(fullQ(i)?'<span style="display:block;font-size:calc(13px*var(--z));color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
@@ -1482,6 +1609,8 @@ function openSettings(){
     +'<label>Text size</label>'
     +'<select id="stText" onchange="setTextSize(this.value)">'
     +[['standard','Standard'],['large','Large'],['xl','Extra large']].map(o=>'<option value="'+o[0]+'" '+(textSize()===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select>'
+    +'<label>Time-of-day colors</label>'
+    +TODS.map(t=>'<div class="todcol"><span>'+t[2]+' '+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')
     +'<label>Open this device to</label>'
     +'<select id="stStart" onchange="setStart(this.value)"><option value="">All scorecards</option>'
     +S.templates.map(t=>'<option value="'+t.id+'" '+(startPref()===t.id?'selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>'
@@ -1491,6 +1620,11 @@ function openSettings(){
     +'<div class="msg" id="stMsg"></div>'
     +'<div class="row" style="margin-top:6px"><button onclick="closeSettings()">Close</button></div>';
   $("settingsOverlay").style.display="flex";
+}
+function setTodColor(slot,hex){
+  const c=todColors(); c[slot]=hex;
+  try{ localStorage.setItem('ces-tod-colors',JSON.stringify(c)); }catch(e){}
+  openSettings(); render();
 }
 function setTextSize(k){
   try{ localStorage.setItem('ces-text',k); }catch(e){}
@@ -1559,8 +1693,25 @@ async function deleteScorecard(id){
   try{ await run(SB.rpc("sc_delete_template",{p_id:id})); await refreshData(null); }catch(e){}
 }
 
+const NAV_ICONS={
+  checkin:'<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>',
+  tracker:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/>',
+  score:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
+  history:'<path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-7"/>',
+  items:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="18" r="1"/>'
+};
+/* The tab bar lives at the bottom of the screen, within thumb reach. */
+function renderNav(tabs){
+  const n=$("bottomNav"); if(!n) return;
+  if(!tabs){ n.style.display="none"; n.innerHTML=""; return; }
+  n.innerHTML=tabs.map(t=>'<button class="nb '+(S.tab===t[0]?'on':'')+'" onclick="S.tab=\''+t[0]+'\';window.scrollTo(0,0);render()">'
+    +'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(NAV_ICONS[t[0]]||'')+'</svg>'
+    +'<span>'+esc(t[1])+'</span></button>').join('');
+  n.style.display="flex";
+}
 function render(){
   const app=$("app");
+  renderNav(null);
   if(S.tab!=='items') S.keepShown={};
   if(!S.template){
     let h='<div class="h1">Scorecards</div><div class="sub">Choose a scorecard &middot; signed in as '+esc(S.profile.email||'')+'</div>';
@@ -1594,11 +1745,10 @@ function render(){
     return;
   }
   const s=score(viewP());
-  const tabs=[['checkin','Check-in'],['score',S.template.score_label],['history','History'],['items','Items']];
+  const tabs=[[ 'checkin',isDaily()?'Today':'Check-in'],['score',S.template.score_label],['history','History'],['items','Items']];
+  renderNav(tabs);
   let h=back+'<div class="h1">'+esc(S.template.name)+'</div>'
-    +'<div class="sub">'+MON[NOW.m]+' '+NOW.y+' &middot; signed in as '+esc(S.profile.email||'')+'</div><div class="tabs">';
-  tabs.forEach(function(t){ h+='<button class="tab '+(S.tab===t[0]?'on':'')+'" onclick="S.tab=\''+t[0]+'\';render()">'+esc(t[1])+'</button>'; });
-  h+='</div>';
+    +'<div class="sub">'+MON[NOW.m]+' '+NOW.y+'</div>';
   h += S.tab==='checkin' ? checkin(s)
      : S.tab==='score'   ? wheel(s)
      : S.tab==='history' ? historyScreen()
