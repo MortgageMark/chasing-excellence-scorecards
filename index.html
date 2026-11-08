@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Chasing Excellence Scorecards</title>
 <meta name="description" content="Recurring self-assessment across the areas that make a whole life.">
 <link rel="manifest" href="/manifest.json">
 <meta name="theme-color" content="#0D1620">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Scorecards">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -74,7 +74,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .box{width:19px;height:19px;flex:none;margin-top:1px;border:1.5px solid var(--line);border-radius:5px;display:grid;place-items:center;font-size:11px;color:var(--ink);transition:.14s}
 .item.on .box{background:var(--accent);border-color:var(--accent)}
 .item.na .box{border-style:dashed}
-.ilabel{font-size:14px;line-height:1.35;flex:1}
+.ilabel{font-size:14px;line-height:1.35;flex:1;min-width:0}
 .item.on .ilabel{color:var(--muted);text-decoration:line-through;text-decoration-color:var(--line)}
 .freq{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:2px 6px;border-radius:5px;flex:none;margin-top:1px}
 .wheelwrap{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:20px 12px 12px;margin-bottom:16px}
@@ -101,7 +101,11 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .mcard .mn{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .mcard .ms{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:24px;line-height:1;margin-top:3px;font-variant-numeric:tabular-nums}
 .mcard .mc{font-size:10.5px;color:var(--muted);margin-bottom:4px;font-variant-numeric:tabular-nums}
-.selrow{display:flex;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;background:var(--ink)}
+.selrow{display:flex;flex-wrap:wrap;align-items:center;gap:9px;padding:9px 10px;border-radius:10px;background:var(--ink)}
+.schedsum{flex:0 0 100%;text-align:left;font-size:11.5px;color:var(--muted);padding:2px 0 0 0;line-height:1.4}
+.schedsum span{color:var(--accent);margin-left:4px}
+.sched{flex:0 0 100%;display:grid;grid-template-columns:84px 1fr;gap:8px 10px;align-items:center;padding:8px 0 4px;border-top:1px solid var(--line);margin-top:4px}
+.sched .k{font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:600}
 .selrow:hover{background:var(--slate)}
 .tog{width:36px;height:21px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:15px;height:15px;border-radius:50%;background:var(--muted);transition:.18s}
@@ -243,7 +247,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=25;
+const APP_RELEASE=26;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -374,7 +378,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -473,12 +477,35 @@ function cycleName(freq,d){
    of the period and late after the last day (weekly: due Monday, late after Sunday). A weekly item can
    be given another due day (due_dow: 1 Mon ... 7 Sun, 6 = the weekend), e.g. "Call Family" due Saturday. */
 const DOWSHORT=['','Mon','Tue','Wed','Thu','Fri','the weekend','Sun'];
-const dueDow=it=>it.due_dow||1;
+const DOWLATE=['','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
+const MONFULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const ORD=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th'];
+/* due_at / late_at: weekly 1-7 (Mon-Sun, due 6 = the weekend); monthly = day 1-31 (31 = last day);
+   quarterly / 6-month / yearly = month*100 + day (month counted from 0 within the period). */
+const defaultLate=f=>f==='w'?7:(f==='m'?31:((CYC[f]||1)-1)*100+31);
+const dueAt=it=>it.due_at!=null?it.due_at:1;
+const lateAt=it=>it.late_at!=null?it.late_at:defaultLate(it.freq);
+function monthDay(st,m,d){
+  const y=st.getFullYear(), mo=st.getMonth()+m, dim=new Date(y,mo+1,0).getDate();
+  return new Date(y,mo,Math.min(d,dim));
+}
 function instanceDates(it,key){
-  const st=new Date(key+'T00:00:00');
-  if(it.freq==='w') return {due:addDays(st,dueDow(it)-1),late:addDays(st,6)};
-  const p=CYC[it.freq]||1;
-  return {due:st,late:new Date(st.getFullYear(),st.getMonth()+p,0)};
+  const st=new Date(key+'T00:00:00'); let due,late;
+  if(it.freq==='w'){ due=addDays(st,dueAt(it)-1); late=addDays(st,lateAt(it)-1); }
+  else{
+    const dv=dueAt(it), lv=lateAt(it);
+    due=monthDay(st,Math.floor(dv/100),dv%100||1); late=monthDay(st,Math.floor(lv/100),lv%100||1);
+  }
+  if(late<due) late=due;
+  return {due:due,late:late};
+}
+/* Words for a due / late setting, e.g. "Sat", "the 15th", "2nd month, day 15", "Dec 31". */
+function whenText(it,v,isLate){
+  if(it.freq==='w') return isLate?DOWLATE[v]:DOWSHORT[v];
+  const m=Math.floor(v/100), d=v%100||1;
+  if(it.freq==='m') return d>=31?'last day':'day '+d;
+  if(it.freq==='a') return MONFULL[m].slice(0,3)+' '+(d>=31?'31':d);
+  return ORD[m]+' month, '+(d>=31?'last day':'day '+d);
 }
 /* 'done' | 'na' | 'notdue' | 'due' | 'late' for one answer, as of the day being viewed. */
 function rowState(it,key,ref){
@@ -493,8 +520,8 @@ function rowTag(it,key,ref,isPrior){
   const st=rowState(it,key,ref), d=instanceDates(it,key);
   const late='<span style="color:var(--alert);font-weight:600">Late</span>';
   if(isPrior) return (st==='late'?late+' &middot; ':'')+cycleName(it.freq,new Date(key+'T00:00:00'));
-  if(st==='notdue') return 'Due '+(it.freq==='w'?DOWSHORT[dueDow(it)]:shortDate(d.due));
-  return FREQ[it.freq]+(it.freq==='w'&&dueDow(it)>1?' &middot; due '+DOWSHORT[dueDow(it)]:'');
+  if(st==='notdue') return 'Due '+(it.freq==='w'?DOWSHORT[dueAt(it)]:shortDate(d.due));
+  return FREQ[it.freq]+(it.due_at!=null&&dueAt(it)>1?' &middot; due '+(it.freq==='w'?DOWSHORT[dueAt(it)]:shortDate(d.due)):'');
 }
 /* Unanswered items from the period just before this one: they are Late until done. */
 function lateRows(P,catId){
@@ -759,7 +786,8 @@ async function loadCard(synced){
     lib_label:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].label:null,
     lib_short:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].short_label:null,
     lib_code:(x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].code:null,
-    due_dow:(x.due_dow!=null?x.due_dow:((x.library_item_id&&libById[x.library_item_id])?libById[x.library_item_id].due_dow:null)),
+    due_at:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.due_at!=null?x.due_at:(x.due_dow!=null?x.due_dow:(L.due_at!=null?L.due_at:L.due_dow!=null?L.due_dow:null)); })(),
+    late_at:(()=>{ const L=(x.library_item_id&&libById[x.library_item_id])||{}; return x.late_at!=null?x.late_at:(L.late_at!=null?L.late_at:null); })(),
     freq:DB2F[x.frequency]||'m', target_month:x.target_month,
     is_selected:x.is_selected, sort_order:x.sort_order, removed_at:x.removed_at
   }));
@@ -837,7 +865,38 @@ async function patchItem(itemId,patch,localPatch){
   try{ await run(SB.from("sc_user_scorecard_items").update(patch).eq("id",itemId)); }
   catch(e){ Object.assign(it,before); render(); }
 }
-function setDue(id,v){ const n=parseInt(v,10); patchItem(id,{due_dow:n},{due_dow:n}); }
+/* Edit one part of a due / late setting. part: 'v' (the whole value), 'm' (month in period), 'd' (day). */
+function setSched(id,which,part,val){
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  const cur=which==='due'?dueAt(it):lateAt(it), n=parseInt(val,10);
+  const v=part==='v'?n:((part==='m'?n:Math.floor(cur/100))*100+(part==='d'?n:(cur%100||1)));
+  const patch={}; patch[which==='due'?'due_at':'late_at']=v; patchItem(id,patch,patch);
+}
+function toggleSched(id){ S.schedOpen=(S.schedOpen===id)?null:id; render(); }
+/* Rows of the Repeats / Due / Late editor for one item. */
+function schedEditor(i){
+  const f=i.freq, p=CYC[f]||1;
+  const sel=(which,part,opts,cur)=>'<select class="fsel" style="width:auto;min-width:0" onchange="setSched(\''+i.id+'\',\''+which+'\',\''+part+'\',this.value)">'
+    +opts.map(o=>'<option value="'+o[0]+'" '+(o[0]===cur?'selected':'')+'>'+o[1]+'</option>').join('')+'</select>';
+  const days=[];for(let d=1;d<=28;d++)days.push([d,String(d)]);days.push([31,'last day']);
+  const mons=[];for(let m=0;m<p;m++)mons.push([m,f==='a'?MONFULL[m]:ORD[m]+' month']);
+  const field=(which,cur)=>{
+    if(f==='w') return sel(which,'v',which==='due'?[[1,'Monday'],[2,'Tuesday'],[3,'Wednesday'],[4,'Thursday'],[5,'Friday'],[6,'the weekend (Sat)'],[7,'Sunday']]
+                                                  :[[1,'Monday'],[2,'Tuesday'],[3,'Wednesday'],[4,'Thursday'],[5,'Friday'],[6,'Saturday'],[7,'Sunday']],cur);
+    if(f==='m') return sel(which,'v',days,cur);
+    return sel(which,'m',mons,Math.floor(cur/100))+' '+sel(which,'d',days,cur%100||1);
+  };
+  const row=(k,v)=>'<span class="k">'+k+'</span><span>'+v+'</span>';
+  return '<div class="sched" onclick="event.stopPropagation()">'
+    +row('Repeats','<select class="fsel" style="width:auto" onchange="setFreq(\''+i.id+'\',this.value)">'+freqKeys().map(x=>'<option value="'+x+'" '+(i.freq===x?'selected':'')+'>'+FREQ[x]+'</option>').join('')+'</select>')
+    +(schedApplies(i)?row('Due',field('due',dueAt(i)))+row('Late after',field('late',lateAt(i))):'')
+    +'</div>';
+}
+/* Due / late only matter where an answer belongs to a longer period than the card's own. */
+const schedApplies=i=>isWeekly()&&i.freq!=='d'&&!(i.freq==='w'&&!isDaily());
+function schedSummary(i){
+  return 'Repeats '+FREQ[i.freq]+(schedApplies(i)?' &middot; Due '+whenText(i,dueAt(i),false)+' &middot; Late after '+whenText(i,lateAt(i),true):'');
+}
 function toggleSel(id){
   const it=S.items.find(i=>i.id===id);
   if(it.is_selected) S.keepShown[id]=1;   /* stays on screen until you leave Items, so it can be undone */
@@ -890,7 +949,8 @@ function setFreq(id,f){
   let tm=it.target_month;
   if(PERIOD[f]&&!tm) tm=spreadTargetMonth(f,liveItems().filter(x=>x.freq===f).length);
   if(!PERIOD[f]) tm=null;
-  patchItem(id,{frequency:F2DB[f],target_month:tm},{freq:f,target_month:tm});
+  /* due / late mean different things per cadence, so they go back to the defaults */
+  patchItem(id,{frequency:F2DB[f],target_month:tm,due_at:null,late_at:null},{freq:f,target_month:tm,due_at:null,late_at:null});
 }
 function saveName(id,v){
   const val=(v||'').trim(), it=S.items.find(i=>i.id===id);
@@ -1242,17 +1302,12 @@ function itemsScreen(){
           +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
         +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
-        +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')
-        +(isDaily()&&i.freq==='w'?'<span style="display:block;margin-top:5px;font-size:11.5px;color:var(--muted);font-weight:400" onclick="event.stopPropagation()">Due '
-          +'<select class="fsel" style="width:auto" onchange="setDue(\''+i.id+'\',this.value)">'
-          +[[1,'Monday'],[2,'Tuesday'],[3,'Wednesday'],[4,'Thursday'],[5,'Friday'],[6,'the weekend'],[7,'Sunday']].map(o=>'<option value="'+o[0]+'" '+(dueDow(i)===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')
-          +'</select> &middot; late after Sunday</span>':'')+'</span>'
+        +(fullQ(i)?'<span style="display:block;font-size:11.5px;color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
         +'<button class="trkbtn" title="Rename" onclick="S.editing=\''+i.id+'\';render();var e=document.getElementById(\'rn\');if(e){e.focus();e.select();}">&#9998;</button>'
         +(!i.library_item_id?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
-        +'<select class="fsel" onchange="setFreq(\''+i.id+'\',this.value)">'
-        +freqKeys().map(f=>'<option value="'+f+'" '+(i.freq===f?'selected':'')+'>'+FREQ[f]+'</option>').join('')
-        +'</select>'
         +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
+        +'<button class="schedsum" onclick="toggleSched(\''+i.id+'\')">'+schedSummary(i)+' <span>'+(S.schedOpen===i.id?'&#9652;':'&#9662;')+'</span></button>'
+        +(S.schedOpen===i.id?schedEditor(i):'')
         +'</div>';
     });
     if(!mine.length) h+='<div style="font-size:12.5px;color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
