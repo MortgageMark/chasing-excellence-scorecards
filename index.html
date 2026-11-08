@@ -521,7 +521,7 @@ const S={
   template:null, cats:[], library:[],
   card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, editItem:null, collapsed:{}, todColors:null, look:'clean', hideDone:true, score:'off', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
-  sortMode:'freq', editing:null, busy:false, adminNew:{}
+  sortMode:'freq', editing:null, busy:false, adminNew:{}, todFilter:''
 };
 
 /* ===================================================================
@@ -1244,9 +1244,11 @@ function setOnlyUsing(){
   render();
 }
 const shownItems=catId=>{
-  const all=catItems(catId);
+  let all=catItems(catId);
+  if(S.todFilter) all=all.filter(i=>todOf(i)===S.todFilter);
   return S.onlyUsing?all.filter(i=>i.is_selected||S.keepShown[i.id]):all;
 };
+function setTodFilter(v){ S.todFilter=v||''; render(); }
 /* Delete one of the user's own added items. It is soft-deleted (entries are kept). */
 async function deleteItem(id){
   const it=S.items.find(i=>i.id===id); if(!it||it.library_item_id) return;
@@ -1870,11 +1872,14 @@ function itemsScreen(){
   let h='<div class="itop"><select class="fsel" aria-label="Sort within each category" onchange="setSort(this.value)">'
     +sorts.map(p=>'<option value="'+p[0]+'" '+(S.sortMode===p[0]?'selected':'')+'>Sort: '+p[1]+'</option>').join('')+'</select>'
     +'<button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>'
-    +'<div class="itop2"><button class="chip'+(S.onlyUsing?' on':'')+'" onclick="setOnlyUsing()">Only what I&rsquo;m using</button>'
+    +'<div class="itop2"><select class="chip" aria-label="Filter by time of day" onchange="setTodFilter(this.value)"><option value="">All times</option>'
+    +TODS.map(t=>'<option value="'+t[0]+'" '+(S.todFilter===t[0]?'selected':'')+'>'+t[1]+' only</option>').join('')+'</select>'
+    +'<button class="chip'+(S.onlyUsing?' on':'')+'" onclick="setOnlyUsing()">Only what I&rsquo;m using</button>'
     +(S.cats.length>1?'<button class="chip" onclick="foldAll('+(!allCol)+')">'+(allCol?'Expand all':'Collapse all')+'</button>':'')+'</div>';
   if(S.sortMode==='tod'||S.sortMode==='active'){
     const only=S.sortMode==='active', catOf={}; S.cats.forEach(c=>{ catOf[c.id]=c.name; });
     TODS.forEach(t=>{
+      if(S.todFilter&&S.todFilter!==t[0]) return;
       const all=todList(t[0]), mine=(only||S.onlyUsing)?all.filter(i=>i.is_selected||(!only&&S.keepShown[i.id])):all;
       if(!mine.length) return;
       h+='<div class="todhead" style="margin-top:20px"><span>'+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
