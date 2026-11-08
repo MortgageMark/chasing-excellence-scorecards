@@ -6,7 +6,7 @@
 <title>Chasing Excellence Scorecards</title>
 <meta name="description" content="Recurring self-assessment across the areas that make a whole life.">
 <link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#0D1620">
+<meta name="theme-color" content="#102937">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black">
 <meta name="apple-mobile-web-app-title" content="Scorecards">
@@ -14,19 +14,21 @@
 <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,400;12..96,75..100,600;12..96,75..100,800&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@500;600;700&display=swap" rel="stylesheet">
 <style>
 /* Ported from life-balance-scorecard-prototype.html. Palette is spec section 2. */
-:root{--z:1;--ink:#0D1620;--slate:#16212D;--raise:#1E2B39;--line:#293949;--bone:#E8EDF2;--muted:#8494A3;--accent:#4C9BE0;--alert:#E0705F;--track:#3FA88F;--gold:#E0A93F;--r:14px}
+:root{--z:1;--ink:#102937;--slate:#163347;--raise:#1C4259;--line:#2A4A5E;--bone:#EEF3F3;--muted:#8FA6B3;--accent:#48A0CE;--alert:#E0705F;--track:#3FA88F;--gold:#D9A441;--r:14px}
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{font-size:calc(16px*var(--z));background:var(--ink);color:var(--bone);font-family:'Instrument Sans',system-ui,-apple-system,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{font-size:calc(16px*var(--z));background:var(--ink);color:var(--bone);font-family:Arial,'Helvetica Neue',Helvetica,sans-serif;-webkit-font-smoothing:antialiased}
 body{min-height:100vh;padding:0 0 calc(120px + env(safe-area-inset-bottom))}
 button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 :focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
 .wrap{max-width:460px;margin:0 auto;padding:0 18px}
 .top{padding-top:env(safe-area-inset-top);position:sticky;top:0;z-index:20;background:rgba(13,22,32,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
 .top-in{max-width:460px;margin:0 auto;padding:14px 18px;display:flex;align-items:center;gap:12px;position:relative}
-.brandmark{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(15px*var(--z));letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.hdrtitle{font-family:'League Spartan',system-ui,sans-serif;font-weight:600;font-size:calc(21px*var(--z));line-height:1.1;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#homeLink{display:block;line-height:0;flex:none}#homeLink img{display:block;height:40px;width:auto}
+.brandmark{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(15px*var(--z));letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
 .brandsub{font-size:calc(13px*var(--z));color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
 .top-sp{flex:1}
 .iconbtn{width:34px;height:34px;border-radius:9px;border:1px solid var(--line);display:grid;place-items:center;color:var(--muted);font-size:calc(16.5px*var(--z))}
@@ -40,7 +42,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .menu .ver{margin-top:4px;padding:10px 14px 6px;border-top:1px solid var(--line);font-size:calc(12px*var(--z));color:var(--muted);font-variant-numeric:tabular-nums}
 .overlay{position:fixed;inset:0;background:rgba(5,10,16,.72);z-index:60;display:flex;align-items:flex-start;justify-content:center;padding:calc(40px + env(safe-area-inset-top)) 16px 40px;overflow:auto}
 .modal{background:var(--slate);border:1px solid var(--line);border-radius:14px;width:100%;max-width:440px;padding:20px}
-.modal h2{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(20px*var(--z));margin:0 0 14px}
+.modal h2{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(20px*var(--z));margin:0 0 14px}
 .modal label{display:block;font-size:calc(13px*var(--z));letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600;margin:14px 0 6px}
 .modal input,.modal select,.modal textarea,.formfld{width:100%;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:11px 12px;color:var(--bone);font:inherit;font-size:calc(15.5px*var(--z))}
 .modal .row{display:flex;gap:8px;margin-top:16px}
@@ -50,23 +52,23 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .sw{width:34px;height:34px;border-radius:50%;border:2px solid transparent}.sw.on{border-color:var(--bone)}
 .modal .msg{font-size:calc(13.5px*var(--z));color:var(--muted);margin-top:8px;min-height:16px}
 .cardact{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
-.h1{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(30px*var(--z));line-height:1.05;letter-spacing:-.02em;margin:26px 0 4px}
+.h1{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(30px*var(--z));line-height:1.05;letter-spacing:0;margin:26px 0 4px}
 .sub{color:var(--muted);font-size:calc(15px*var(--z));margin-bottom:22px}
-.eyebrow{font-size:calc(12px*var(--z));letter-spacing:.16em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.eyebrow{font-size:calc(12px*var(--z));letter-spacing:.2em;text-transform:uppercase;color:var(--gold);font-weight:700}
 .card{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:16px;margin-bottom:12px;width:100%;text-align:left;display:block}
 .pill{font-size:calc(12px*var(--z));letter-spacing:.1em;text-transform:uppercase;font-weight:600;padding:4px 9px;border-radius:100px}
-.pill.due{background:rgba(76,155,224,.14);color:var(--accent)}
+.pill.due{background:rgba(72,160,206,.14);color:var(--accent)}
 .bottomnav{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(10px + env(safe-area-inset-bottom));width:min(440px,calc(100% - 20px));z-index:30;display:flex;gap:2px;background:rgba(22,33,45,.96);backdrop-filter:blur(12px);border:1px solid var(--line);border-radius:26px;padding:6px;box-shadow:0 10px 34px rgba(0,0,0,.5)}
 .nb{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:9px 2px 7px;border-radius:20px;color:var(--muted);font-size:calc(11px*var(--z));font-weight:500}
 .nb.on{background:var(--raise);color:var(--accent)}
 .nb svg{display:block}
-.daystrip{display:flex;align-items:center;gap:2px;margin:6px 0 4px}
-.daystrip .days{flex:1;display:flex;justify-content:space-between}
+.daystrip{margin:6px -18px 2px}
+.daystrip .days{display:flex;overflow-x:auto;scroll-snap-type:x proximity;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding:0 12px}
+.daystrip .days::-webkit-scrollbar{display:none}
 .wkarrow{width:30px;height:48px;color:var(--muted);font-size:calc(24px*var(--z));flex:none}
 .wkarrow:disabled{opacity:.25}
-.dcell{display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 3px 7px;border-radius:24px;min-width:44px}
+.dcell{flex:0 0 54px;display:flex;flex-direction:column;align-items:center;gap:6px;padding:8px 3px 7px;border-radius:24px;scroll-snap-align:center}
 .dcell.sel{background:var(--raise);outline:1px solid var(--line)}
-.dcell.off{opacity:.4}
 .dcell .dl{font-size:calc(13px*var(--z));color:var(--muted)}
 .dcell .dc{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:calc(15px*var(--z));font-weight:600;border:2px solid var(--line);color:var(--bone)}
 .dcell .dc.full{background:var(--accent);border-color:var(--accent);color:var(--ink)}
@@ -81,18 +83,36 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .tab{flex:1;padding:13px 2px;border-radius:8px;font-size:calc(13px*var(--z));font-weight:500;color:var(--muted);transition:.14s;white-space:nowrap}
 .tab.on{background:var(--raise);color:var(--bone)}
 .monthbar{display:flex;align-items:center;gap:10px;margin-bottom:18px}
-.monthbar .mlbl{flex:1;text-align:center;font-family:'Bricolage Grotesque',system-ui;font-weight:600;font-size:calc(16.5px*var(--z))}
+.monthbar .mlbl{flex:1;text-align:center;font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(16.5px*var(--z))}
 .monthbar button{width:46px;height:42px;border:1px solid var(--line);border-radius:8px;color:var(--muted)}
 .monthbar button:hover:not(:disabled){color:var(--bone);border-color:var(--muted)}
 .monthbar button:disabled{opacity:.3;cursor:default}
 .catblock{margin-bottom:26px}
 .cathead{display:flex;align-items:baseline;gap:10px;margin-bottom:10px}
-.catname{font-family:'Bricolage Grotesque',system-ui;font-weight:600;font-size:calc(17px*var(--z));flex:1}
-.catpct{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(17px*var(--z));font-variant-numeric:tabular-nums}
+.catname{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(17px*var(--z));flex:1}
+.catpct{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(17px*var(--z));font-variant-numeric:tabular-nums}
 .catmeta{font-size:calc(13px*var(--z));color:var(--muted);margin-bottom:10px}
 .bar{height:3px;background:var(--line);border-radius:2px;overflow:hidden;margin-bottom:12px}
 .bar span{display:block;height:100%;background:var(--accent);transition:width .35s cubic-bezier(.4,0,.2,1)}
-.item{display:flex;align-items:flex-start;gap:12px;padding:14px 12px;border-radius:10px;width:100%;text-align:left;transition:background .14s}
+.item{display:flex;align-items:center;gap:12px;padding:16px 14px;border-radius:14px;width:100%;text-align:left;background:var(--slate)}
+.swrow{position:relative;border-radius:14px;overflow:hidden;margin-bottom:8px}
+.swbg{position:absolute;inset:0;display:flex;align-items:center;opacity:0;font-weight:600;font-size:calc(15px*var(--z));color:#fff}
+.swbg.r{background:var(--track);justify-content:flex-start;padding-left:20px}
+.swbg.l{background:#5E7482;justify-content:flex-end;padding-right:20px}
+.swrow.dr .swbg.r,.swrow.dl .swbg.l{opacity:1}
+.swrow .item{position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .18s ease}
+.swrow .item.dragging{transition:none}
+.item .ilabel .sub{display:block;font-size:calc(13px*var(--z));color:var(--muted);margin-top:3px;text-decoration:none}
+.st{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:calc(16px*var(--z));font-weight:700}
+.st.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.st.nap{border-style:dashed;font-size:calc(10.5px*var(--z));font-weight:600;color:var(--muted)}
+.pills{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding:2px 0 18px}
+.pills::-webkit-scrollbar{display:none}
+.pl{flex:none;padding:10px 16px;border-radius:999px;border:1px solid var(--line);color:var(--muted);font-size:calc(14px*var(--z));font-weight:500;white-space:nowrap}
+.pl.on{background:var(--raise);color:var(--bone);border-color:var(--accent)}
+.plsep{flex:none;width:1px;background:var(--line);margin:4px 2px}
+.hidenote{display:block;width:100%;text-align:center;color:var(--muted);padding:16px;font-size:calc(14px*var(--z))}
+.allclear{color:var(--muted);padding:4px 4px 12px;font-size:calc(14px*var(--z))}
 .item:hover{background:var(--slate)}
 .item.na{opacity:.5;cursor:default}.item.na:hover{background:none}
 .box{width:24px;height:24px;flex:none;margin-top:1px;border:1.5px solid var(--line);border-radius:5px;display:grid;place-items:center;font-size:calc(13px*var(--z));color:var(--ink);transition:.14s}
@@ -103,7 +123,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .freq{font-size:calc(12px*var(--z));letter-spacing:.08em;text-transform:uppercase;color:var(--muted);border:1px solid var(--line);padding:3px 8px;border-radius:5px;flex:none;margin-top:1px}
 .wheelwrap{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:20px 12px 12px;margin-bottom:16px}
 .scoreline{text-align:center;margin-bottom:6px}
-.scoreline .n{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(56px*var(--z));line-height:1;letter-spacing:-.04em;font-variant-numeric:tabular-nums}
+.scoreline .n{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(56px*var(--z));line-height:1;letter-spacing:0;font-variant-numeric:tabular-nums}
 .scoreline .d{font-size:calc(15px*var(--z));color:var(--muted);margin-top:2px}
 .scoreline .c{font-size:calc(13.5px*var(--z));color:var(--accent);margin-top:5px;font-variant-numeric:tabular-nums}
 .legend{display:flex;justify-content:center;gap:16px;font-size:calc(13px*var(--z));color:var(--muted);margin-top:4px}
@@ -115,15 +135,15 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .catrow .ct{font-size:calc(13px*var(--z));color:var(--muted);font-variant-numeric:tabular-nums;width:42px;text-align:right}
 .catrow .tr{width:52px;height:3px;background:var(--line);border-radius:2px;overflow:hidden}
 .catrow .tr span{display:block;height:100%;background:var(--accent)}
-.catrow .vl{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(16.5px*var(--z));width:34px;text-align:right;font-variant-numeric:tabular-nums}
+.catrow .vl{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(16.5px*var(--z));width:34px;text-align:right;font-variant-numeric:tabular-nums}
 .low .vl{color:var(--alert)}.low .tr span{background:var(--alert)}
 .histcard{background:var(--slate);border:1px solid var(--line);border-radius:var(--r);padding:18px 16px;margin-bottom:14px}
 .hrow{display:flex;align-items:center;gap:12px;padding:9px 0}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .mcard{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:12px 8px 8px;text-align:center}
-.mcard.cur{border-color:rgba(76,155,224,.45)}
+.mcard.cur{border-color:rgba(72,160,206,.45)}
 .mcard .mn{font-size:calc(13px*var(--z));letter-spacing:.12em;text-transform:uppercase;color:var(--muted);font-weight:600}
-.mcard .ms{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(24px*var(--z));line-height:1;margin-top:3px;font-variant-numeric:tabular-nums}
+.mcard .ms{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(24px*var(--z));line-height:1;margin-top:3px;font-variant-numeric:tabular-nums}
 .mcard .mc{font-size:calc(12px*var(--z));color:var(--muted);margin-bottom:4px;font-variant-numeric:tabular-nums}
 .selrow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 9px;padding:12px 10px;border-radius:10px;background:var(--ink)}
 .schedsum{flex:0 0 100%;text-align:left;padding:9px 0 5px !important;font-size:calc(13px*var(--z));color:var(--muted);padding:2px 0 0 0;line-height:1.4}
@@ -137,7 +157,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .selrow:hover{background:var(--slate)}
 .tog{width:48px;height:28px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:.18s}
-.selrow.on .tog{background:rgba(76,155,224,.3)}
+.selrow.on .tog{background:rgba(72,160,206,.3)}
 .selrow.on .tog::after{transform:translateX(20px);background:var(--accent)}
 .grip{flex:none;width:30px;padding:8px 0;text-align:center;color:var(--muted);font-size:calc(18px*var(--z));line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .mv{flex:none;display:flex;flex-direction:column;gap:2px}
@@ -148,7 +168,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .selrow.drop-after{box-shadow:0 2px 0 var(--accent)}
 .gtog{width:44px;height:26px;border-radius:100px;background:var(--line);flex:none;position:relative;transition:.18s;cursor:pointer}
 .gtog::after{content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:var(--muted);transition:.18s}
-.gtog.on{background:rgba(224,178,76,.3)}
+.gtog.on{background:rgba(217,164,65,.3)}
 .gtog.on::after{transform:translateX(18px);background:var(--gold)}
 .fsel{min-height:42px;background:var(--ink);border:1px solid var(--line);border-radius:9px;color:var(--muted);font:inherit;font-size:calc(12px*var(--z));padding:8px 8px;flex:none;width:auto;cursor:pointer}
 .selrow.on .fsel{color:var(--bone)}
@@ -157,25 +177,25 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .addwrap input{flex:1;background:var(--ink);border:1px solid var(--line);border-radius:9px;padding:14px 12px;color:var(--bone);font:inherit;font-size:calc(15px*var(--z));min-width:0}
 .addwrap select{flex:none;width:96px;background:var(--ink);border:1px solid var(--line);border-radius:9px;color:var(--bone);font:inherit;font-size:calc(13.5px*var(--z));padding:0 5px}
 .addwrap button{background:var(--accent);color:var(--ink);font-weight:600;padding:0 18px;border-radius:9px;font-size:calc(15px*var(--z))}
-.custom-tag{font-size:calc(12px*var(--z));letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(76,155,224,.35);padding:2px 5px;border-radius:4px;margin-left:6px}
-.note{background:rgba(76,155,224,.07);border:1px solid rgba(76,155,224,.22);border-radius:11px;padding:13px 15px;font-size:calc(13.5px*var(--z));color:var(--muted);line-height:1.5;margin-bottom:18px}
+.custom-tag{font-size:calc(12px*var(--z));letter-spacing:.08em;text-transform:uppercase;color:var(--accent);border:1px solid rgba(72,160,206,.35);padding:2px 5px;border-radius:4px;margin-left:6px}
+.note{background:rgba(72,160,206,.07);border:1px solid rgba(72,160,206,.22);border-radius:11px;padding:13px 15px;font-size:calc(13.5px*var(--z));color:var(--muted);line-height:1.5;margin-bottom:18px}
 .note b{color:var(--accent);font-weight:600}
 .empty{text-align:center;color:var(--muted);font-size:calc(15px*var(--z));padding:30px 20px;line-height:1.6}
 .seg{display:flex;gap:7px;margin-top:12px}
-.seg button{flex:1;padding:15px 4px;border-radius:9px;font-size:calc(15px*var(--z));font-weight:500;color:var(--muted);background:#0A1119;border:1px solid var(--line);transition:.14s}
-.seg button:hover{color:var(--bone);border-color:#3B5068}
-.seg button.on{background:rgba(76,155,224,.16);border-color:var(--accent);color:var(--accent);font-weight:600}
+.seg button{flex:1;padding:15px 4px;border-radius:9px;font-size:calc(15px*var(--z));font-weight:500;color:var(--muted);background:#0C2230;border:1px solid var(--line);transition:.14s}
+.seg button:hover{color:var(--bone);border-color:#3E6178}
+.seg button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent);font-weight:600}
 .seglbl{font-size:calc(12px*var(--z));letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-top:22px}
 .statgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
 .stat{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:13px 14px}
 .stat .sl{font-size:calc(12px*var(--z));letter-spacing:.13em;text-transform:uppercase;color:var(--muted);font-weight:600;margin-bottom:6px}
-.stat .sv{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(24px*var(--z));line-height:1.1;font-variant-numeric:tabular-nums}
-.stat .sm{display:block;font-family:'Instrument Sans',system-ui;font-weight:400;font-size:calc(13px*var(--z));color:var(--muted);margin-top:3px}
+.stat .sv{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(24px*var(--z));line-height:1.1;font-variant-numeric:tabular-nums}
+.stat .sm{display:block;font-family:Arial,Helvetica,sans-serif;font-weight:400;font-size:calc(13px*var(--z));color:var(--muted);margin-top:3px}
 .ctrend{background:var(--slate);border:1px solid var(--line);border-radius:12px;padding:14px 14px 11px;margin-bottom:10px}
 .cth{display:flex;align-items:baseline;gap:10px;margin-bottom:2px}
-.ctn{font-family:'Bricolage Grotesque',system-ui;font-weight:600;font-size:calc(16.5px*var(--z));flex:1}
+.ctn{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(16.5px*var(--z));flex:1}
 .ctd{font-size:calc(13px*var(--z));color:var(--muted)}
-.ctv{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(19px*var(--z));font-variant-numeric:tabular-nums}
+.ctv{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(19px*var(--z));font-variant-numeric:tabular-nums}
 .ctc{margin:2px -4px 0}
 .ctvals{display:flex;justify-content:space-between;gap:2px;margin-top:2px}
 .ctvals span{flex:1;text-align:center;font-size:calc(12px*var(--z));color:var(--muted);font-variant-numeric:tabular-nums}
@@ -183,21 +203,21 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .ctvals span.now{color:var(--bone)}
 .ctfoot{font-size:calc(13px*var(--z));color:var(--muted);margin-top:9px;padding-top:9px;border-top:1px solid var(--line)}
 .pickrow{display:flex;gap:7px;margin:-2px 0 10px}
-.pick{padding:11px 16px !important;font-size:calc(13px*var(--z));color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 11px;background:#0A1119;transition:.14s}
+.pick{padding:11px 16px !important;font-size:calc(13px*var(--z));color:var(--muted);border:1px solid var(--line);border-radius:7px;padding:5px 11px;background:#0C2230;transition:.14s}
 .pick:hover:not(:disabled){color:var(--accent);border-color:var(--accent)}
 .pick:disabled{opacity:.32;cursor:default}
-.resetbtn{width:100%;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:calc(15px*var(--z));background:#0A1119;transition:.14s}
+.resetbtn{width:100%;margin-top:14px;padding:16px;border:1px solid var(--line);border-radius:11px;color:var(--muted);font-size:calc(15px*var(--z));background:#0C2230;transition:.14s}
 .resetbtn:hover{color:var(--alert);border-color:var(--alert)}
-.renameinp{flex:1;background:#0A1119;border:1px solid var(--accent);border-radius:8px;padding:8px 10px;color:var(--bone);font:inherit;font-size:calc(15.5px*var(--z));min-width:0}
+.renameinp{flex:1;background:#0C2230;border:1px solid var(--accent);border-radius:8px;padding:8px 10px;color:var(--bone);font:inherit;font-size:calc(15.5px*var(--z));min-width:0}
 .bigbtn{width:100%;padding:18px;border-radius:11px;background:var(--accent);color:var(--ink);font-weight:600;font-size:calc(16.5px*var(--z))}
 .bigbtn:disabled{opacity:.55;cursor:default}
 #saving{position:fixed;left:50%;transform:translateX(-50%);bottom:18px;z-index:60;background:var(--raise);border:1px solid var(--line);border-radius:100px;padding:8px 16px;font-size:calc(13.5px*var(--z));color:var(--muted);display:none}
 #saving.err{color:var(--alert);border-color:var(--alert)}
 .login{position:fixed;inset:0;display:none;align-items:center;justify-content:center;padding:20px;background:var(--ink);z-index:50}
 .login .box{width:100%;max-width:380px;background:var(--slate);border:1px solid var(--line);border-radius:16px;padding:28px}
-.login h1{font-family:'Bricolage Grotesque',system-ui;font-weight:800;font-size:calc(20px*var(--z));letter-spacing:-.01em}
+.login h1{font-family:'League Spartan',system-ui;font-weight:600;font-size:calc(20px*var(--z));letter-spacing:0}
 .login .brand{display:flex;align-items:center;gap:10px;margin-bottom:14px}
-.login .dot{width:26px;height:26px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--track));flex:0 0 auto}
+.login .logo{width:44px;height:44px;flex:0 0 auto}
 .login p{margin:0 0 20px;color:var(--muted);font-size:calc(15px*var(--z))}
 label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 0 6px}
 .login input{width:100%;padding:11px 12px;background:var(--ink);color:var(--bone);border:1px solid var(--line);border-radius:10px;font-size:calc(17px*var(--z));font-family:inherit}
@@ -218,7 +238,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
 <!-- ================= LOGIN GATE ================= -->
 <div class="login" id="loginGate">
   <div class="box">
-    <div class="brand"><span class="dot"></span><h1>Scorecards</h1></div>
+    <div class="brand"><img class="logo" src="/ce-mark-gold.png" alt="Chasing Excellence"><h1>Scorecards</h1></div>
     <p id="authSub">Sign in to track your scorecards across every device.</p>
     <div id="emailWrap"><label>Email</label>
       <input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com"></div>
@@ -241,21 +261,9 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
 <!-- ================= APP ================= -->
 <div id="appRoot" style="display:none">
   <div class="top"><div class="top-in">
-    <a href="/" id="homeLink" title="All scorecards" style="text-decoration:none;color:inherit;display:block"><div class="brandmark">Chasing Excellence</div><div class="brandsub">Scorecards</div></a>
-    <div class="top-sp"></div>
-    <button class="avatar" id="avatarBtn" title="Account" aria-haspopup="true">?</button>
-    <div class="menu" id="userMenu" style="display:none">
-      <div class="who" id="menuWho"></div>
-      <button id="menuHome">All scorecards</button>
-      <button id="menuLonger" style="display:none"></button>
-      <button id="menuDue" style="display:none"></button>
-      <button id="menuGroup" style="display:none"></button>
-      <button id="menuSettings">Settings</button>
-      <button id="menuOut" class="danger">Sign out</button>
-      <div class="ver" id="menuVer"></div>
-    </div>
+    <a href="/" id="homeLink" title="All scorecards"><img src="/ce-mark-gold.png" alt="Chasing Excellence" width="40" height="40"></a>
+    <div class="hdrtitle" id="hdrTitle">Scorecards</div>
   </div></div>
-  <div class="overlay" id="settingsOverlay" style="display:none"><div class="modal" id="settingsBody"></div></div>
   <div class="wrap" id="app"></div>
   <nav class="bottomnav" id="bottomNav" style="display:none"></nav>
 </div>
@@ -278,7 +286,7 @@ Resources:`;for(let t of c){if(!t||typeof t!=`string`)throw Error(`@supabase/aut
 </script>
 
 <script>
-const APP_RELEASE=29;
+const APP_RELEASE=30;
 const BUILD_ID="__BUILD_ID__";
 
 const SUPA_URL="https://vybypyeyzfgakenkotbw.supabase.co";
@@ -374,19 +382,6 @@ $("loginBtn").addEventListener("click",doAuth);
 $("forgotLink").addEventListener("click",e=>{e.preventDefault();setAuthMode("reset");});
 $("modeLink").addEventListener("click",e=>{e.preventDefault();setAuthMode(authMode==="signin"?"signup":"signin");});
 $("homeLink").addEventListener("click",e=>{e.preventDefault(); if(typeof goHome==="function"&&S.profile) goHome();});
-/* ---- Account menu + settings ---- */
-function closeMenu(){ $("userMenu").style.display="none"; }
-$("avatarBtn").addEventListener("click",e=>{ e.stopPropagation(); const m=$("userMenu"); if(m.style.display==="none") refreshMenu(); m.style.display=m.style.display==="none"?"block":"none"; });
-$("menuLonger").addEventListener("click",()=>{ closeMenu(); setShowLonger(); });
-$("menuDue").addEventListener("click",()=>{ closeMenu(); setDueOnly(); });
-$("menuGroup").addEventListener("click",()=>{ closeMenu(); setGroupBy(); });
-document.addEventListener("click",e=>{ if(!$("userMenu").contains(e.target)) closeMenu(); });
-$("menuOut").addEventListener("click",async()=>{ await SB.auth.signOut(); location.reload(); });
-$("menuHome").addEventListener("click",()=>{ closeMenu(); if(S.profile) goHome(); });
-$("menuSettings").addEventListener("click",()=>{ closeMenu(); openSettings(); });
-$("settingsOverlay").addEventListener("click",e=>{ if(e.target===$("settingsOverlay")) closeSettings(); });
-function closeSettings(){ $("settingsOverlay").style.display="none"; }
-
 /* ===================================================================
    CONSTANTS - the prototype's short frequency codes map to the enum in
    the database. Everything in memory uses the short code, as the
@@ -415,7 +410,7 @@ const dfmt=d=>isWeekly()?Math.round(d*10)+' pts':d.toFixed(1);
 const S={
   profile:null, isAdmin:false, templates:[], allCats:[], allLib:[], cards:[],
   template:null, cats:[], library:[],
-  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, groupBy:'section', todColors:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
+  card:null, items:[], entries:{}, credit:{}, keepShown:{}, schedOpen:null, iconPick:null, todColors:null, look:'sections', hideDone:false, score:'count', stripScroll:null, onlyUsing:true, showLonger:true, dueOnly:true,          /* entries: "itemId|period" -> bool */
   tab:'checkin', view:{y:NOW.y,m:NOW.m}, wk:null, day:null, form:null,
   sortMode:'freq', editing:null, busy:false
 };
@@ -511,8 +506,8 @@ function cycleName(freq,d){
 }
 /* ---- Time of day, colours and icons ---------------------------------------------------- */
 const TODS=[['morning','Morning','☀️'],['afternoon','Afternoon','🌤️'],['evening','Evening','🌙'],['any','Anytime','🕒']];
-const TOD_DEFAULT={morning:'#F2C94C',afternoon:'#4FBF8F',evening:'#7CC4F0',any:'#8494A3'};
-const TOD_PALETTE=['#F2C94C','#F2994A','#EB5757','#E86FA8','#BB6BD9','#7C8CF0','#7CC4F0','#4FBF8F','#8BC34A','#8494A3'];
+const TOD_DEFAULT={morning:'#F2C94C',afternoon:'#4FBF8F',evening:'#7CC4F0',any:'#8FA6B3'};
+const TOD_PALETTE=['#F2C94C','#F2994A','#EB5757','#E86FA8','#BB6BD9','#7C8CF0','#7CC4F0','#4FBF8F','#8BC34A','#8FA6B3'];
 const todOf=it=>(it.tod&&it.tod!=='any')?it.tod:'any';
 function todColors(){
   if(!S.todColors){ let c={}; try{ c=JSON.parse(localStorage.getItem('ces-tod-colors')||'{}'); }catch(e){} S.todColors=Object.assign({},TOD_DEFAULT,c); }
@@ -670,17 +665,17 @@ function radar(cats,size,lbl){
   if(live.length<3) return '<div class="empty">Select items in at least three categories to draw your shape.</div>';
   const cx=size/2,cy=size/2,R=size/2-(lbl?46:6),n=live.length;
   const ang=i=>(Math.PI*2*i/n)-Math.PI/2, pt=(i,r)=>[cx+Math.cos(ang(i))*R*r,cy+Math.sin(ang(i))*R*r];
-  let g=''; [.25,.5,.75].forEach(r=>g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*r)+'" fill="none" stroke="#293949"/>');
-  g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="#3B5068" stroke-width="1.5" stroke-dasharray="3 4"/>';
-  live.forEach((c,i)=>{const p=pt(i,1);g+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#293949"/>';});
-  g+='<polygon points="'+live.map((c,i)=>pt(i,Math.max(c.pct,.02)).join(',')).join(' ')+'" fill="rgba(76,155,224,.22)" stroke="#4C9BE0" stroke-width="'+(lbl?2:1.5)+'" stroke-linejoin="round"/>';
+  let g=''; [.25,.5,.75].forEach(r=>g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+(R*r)+'" fill="none" stroke="#2A4A5E"/>');
+  g+='<circle cx="'+cx+'" cy="'+cy+'" r="'+R+'" fill="none" stroke="#3E6178" stroke-width="1.5" stroke-dasharray="3 4"/>';
+  live.forEach((c,i)=>{const p=pt(i,1);g+='<line x1="'+cx+'" y1="'+cy+'" x2="'+p[0]+'" y2="'+p[1]+'" stroke="#2A4A5E"/>';});
+  g+='<polygon points="'+live.map((c,i)=>pt(i,Math.max(c.pct,.02)).join(',')).join(' ')+'" fill="rgba(72,160,206,.22)" stroke="#48A0CE" stroke-width="'+(lbl?2:1.5)+'" stroke-linejoin="round"/>';
   live.forEach((c,i)=>{const p=pt(i,Math.max(c.pct,.02));
-    g+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(lbl?3.5:2)+'" fill="'+(c.pct<.5?'#E0705F':'#4C9BE0')+'"/>';
+    g+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(lbl?3.5:2)+'" fill="'+(c.pct<.5?'#E0705F':'#48A0CE')+'"/>';
     if(!lbl)return;
     const l=pt(i,1.32), anc=Math.abs(l[0]-cx)<8?'middle':(l[0]>cx?'start':'end');
-    g+='<text x="'+l[0]+'" y="'+(l[1]-5)+'" text-anchor="'+anc+'" fill="#8494A3" font-size="10.5" font-weight="500">'+esc(c.name.replace('Family: ',''))+'</text>';
-    g+='<text x="'+l[0]+'" y="'+(l[1]+8)+'" text-anchor="'+anc+'" fill="'+(c.pct<.5?'#E0705F':'#E8EDF2')+'" font-size="11.5" font-weight="800">'+ten(c.pct)+'</text>';
-    g+='<text x="'+l[0]+'" y="'+(l[1]+20)+'" text-anchor="'+anc+'" fill="#8494A3" font-size="9.5">'+c.done+' of '+c.due+'</text>';});
+    g+='<text x="'+l[0]+'" y="'+(l[1]-5)+'" text-anchor="'+anc+'" fill="#8FA6B3" font-size="10.5" font-weight="500">'+esc(c.name.replace('Family: ',''))+'</text>';
+    g+='<text x="'+l[0]+'" y="'+(l[1]+8)+'" text-anchor="'+anc+'" fill="'+(c.pct<.5?'#E0705F':'#EEF3F3')+'" font-size="11.5" font-weight="800">'+ten(c.pct)+'</text>';
+    g+='<text x="'+l[0]+'" y="'+(l[1]+20)+'" text-anchor="'+anc+'" fill="#8FA6B3" font-size="9.5">'+c.done+' of '+c.due+'</text>';});
   /* Labelled radars put their text at 1.32R, which runs past a "0 0 size size"
      viewBox and clips "Wealth" and "Family" at the left and right edges. Pad
      the box horizontally rather than pulling the labels inward, so the wheel
@@ -693,7 +688,7 @@ function lineChart(series,w,h,col,showLbl,labels){
   const xs=i=>P+i*(w-2*P)/Math.max(1,n-1), ys=v=>(h-B)-v*(h-B-Tp);
   const pts=series.map((v,i)=>v===null?null:[xs(i),ys(v)]).filter(Boolean);
   let g='';
-  [0,.5,1].forEach(r=>{const y=ys(r);g+='<line x1="'+P+'" y1="'+y+'" x2="'+(w-P)+'" y2="'+y+'" stroke="#293949" stroke-width="1" '+(r===0?'':'stroke-dasharray="2 4"')+'/>';});
+  [0,.5,1].forEach(r=>{const y=ys(r);g+='<line x1="'+P+'" y1="'+y+'" x2="'+(w-P)+'" y2="'+y+'" stroke="#2A4A5E" stroke-width="1" '+(r===0?'':'stroke-dasharray="2 4"')+'/>';});
   if(pts.length>1){
     const line=pts.map(p=>p.join(',')).join(' ');
     g+='<polygon points="'+xs(0)+','+(h-B)+' '+line+' '+xs(n-1)+','+(h-B)+'" fill="'+col+'" opacity=".13"/>';
@@ -702,8 +697,8 @@ function lineChart(series,w,h,col,showLbl,labels){
   pts.forEach((p,i)=>{g+='<circle cx="'+p[0]+'" cy="'+p[1]+'" r="'+(i===pts.length-1?3.4:2.2)+'" fill="'+col+'"/>';});
   if(showLbl){
     series.forEach((v,i)=>{ if(v===null)return;
-      g+='<text x="'+xs(i)+'" y="'+(ys(v)-7)+'" text-anchor="middle" fill="#E8EDF2" font-size="9.5" font-weight="800">'+ten(v)+'</text>';
-      g+='<text x="'+xs(i)+'" y="'+(h-4)+'" text-anchor="middle" fill="#8494A3" font-size="9">'+esc(labels[i])+'</text>';});
+      g+='<text x="'+xs(i)+'" y="'+(ys(v)-7)+'" text-anchor="middle" fill="#EEF3F3" font-size="9.5" font-weight="800">'+ten(v)+'</text>';
+      g+='<text x="'+xs(i)+'" y="'+(h-4)+'" text-anchor="middle" fill="#8FA6B3" font-size="9">'+esc(labels[i])+'</text>';});
   }
   return '<svg viewBox="0 0 '+w+' '+h+'" width="100%" style="display:block">'+g+'</svg>';
 }
@@ -738,7 +733,6 @@ async function loadAll(){
   const {data:prof,error:pe}=await SB.rpc("sc_bootstrap_profile",{p_timezone:tz});
   if(pe) throw pe;
   S.profile=Array.isArray(prof)?prof[0]:prof;
-  { const em=(S.profile&&S.profile.email)||''; $("avatarBtn").textContent=(em.charAt(0)||'?'); $("menuWho").textContent=em; }
   /* Admins (sql/08) can promote their own questions into the shared template. */
   try{ const {data:adm,error:ae}=await SB.rpc("sc_is_admin"); S.isAdmin=!ae&&adm===true; }catch(e){ S.isAdmin=false; }
 
@@ -767,7 +761,7 @@ async function openTemplate(id){
   S.library=S.allLib.filter(i=>catIds[i.category_id]);
   S.card=S.cards.find(c=>c.template_id===id)||null;
   S.items=[]; S.entries={}; S.credit={};
-  S.tab='checkin'; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.day=today0(); S.sortMode=defSort(); S.editing=null;
+  S.tab='checkin'; S.stripScroll=null; S.view={y:NOW.y,m:NOW.m}; S.wk=mondayOf(new Date()); S.day=today0(); S.sortMode=defSort(); S.editing=null;
   if(S.card){
     await loadCard();
     const used={}; S.library.forEach(l=>used[l.category_id]=1); liveItems().forEach(i=>used[i.category_id]=1);
@@ -778,7 +772,7 @@ async function openTemplate(id){
 async function refreshData(openId,tab){
   await loadAll();
   if(openId&&S.templates.some(t=>t.id===openId)){ await openTemplate(openId); if(tab) S.tab=tab; }
-  else { S.template=null; S.card=null; setUrl(null); }
+  else { S.template=null; S.card=null; S.tab='home'; setUrl(null); }
   render();
 }
 /* On launch: open the scorecard named in the address (?s=), else this device's chosen start scorecard. */
@@ -794,7 +788,7 @@ async function goTemplate(id){
   try{ await openTemplate(id); }catch(e){ console.error(e); saving('err','Could not load - '+e.message); }
   render();
 }
-function goHome(){ S.template=null; S.card=null; setUrl(null); render(); }
+function goHome(){ S.template=null; S.card=null; S.tab='home'; setUrl(null); render(); }
 
 async function loadCard(synced){
   const r=await Promise.all([
@@ -886,12 +880,12 @@ async function adopt(){
   finally{ S.busy=false; render(); }
 }
 
-async function tick(itemId,period,creditWeek){
+async function tick(itemId,period,creditWeek,force){
   const it=S.items.find(i=>i.id===itemId); if(!it) return;
   const k=itemId+'|'+period;
-  /* Cycle: not done -> yes -> N/A -> not done */
   const prev=S.entries[k], prevCredit=S.credit[k];
-  const next=prev===true?'na':(prev==='na'?false:true);
+  /* Tap or swipe right: done (again = undo). Swipe left: not applicable (again = undo). */
+  const next=force==='na'?(prev==='na'?false:'na'):(prev===true?false:true);
   /* A monthly/quarterly/yearly "yes" is credited to the week it was ticked in. */
   const credit=(next===true&&creditWeek)?creditWeek:null;
   S.entries[k]=next;
@@ -977,32 +971,32 @@ try{ if(localStorage.getItem('ces-only-using')==='0') S.onlyUsing=false; }catch(
 /* Check-in: also list the weekly / monthly / longer items inside each section. Remembered in this browser. */
 try{ if(localStorage.getItem('ces-show-longer')==='0') S.showLonger=false; }catch(e){}
 try{ if(localStorage.getItem('ces-due-only')==='0') S.dueOnly=false; }catch(e){}
+try{
+  const lk=localStorage.getItem('ces-look'); if(lk==='clean'||lk==='sections'||lk==='time') S.look=lk;
+  if(localStorage.getItem('ces-hide')==='1') S.hideDone=true;
+  const sc=localStorage.getItem('ces-score'); if(sc==='count'||sc==='pct'||sc==='off') S.score=sc;
+}catch(e){}
 function setDueOnly(){
   S.dueOnly=!S.dueOnly;
   try{ localStorage.setItem('ces-due-only',S.dueOnly?'1':'0'); }catch(e){}
-  refreshMenu(); render();
-}
-try{ if(localStorage.getItem('ces-group')==='tod') S.groupBy='tod'; }catch(e){}
-function setGroupBy(){
-  S.groupBy=S.groupBy==='tod'?'section':'tod';
-  try{ localStorage.setItem('ces-group',S.groupBy); }catch(e){}
-  refreshMenu(); render();
+  render();
 }
 function setShowLonger(){
   S.showLonger=!S.showLonger;
   try{ localStorage.setItem('ces-show-longer',S.showLonger?'1':'0'); }catch(e){}
-  refreshMenu(); render();
+  render();
 }
-/* The menu entry only applies on weekly / daily scorecards. */
-function refreshMenu(){
-  const v=$("menuVer"); if(v) v.textContent='Version '+fmtBuild(BUILD_ID);
-  const b=$("menuLonger"); if(!b) return;
-  const on=!!(S.template&&isWeekly());
-  b.style.display=on?"block":"none";
-  const gr=$("menuGroup"); if(gr){ const gon=!!(S.template&&isDaily()); gr.style.display=gon?"block":"none"; if(gon) gr.innerHTML=(S.groupBy==='tod'?'&#9745;':'&#9744;')+' Group by time of day'; }
-  const d=$("menuDue"); if(d){ const don=!!(S.template&&isDaily()); d.style.display=don?"block":"none"; if(don) d.innerHTML=(S.dueOnly?'&#9745;':'&#9744;')+' Only show what&rsquo;s due now'; }
-  if(on) b.innerHTML=(S.showLonger?'&#9745;':'&#9744;')+' Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section';
+/* ---- Today: three looks, hide done, score style ---- */
+const LOOKS=[['clean','Clean'],['sections','Sections'],['time','Time of day']];
+function savePrefs(){ try{ localStorage.setItem('ces-look',S.look); localStorage.setItem('ces-hide',S.hideDone?'1':'0'); localStorage.setItem('ces-score',S.score); }catch(e){} }
+function setLook(k){
+  S.look=k;
+  if(k==='clean'){ S.hideDone=true; S.score='off'; } else { S.hideDone=false; S.score='count'; }
+  savePrefs(); render();
 }
+function toggleHideDone(){ S.hideDone=!S.hideDone; savePrefs(); render(); }
+function cycleScore(){ S.score=S.score==='count'?'pct':(S.score==='pct'?'off':'count'); savePrefs(); render(); }
+const fmtScore=(d,t)=>S.score==='off'?'':(S.score==='pct'?(t?Math.round(100*d/t)+'%':'—'):d+'/'+t);
 function setOnlyUsing(){
   S.onlyUsing=!S.onlyUsing; S.keepShown={}; S.editing=null;
   try{ localStorage.setItem('ces-only-using',S.onlyUsing?'1':'0'); }catch(e){}
@@ -1125,15 +1119,48 @@ function stepPeriod(d){
   S.view={y:y,m:m}; render();
 }
 
-/* One tickable row. `right` is the small text on the right-hand side. */
+/* One row. Swipe right = done, swipe left = not applicable, tap = done / undo. */
+let SWIPED=0;
 function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
-  const t=todOf(i), tint=t!=='any'?' style="background:'+todBg(t)+'"':'';
-  return '<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'"'+tint+' '+(due?'onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\')"':'')+'>'
-    +'<span class="box" '+(nap?'style="font-size:calc(12px*var(--z))"':'')+'>'+(on?'✓':(nap?'N/A':''))+'</span>'
-    +(i.icon?'<span class="ico">'+esc(i.icon)+'</span>':'')+'<span class="ilabel">'+esc(label(i))+'</span>'
-    +((nap||right)?'<span class="freq">'+(nap?'Not applicable':right)+'</span>':'')+'</button>';
+  const t=todOf(i), tint=t!=='any'?' style="background:linear-gradient('+todBg(t)+','+todBg(t)+'),var(--slate)"':'';
+  const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':'<span class="st"></span>');
+  const act=due?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
+  return '<div class="swrow'+(due?' swp':'')+'"><div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
+    +'<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'"'+tint+act+'>'
+    +(i.icon?'<span class="ico">'+esc(i.icon)+'</span>':'')+'<span class="ilabel">'+esc(label(i))+(right?'<span class="sub">'+right+'</span>':'')+'</span>'
+    +state+'</button></div>';
 }
+function rowTap(el){ if(Date.now()-SWIPED<500) return; tick(el.dataset.id,el.dataset.key,el.dataset.cr); }
+let SW=null;
+try{
+  document.addEventListener('pointerdown',e=>{
+    const it=e.target.closest&&e.target.closest('.swrow.swp .item'); if(!it) return;
+    if(e.clientX<22||e.clientX>window.innerWidth-22) return;           /* leave the phone's edge-swipe alone */
+    SW={el:it,wrap:it.parentNode,x:e.clientX,y:e.clientY,dx:0,on:false};
+  });
+  window.addEventListener('pointermove',e=>{
+    if(!SW) return;
+    const dx=e.clientX-SW.x, dy=e.clientY-SW.y;
+    if(!SW.on){
+      if(Math.abs(dx)>14&&Math.abs(dx)>Math.abs(dy)*1.4){ SW.on=true; SW.el.classList.add('dragging'); }
+      else if(Math.abs(dy)>12){ SW=null; return; }
+      else return;
+    }
+    SW.dx=Math.max(-140,Math.min(140,dx));
+    SW.el.style.transform='translateX('+SW.dx+'px)';
+    SW.wrap.classList.toggle('dr',SW.dx>8); SW.wrap.classList.toggle('dl',SW.dx<-8);
+  },{passive:true});
+  const endSwipe=()=>{
+    if(!SW) return; const s0=SW; SW=null;
+    if(!s0.on) return;
+    SWIPED=Date.now();
+    s0.el.classList.remove('dragging'); s0.el.style.transform=''; s0.wrap.classList.remove('dr','dl');
+    if(s0.dx>70) tick(s0.el.dataset.id,s0.el.dataset.key,s0.el.dataset.cr,'done');
+    else if(s0.dx<-70) tick(s0.el.dataset.id,s0.el.dataset.key,s0.el.dataset.cr,'na');
+  };
+  window.addEventListener('pointerup',endSwipe); window.addEventListener('pointercancel',endSwipe);
+}catch(e){}
 
 /* The longer-cycle rows that belong under a section this week/day: counted ones, plus (if switched on)
    every longer item of the section and anything Late. */
@@ -1155,83 +1182,120 @@ function extraRows(c,P,counted){
   if(W&&S.dueOnly&&isDaily()) extra=extra.filter(x=>rowState(x.it,x.key,P.fri)!=='notdue');
   return extra;
 }
-/* Daily cards: the week as a row of circles. Full = everything done, partial ring = some done,
-   red ring = a past day with nothing done. Tap a day to open it. */
+/* Daily cards: the days as a row you scroll sideways. Full = everything done, partial ring = some
+   done, red ring = a past day with nothing done. Tap a day to open it. */
 function dayStrip(s){
-  const today=today0(), startD=new Date(S.card.started_at+"T00:00:00"), mon=mondayOf(S.day);
-  let h='<div class="daystrip"><button class="wkarrow" title="Previous week" onclick="stepWeekStrip(-1)">&lsaquo;</button><div class="days">';
-  for(let k=0;k<7;k++){
-    const d=addDays(mon,k), key=ymd(d), fut=key>ymd(today), before=key<ymd(startD), sel=key===ymd(S.day);
+  const today=today0(), startD=new Date(S.card.started_at+"T00:00:00");
+  let first=addDays(today,-120); if(ymd(first)<ymd(startD)) first=startD;
+  let h='<div class="daystrip"><div class="days" id="daysScroll" onscroll="S.stripScroll=this.scrollLeft">';
+  for(let d=first; ymd(d)<=ymd(today); d=addDays(d,1)){
+    const key=ymd(d), sel=key===ymd(S.day), sc=score(mkPDay(d));
     let st='none', pct=0;
-    if(!fut&&!before){
-      const sc=score(mkPDay(d));
-      if(sc.tDue){ pct=Math.round(100*sc.tDone/sc.tDue); st=sc.tDone>=sc.tDue?'full':(sc.tDone>0?'part':(key<ymd(today)?'miss':'zero')); }
-    }
-    h+='<button class="dcell '+(sel?'sel ':'')+(fut||before?'off':'')+'" '+(fut||before?'disabled':'onclick="pickDay(\''+key+'\')"')+'>'
+    if(sc.tDue){ pct=Math.round(100*sc.tDone/sc.tDue); st=sc.tDone>=sc.tDue?'full':(sc.tDone>0?'part':(key<ymd(today)?'miss':'zero')); }
+    h+='<button class="dcell'+(sel?' sel':'')+'" onclick="pickDay(\''+key+'\')">'
       +'<span class="dl">'+DOW[d.getDay()].slice(0,2)+'</span>'
       +'<span class="dc '+st+'" style="--p:'+pct+'">'+(st==='full'?'&#10003;':d.getDate())+'</span></button>';
   }
-  h+='</div><button class="wkarrow" title="Next week" onclick="stepWeekStrip(1)" '+(ymd(addDays(mon,7))>ymd(today)?'disabled':'')+'>&rsaquo;</button></div>';
+  h+='</div></div>';
   const isToday=ymd(S.day)===ymd(today);
   h+='<div class="daylabel"><span>'+DOWLATE[S.day.getDay()||7]+', '+shortDate(S.day)+'</span>'
     +(isToday?'<span class="pill due">Today</span>':'<span class="pill due">Backfill</span>')
-    +'<span class="dayprog">'+s.tDone+' of '+s.tDue+(s.tDue?' &middot; '+Math.round(100*s.tDone/s.tDue)+'%':'')+'</span></div>';
+    +(S.score==='off'?'':'<span class="dayprog">'+(S.score==='pct'?(s.tDue?Math.round(100*s.tDone/s.tDue)+'%':'—'):s.tDone+' of '+s.tDue)+'</span>')+'</div>';
   return h;
 }
 function pickDay(key){ S.day=new Date(key+'T00:00:00'); render(); }
-function stepWeekStrip(d){
-  const t=today0(); let n=addDays(S.day,7*d); if(ymd(n)>ymd(t)) n=t;
-  const st=new Date(S.card.started_at+"T00:00:00"); if(ymd(n)<ymd(st)) n=st;
-  S.day=n; render();
+function restoreStrip(){
+  try{
+    const el=document.getElementById('daysScroll'); if(!el) return;
+    if(S.stripScroll==null){
+      const sel=el.querySelector('.sel');
+      if(sel){ el.scrollLeft=sel.offsetLeft-(el.clientWidth-sel.offsetWidth)/2; S.stripScroll=el.scrollLeft; }
+    } else el.scrollLeft=S.stripScroll;
+  }catch(e){}
 }
-/* "Group by time of day": one list for the day, Morning, Afternoon, Evening, Anytime, mixing all sections. */
-function todView(s,P,counted){
-  const slots={morning:[],afternoon:[],evening:[],any:[]};
+function lookBar(){
+  const sc={count:'Score: 3/9',pct:'Score: %',off:'Score: off'}[S.score];
+  return '<div class="pills">'+LOOKS.map(l=>'<button class="pl'+(S.look===l[0]?' on':'')+'" onclick="setLook(\''+l[0]+'\')">'+l[1]+'</button>').join('')
+    +'<span class="plsep"></span>'
+    +'<button class="pl'+(S.hideDone?' on':'')+'" onclick="toggleHideDone()">'+(S.hideDone?'&#10003; Done hidden':'Hide done')+'</button>'
+    +'<button class="pl" onclick="cycleScore()">'+sc+'</button></div>';
+}
+const rowVal=r=>S.entries[r.it.id+'|'+r.key];
+const isResolved=r=>{ const v=rowVal(r); return v===true||v==='na'; };
+/* Every row for the day, in section order: the day's own items plus any longer-cycle rows. */
+function dayRowsData(P,counted){
+  const rows=[];
   S.cats.forEach(c=>{
-    catItems(c.id).filter(i=>i.is_selected&&isShortCycle(i)).forEach(i=>slots[todOf(i)].push({it:i,key:ekey(i,P),right:'',credit:''}));
+    catItems(c.id).filter(i=>i.is_selected&&isShortCycle(i)).forEach(i=>rows.push({it:i,key:ekey(i,P),right:'',credit:''}));
     extraRows(c,P,counted).forEach(x=>{
       const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
-      slots[todOf(x.it)].push({it:x.it,key:x.key,right:rowTag(x.it,x.key,P.fri,prior),credit:P.key});
+      rows.push({it:x.it,key:x.key,right:rowTag(x.it,x.key,P.fri,prior),credit:P.key});
     });
   });
-  const col=todColors(); let h='';
+  return rows;
+}
+/* "Time of day" shows Morning / Afternoon / Evening headers; "Clean" is the same order with no headers. */
+function rowsView(P,counted,headers){
+  const all=dayRowsData(P,counted), rows=S.hideDone?all.filter(r=>!isResolved(r)):all, hid=all.length-rows.length;
+  const slot=(list,t)=>list.filter(r=>todOf(r.it)===t);
+  let h='';
   TODS.forEach(t=>{
-    const rows=slots[t[0]]; if(!rows.length) return;
-    const val=r=>S.entries[r.it.id+'|'+r.key];
-    const done=rows.filter(r=>val(r)===true).length, tot=rows.filter(r=>val(r)!=='na').length;
-    h+='<div class="todhead" style="background:'+col[t[0]]+'33;border-color:'+col[t[0]]+'66"><span>'+t[2]+' '+t[1]+'</span><b>'+done+'/'+tot+'</b></div>';
-    rows.forEach(r=>{ h+=itemBtn(r.it,r.key,true,r.right,r.credit); });
+    const inSlot=slot(all,t[0]), shown=slot(rows,t[0]);
+    if(!inSlot.length) return;
+    if(headers){
+      const col=todColors()[t[0]], done=inSlot.filter(r=>rowVal(r)===true).length, tot=inSlot.filter(r=>rowVal(r)!=='na').length;
+      h+='<div class="todhead" style="background:'+col+'33;border-color:'+col+'66"><span>'+t[2]+' '+t[1]+'</span><b>'+fmtScore(done,tot)+'</b></div>';
+      if(!shown.length) h+='<div class="allclear">All done &#10003;</div>';
+    }
+    shown.forEach(r=>{ h+=itemBtn(r.it,r.key,true,r.right,r.credit); });
   });
+  if(S.hideDone&&hid>0) h+='<button class="hidenote" onclick="toggleHideDone()">&#10003; '+hid+' done &middot; show</button>';
+  if(S.hideDone&&all.length&&!rows.length) h='<div class="allclear" style="text-align:center;padding:30px 0 6px;font-size:calc(17px*var(--z))">Everything is done for this day &#127881;</div>'+h;
   return h;
 }
 
 function checkin(s){
-  const P=viewP(), W=P.weekly;
-  let h=isDaily()?dayStrip(s):periodBar();
+  const P=viewP(), W=P.weekly, daily=isDaily();
+  let h=daily?dayStrip(s)+lookBar():periodBar();
   const any=liveItems().some(i=>i.is_selected);
   const counted=W?longCounted(P):{};
-  if(isDaily()&&S.groupBy==='tod'){ h+=todView(s,P,counted); }
-  else S.cats.forEach(c=>{
-    const mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
-    const extra=extraRows(c,P,counted);
-    if(!mine.length&&!extra.length) return;
-    const cs=s.cats.find(x=>x.id===c.id);
-    h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct))+'</div></div>'
-      +'<div class="catmeta">'+(W?cs.sel+' '+PNOUN()+(cs.xdue?' + '+cs.xdue+' due or ticked from your longer list':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
-      +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
-    mine.forEach(i=>{
-      const due=W?true:isDue(i.freq,P.m,i.target_month);
-      h+=itemBtn(i,ekey(i,P),due,(isDaily()&&i.freq==='d')?'':(due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due')));
-    });
-    if(extra.length){
-      h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">'+(S.showLonger?'Weekly, monthly &amp; longer &mdash; tick when you do them':'From your longer list &mdash; due or ticked '+PNOUN())+'</div>';
-      extra.forEach(x=>{
-        const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
-        h+=itemBtn(x.it,x.key,true,rowTag(x.it,x.key,P.fri,prior),P.key);
+  if(daily&&S.look!=='sections') h+=rowsView(P,counted,S.look==='time');
+  else{
+    let hidTotal=0;
+    S.cats.forEach(c=>{
+      let mine=catItems(c.id).filter(i=>i.is_selected&&(!W||isShortCycle(i)));
+      let extra=extraRows(c,P,counted);
+      const nAll=mine.length+extra.length;
+      if(!nAll) return;
+      if(daily&&S.hideDone){
+        const m0=mine.length+extra.length;
+        mine=mine.filter(i=>!isResolved({it:i,key:ekey(i,P)}));
+        extra=extra.filter(x=>!isResolved(x));
+        hidTotal+=m0-mine.length-extra.length;
+      }
+      const cs=s.cats.find(x=>x.id===c.id);
+      const head=daily?fmtScore(cs.done,cs.due):(W?(cs.due?cs.done+'/'+cs.due:'—'):ten(cs.pct));
+      h+='<div class="catblock"><div class="cathead"><div class="catname">'+esc(catTitle(c))+'</div><div class="catpct">'+head+'</div></div>';
+      if(!(daily&&S.score==='off')){
+        h+='<div class="catmeta">'+(W?cs.sel+' '+PNOUN()+(cs.xdue?' + '+cs.xdue+' due or ticked from your longer list':'')+' &middot; N/A answers not counted':cs.done+' of '+cs.due+' due &middot; '+cs.sel+' of '+cs.total+' selected')+'</div>'
+          +'<div class="bar"><span style="width:'+((cs.pct||0)*100)+'%"></span></div>';
+      }
+      mine.forEach(i=>{
+        const due=W?true:isDue(i.freq,P.m,i.target_month);
+        h+=itemBtn(i,ekey(i,P),due,(isDaily()&&i.freq==='d')?'':(due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due')));
       });
-    }
-    h+='</div>';
-  });
+      if(extra.length){
+        h+='<div class="catmeta" style="margin:12px 0 4px;color:var(--gold)">'+(S.showLonger?'Weekly, monthly &amp; longer &mdash; tick when you do them':'From your longer list &mdash; due or ticked '+PNOUN())+'</div>';
+        extra.forEach(x=>{
+          const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
+          h+=itemBtn(x.it,x.key,true,rowTag(x.it,x.key,P.fri,prior),P.key);
+        });
+      }
+      if(daily&&S.hideDone&&!mine.length&&!extra.length) h+='<div class="allclear">All done &#10003;</div>';
+      h+='</div>';
+    });
+    if(daily&&S.hideDone&&hidTotal>0) h+='<button class="hidenote" onclick="toggleHideDone()">&#10003; '+hidTotal+' done &middot; show</button>';
+  }
   if(W) h+=longCycle(P,counted);
   if(!any) h+='<div class="empty">Nothing selected yet. Open <b>Items</b> and pick what applies to you.</div>';
   return h;
@@ -1288,7 +1352,7 @@ function wheel(s){
   h+='<div class="wheelwrap"><div class="scoreline"><div class="n">'+ten(s.overall)+'</div>'
     +'<div class="d">'+esc(S.template.score_label)+' score &middot; '+esc(P.label)+'</div>'
     +'<div class="c">'+s.tDone+' of '+s.tDue+' items completed</div></div>'+radar(s.cats,320,true)
-    +'<div class="legend"><span><i style="background:#3B5068"></i>Perfect</span><span><i style="background:#4C9BE0"></i>You</span></div>'
+    +'<div class="legend"><span><i style="background:#3E6178"></i>Perfect</span><span><i style="background:#48A0CE"></i>You</span></div>'
     +'</div><div class="catlist">';
   s.cats.filter(c=>c.pct!==null).sort((a,b)=>b.pct-a.pct).forEach(c=>{
     h+='<div class="catrow '+(c.pct<.5?'low':'')+'"><div class="nm">'+esc(c.name)+'</div>'
@@ -1345,7 +1409,7 @@ function historyScreen(){
   const pos=vals.filter(v=>v!==null&&v>=.7).length;
 
   let h='<div class="histcard"><div class="eyebrow" style="margin-bottom:10px">'+esc(S.template.score_label)+' trend</div>'
-    +lineChart(vals,400,132,'#4C9BE0',true,labels)+'</div>';
+    +lineChart(vals,400,132,'#48A0CE',true,labels)+'</div>';
   h+='<div class="statgrid">'
     +'<div class="stat"><div class="sl">Average</div><div class="sv">'+ten(avg)+'</div></div>'
     +'<div class="stat"><div class="sl">Best '+U+'</div><div class="sv">'+ten(best.s.overall)+'<span class="sm">'+best.label+'</span></div></div>'
@@ -1370,7 +1434,7 @@ function historyScreen(){
 
   h+='<div class="eyebrow" style="margin:26px 0 12px">Every category, '+U+' by '+U+'</div>';
   rows.forEach(r=>{
-    const col=r.cur<.5?'#E0705F':(r.cur>=.85?'#3FA88F':'#4C9BE0');
+    const col=r.cur<.5?'#E0705F':(r.cur>=.85?'#3FA88F':'#48A0CE');
     h+='<div class="ctrend"><div class="cth"><div class="ctn">'+esc(catTitle(r.c))+'</div><div class="ctd">'
       +(r.delta===null?'':(r.delta>0?'<span style="color:var(--track)">&#9650; '+dfmt(r.delta)+'</span>':(r.delta<0?'<span style="color:var(--alert)">&#9660; '+dfmt(Math.abs(r.delta))+'</span>':'<span>no change</span>')))
       +'</div><div class="ctv" style="color:'+col+'">'+ten(r.cur)+'</div></div>'
@@ -1596,35 +1660,47 @@ function fmtBuild(id){
 }
 const footerHtml=()=>'<div style="text-align:center;font-size:calc(12px*var(--z));color:var(--muted);margin-top:30px">Version '+esc(fmtBuild(BUILD_ID))+'</div>';
 
-/* ---- Settings ---- */
-function openSettings(){
+/* ---- Settings (a page, reached from the gear in the bottom bar) ---- */
+function openSettings(){ S.tab='settings'; render(); }
+async function signOut(){ await SB.auth.signOut(); location.reload(); }
+function settingsHtml(){
   const email=(S.profile&&S.profile.email)||'', tz=(S.profile&&S.profile.timezone)||'';
-  $("settingsBody").innerHTML='<h2>Settings</h2>'
-    +'<label>Account</label><div style="font-size:calc(15.5px*var(--z));word-break:break-all">'+esc(email)+'</div>'
-    +'<label>Time zone</label><div style="font-size:calc(15.5px*var(--z))">'+esc(tz||'—')+'</div>'
-    +'<label>Change password</label>'
-    +'<input type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
-    +'<input type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
-    +'<div class="row"><button class="primary" onclick="changePassword()">Update password</button></div>'
-    +'<label>Text size</label>'
-    +'<select id="stText" onchange="setTextSize(this.value)">'
-    +[['standard','Standard'],['large','Large'],['xl','Extra large']].map(o=>'<option value="'+o[0]+'" '+(textSize()===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select>'
-    +'<label>Time-of-day colors</label>'
-    +TODS.map(t=>'<div class="todcol"><span>'+t[2]+' '+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')
-    +'<label>Open this device to</label>'
-    +'<select id="stStart" onchange="setStart(this.value)"><option value="">All scorecards</option>'
+  const inCard=!!(S.template&&S.card&&isWeekly());
+  const sw=(on,fn,txt)=>'<div class="selrow'+(on?' on':'')+'" style="cursor:pointer" onclick="'+fn+'()"><span class="tog"></span><span class="ilabel">'+txt+'</span></div>';
+  let h='<div style="height:14px"></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:8px">Account</div>'
+    +'<div style="font-size:calc(16px*var(--z));word-break:break-all">'+esc(email)+'</div>'
+    +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:4px">Time zone: '+esc(tz||'—')+'</div>'
+    +'<div class="cardact"><button class="pick" style="color:var(--alert)" onclick="signOut()">Sign out</button></div></div>';
+  if(inCard){
+    h+='<div class="card"><div class="eyebrow" style="margin-bottom:10px">This scorecard</div>'
+      +sw(S.showLonger,'setShowLonger','Show '+(isDaily()?'weekly, monthly &amp; longer items':'monthly, quarterly &amp; yearly items')+' in each section')
+      +(isDaily()?sw(S.dueOnly,'setDueOnly','Only show what&rsquo;s due now'):'')+'</div>';
+  }
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Text size</div>'
+    +'<select class="formfld" id="stText" onchange="setTextSize(this.value)">'
+    +[['standard','Standard'],['large','Large'],['xl','Extra large']].map(o=>'<option value="'+o[0]+'" '+(textSize()===o[0]?'selected':'')+'>'+o[1]+'</option>').join('')+'</select></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Time-of-day colors</div>'
+    +TODS.map(t=>'<div class="todcol"><span>'+t[2]+' '+t[1]+'</span><div>'+TOD_PALETTE.map(c=>'<button class="sw'+(todColors()[t[0]]===c?' on':'')+'" style="background:'+c+'" onclick="setTodColor(\''+t[0]+'\',\''+c+'\')"></button>').join('')+'</div></div>').join('')+'</div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Open this device to</div>'
+    +'<select class="formfld" id="stStart" onchange="setStart(this.value)"><option value="">All scorecards</option>'
     +S.templates.map(t=>'<option value="'+t.id+'" '+(startPref()===t.id?'selected':'')+'>'+esc(t.name)+'</option>').join('')+'</select>'
-    +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);margin-top:6px;line-height:1.45">Applies to this phone or computer only. To put it on your iPhone home screen: open the scorecard in Safari, tap Share, then Add to Home Screen.</div>'
-    +'<label>App version</label><div style="font-size:calc(15.5px*var(--z))">'+esc(fmtBuild(BUILD_ID))+' <span style="color:var(--muted)">(your local time)</span></div>'
-    +'<div class="row"><button onclick="checkUpdate()">Check for updates</button></div>'
-    +'<div class="msg" id="stMsg"></div>'
-    +'<div class="row" style="margin-top:6px"><button onclick="closeSettings()">Close</button></div>';
-  $("settingsOverlay").style.display="flex";
+    +'<div style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;line-height:1.45">Applies to this phone or computer only. To put a scorecard on your iPhone home screen: open it in Safari, tap Share, then Add to Home Screen.</div></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">Change password</div>'
+    +'<input class="formfld" type="password" id="stPw1" placeholder="New password (8+ characters)" autocomplete="new-password">'
+    +'<input class="formfld" type="password" id="stPw2" style="margin-top:8px" placeholder="Repeat new password" autocomplete="new-password">'
+    +'<div class="cardact"><button class="pick" onclick="changePassword()">Update password</button></div></div>';
+  h+='<div class="card"><div class="eyebrow" style="margin-bottom:6px">App version</div>'
+    +'<div style="font-size:calc(16px*var(--z));font-variant-numeric:tabular-nums">'+esc(fmtBuild(BUILD_ID))+'</div>'
+    +'<div style="font-size:calc(13px*var(--z));color:var(--muted)">Your local time</div>'
+    +'<div class="cardact"><button class="pick" onclick="checkUpdate()">Check for updates</button></div>'
+    +'<div id="stMsg" style="font-size:calc(14px*var(--z));color:var(--muted);margin-top:8px;min-height:18px"></div></div>';
+  return h;
 }
 function setTodColor(slot,hex){
   const c=todColors(); c[slot]=hex;
   try{ localStorage.setItem('ces-tod-colors',JSON.stringify(c)); }catch(e){}
-  openSettings(); render();
+  render();
 }
 function setTextSize(k){
   try{ localStorage.setItem('ces-text',k); }catch(e){}
@@ -1698,22 +1774,41 @@ const NAV_ICONS={
   tracker:'<rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 10h16M4 15h16M10 4v16M15 4v16"/>',
   score:'<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4.5"/><circle cx="12" cy="12" r="1" fill="currentColor"/>',
   history:'<path d="M4 19V5M4 19h16"/><path d="M8 15l3-4 3 2 5-7"/>',
-  items:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="18" r="1"/>'
+  items:'<path d="M9 6h11M9 12h11M9 18h11"/><circle cx="5" cy="6" r="1"/><circle cx="5" cy="12" r="1"/><circle cx="5" cy="18" r="1"/>',
+  settings:'<circle cx="12" cy="12" r="3"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.3 5.3l2.1 2.1M16.6 16.6l2.1 2.1M5.3 18.7l2.1-2.1M16.6 7.4l2.1-2.1"/>',
+  home:'<path d="M4 11l8-7 8 7"/><path d="M6 10v9h12v-9"/>'
 };
+const scorecardTabs=()=>[['checkin',isDaily()?'Today':'Check-in'],['score',S.template.score_label],['history','History'],['items','Items'],['settings','Settings']];
+const homeTabs=()=>[['home','Scorecards'],['settings','Settings']];
+function navTo(k){
+  if(k==='home'){ if(S.template) goHome(); else { S.tab='home'; render(); } return; }
+  S.tab=k; window.scrollTo(0,0); render();
+}
+function setHeader(){
+  const t=$("hdrTitle"); if(!t) return;
+  t.textContent=S.tab==='settings'?'Settings':(S.template?S.template.name:'Scorecards');
+}
 /* The tab bar lives at the bottom of the screen, within thumb reach. */
 function renderNav(tabs){
   const n=$("bottomNav"); if(!n) return;
   if(!tabs){ n.style.display="none"; n.innerHTML=""; return; }
-  n.innerHTML=tabs.map(t=>'<button class="nb '+(S.tab===t[0]?'on':'')+'" onclick="S.tab=\''+t[0]+'\';window.scrollTo(0,0);render()">'
+  const cur=(S.template&&S.card)?S.tab:(S.tab==='settings'?'settings':'home');
+  n.innerHTML=tabs.map(t=>'<button class="nb '+(cur===t[0]?'on':'')+'" onclick="navTo(\''+t[0]+'\')">'
     +'<svg viewBox="0 0 24 24" width="26" height="26" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">'+(NAV_ICONS[t[0]]||'')+'</svg>'
     +'<span>'+esc(t[1])+'</span></button>').join('');
   n.style.display="flex";
 }
 function render(){
   const app=$("app");
-  renderNav(null);
   if(S.tab!=='items') S.keepShown={};
+  setHeader();
+  if(S.tab==='settings'){
+    renderNav((S.template&&S.card)?scorecardTabs():homeTabs());
+    app.innerHTML=settingsHtml()+footerHtml();
+    return;
+  }
   if(!S.template){
+    renderNav(homeTabs());
     let h='<div class="h1">Scorecards</div><div class="sub">Choose a scorecard &middot; signed in as '+esc(S.profile.email||'')+'</div>';
     if(S.form) h+=homeForm();
     S.templates.forEach(t=>{
@@ -1732,6 +1827,7 @@ function render(){
   }
   const back='';
   if(!S.card){
+    renderNav(homeTabs());
     const n=S.library.filter(l=>l.is_default_on).length;
     app.innerHTML=back+'<div class="h1">'+esc(S.template.name)+'</div>'
       +'<div class="sub">'+esc(S.template.description||'')+'</div>'
@@ -1745,16 +1841,15 @@ function render(){
     return;
   }
   const s=score(viewP());
-  const tabs=[[ 'checkin',isDaily()?'Today':'Check-in'],['score',S.template.score_label],['history','History'],['items','Items']];
-  renderNav(tabs);
-  let h=back+'<div class="h1">'+esc(S.template.name)+'</div>'
-    +'<div class="sub">'+MON[NOW.m]+' '+NOW.y+'</div>';
+  renderNav(scorecardTabs());
+  let h='<div style="height:14px"></div>';
   h += S.tab==='checkin' ? checkin(s)
      : S.tab==='score'   ? wheel(s)
      : S.tab==='history' ? historyScreen()
      :                     itemsScreen();
   h+=footerHtml();
   app.innerHTML=h;
+  restoreStrip();
 }
 
 /* ===================================================================

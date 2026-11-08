@@ -11,14 +11,15 @@
  * tied to APP_RELEASE and a skipWaiting/claim dance — do not bolt it on here
  * without that.
  */
-const CACHE = 'ces-static-v1';
+const CACHE = 'ces-static-v2';
 const ASSETS = [
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
   '/icon-maskable-512.png',
   '/apple-touch-icon.png',
-  '/favicon-32.png'
+  '/favicon-32.png',
+  '/ce-mark-gold.png'
 ];
 
 self.addEventListener('install', e => {
