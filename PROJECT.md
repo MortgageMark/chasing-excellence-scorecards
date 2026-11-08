@@ -2,81 +2,66 @@
 
 **Read this first if you are a new chat session picking up this project.**
 
-- **Live:** https://scorecards.chasingexcellence.net *(not deployed yet)*
-- **Current release:** v2
-- **Status:** binary mode working end to end, local only
+- **Live:** https://scorecards.chasingexcellence.net (Netlify, auto-deploys `main`)
+- **Repo:** `MortgageMark/chasing-excellence-scorecards`
+- **Database:** Supabase project **DailyTimeTracker** (`vybypyeyzfgakenkotbw`), shared with the time tracker. All objects are prefixed `sc_`.
+- **Owner:** Mark (non-technical; dictates by voice).
 
 ---
 
-## 1. Where everything is
+## How Mark wants to work (standing rules)
 
-| Thing | Where |
-|---|---|
-| Local clone | `C:\Users\markn\OneDrive\Desktop\Claude Folder\Scorecards` |
-| GitHub | `https://github.com/MortgageMark/chasing-excellence-scorecards` |
-| Host | Netlify, auto-deploy from `main` |
-| Database | Supabase project `vybypyeyzfgakenkotbw` — **shared with Daily Time Tracker** |
-| Local dev | `python -m http.server 8899 --directory Scorecards` |
+1. **Short replies.** Only say what he needs to know or do. No lists of fixes.
+2. **Any SQL he must run: paste the full SQL in the reply** (in a code block) and say "Supabase → DailyTimeTracker → SQL Editor → paste → Run". Never just name a file.
+3. **Deploy when work is done**: commit on the session's feature branch, push, open a PR, merge to `main` (Netlify deploys). He does not want to be asked each time.
+4. Ask before building big new things only when the choice is genuinely his. Otherwise use judgment ("I trust your judgment").
+5. Test before shipping (see Testing).
+
+## The app
+
+Single file `index.html` (vanilla JS + inline CSS, state object `S`, string-template `render()`), Supabase JS client `SB`, installable PWA (`manifest.json`, `sw.js` caches icons only — never `index.html`). `netlify.toml` stamps a build id into the version string shown under Settings.
 
 ```
-index.html                       the entire app (264 KB, all CSS/JS inline)
-manifest.json                    PWA manifest
-sw.js                            service worker - icons only, never index.html
-netlify.toml                     build command, cache headers, SPA rewrite
-sql/00-NOTES.md                  READ THIS before touching the database
-sql/01..05                       migrations, all applied, all idempotent
-sql/99-rls-tests.sql             regression suite - run after any policy change
-Chasing_Excellence_Scorecards_Spec_v2.md    the build spec
-life-balance-scorecard-prototype.html       reference implementation
-icon-*.png                       placeholder icons, swap when branding lands
+index.html          the whole app
+sw.js, manifest.json, icon-*.png, apple-touch-icon.png, favicon-32.png
+ce-mark-gold.png, ce-mark-white.png    brand monograms (header/icons)
+sql/00-NOTES.md     list of every SQL file — READ before touching the DB
+sql/01..16          idempotent migrations (all applied through 16 once Mark has run it)
+sql/99-rls-tests.sql  regression suite, rollback-only; run after policy/helper changes
 ```
 
----
+### Brand
+Navy `#102937` base (`--ink`), `--slate #163347`, `--raise #1C4259`, `--line #2A4A5E`, `--bone #EEF3F3`, `--muted #8FA6B3`, `--accent #48A0CE`, `--gold #D9A441`. League Spartan headings, Arial body. Text scaling via `--z` (Standard/Large/XL).
 
-## 2. The three rules
+### What exists
+- Multiple scorecards (shared templates: Life Balance, Sales & Marketing; plus user-made/copied private ones). Check-in periods: monthly / weekly / daily.
+- Answers: done / not done / **N/A**. Tap = toggle; **swipe right = done, swipe left = N/A**.
+- Optional longer-cycle items with due/late (`due_at`/`late_at`: weekly 1–7, monthly day, longer = month*100+day).
+- Bottom nav: Check-in/Today · Score · History · Items · Settings. Home = Scorecards list + Settings. CE monogram in header.
+- Today (daily) has a scrollable day strip, look chips (Clean / Sections / Time of day — **Clean is default**), hide-completed, score display.
+- Items screen: collapsible sections, drag reorder, "show only what I'm using", **item edit screen** (✎ or the "Repeats…" line): icon, name, color, section, repeat/due/late, time of day; admin tools (make global, rename for everyone, save default order/fields); delete custom items.
+- Per-item emoji icon, time of day, color (color needs SQL 16).
+- Admins (`sc_admins`, `sc_is_admin()`) can promote items to the shared template and edit wording/defaults for everyone.
+- Settings page: account, show-longer / due-only toggles, text size, time-of-day colors, open-this-device-to (start scorecard), change password, version / check for updates.
+- Deep link `?s=<templateId>`; preferences in localStorage (`ces-*` keys).
 
-**The prototype is a reference implementation, not a mockup.** The scoring
-engine, due-cycle logic, radar math, first-run defaults and the 241-item
-library are already correct in it. Port them. Do not rebuild or redesign.
+### Not built yet (agreed next)
+1. **Printable grid tracker** (weekly/monthly; items down the side, days across; tap cells; N/A mark; totals: best day, percentages, perfect days; print CSS).
+2. **Month calendar** (tap a day to jump) — both behind buttons inside the **History** tab.
+3. Stats (monthly rate, streaks, perfect days).
+Explicitly skipped for now: goal-value counts, reminders, item start/end dates.
 
-**The database is shared with the time tracker.** Every table, function and
-type in this app is prefixed `sc_`. The tracker's `public.profiles` is an
-in-app persona (Mark vs Tamara), *not* an auth user — this app has its own
-`sc_profiles`, one row per login.
+## Testing (do this before pushing)
+- Node harness scripts that evaluate the app's `<script>` with stubs (copy the pattern used earlier; recreate if missing).
+- Real browser: Playwright + Chromium are preinstalled (`require('playwright')`, `chromium.launch()`), good for screenshots and mouse/touch tests.
+- SQL: validate against a throwaway local Postgres 16 before giving it to Mark.
+- iOS notes: no `viewport-fit=cover`, opaque status bar, safe-area paddings. Bump the SW cache name only if cached asset names change.
 
-**Run `sql/99-rls-tests.sql` after any policy or helper change.** It is
-rollback-only and safe against live data. Every row must say PASS. Two real
-bugs shipped past code review and were caught only by running it — both are
-written up in `sql/00-NOTES.md`.
+## Database rules
+- Everything `sc_`-prefixed. The tracker's `public.profiles` is NOT an auth user; this app has `sc_profiles`.
+- After changing functions: end SQL with `notify pgrst, 'reload schema';`.
+- Run `sql/99-rls-tests.sql` after any policy change; every row must say PASS.
+- Online only, no IndexedDB (deliberate). Separate auth storageKey `ces-auth`.
 
----
-
-## 3. What works
-
-Binary mode, end to end: adopt a scorecard (241 items, 53 on), check in, score,
-radar, history, edit items. Auth and PWA shell forked from the time tracker.
-
-**"One login" means one Supabase account, not single sign-on.** Different
-domains, so localStorage is not shared. The apps use different auth
-`storageKey`s (`dtt-auth` vs `ces-auth`); you sign in on each separately.
-
-**Online only, no IndexedDB.** Deliberate. A monthly check-in is not something
-you do on a plane, and the tracker's sync engine carries a bug class (deletes
-not propagating) this app does not need.
-
-## 4. What does not exist yet
-
-Following the spec's build order:
-
-- Daily tracking and the Today screen (spec §5). The `⚡` toggle is absent from
-  the Items screen rather than present and dead.
-- Sharing UI (spec §6). The database and RLS are done and tested; there are no
-  screens.
-- Scale and count modes (spec §3.2, §3.3). The schema holds them already.
-- Home / status board and Library screens (spec §9). Only needed once a second
-  template exists.
-
-## 5. Open decisions
-
-Carried over from spec §12: brand hex codes and logo, per-item daily threshold
-(fixed at 70%), the 7.0 positive-month line, and data export.
+## Git
+Develop on the branch the session names (previously `claude/sales-marketing-scorecard-r0ks8h`). If its last PR is already merged, restart the branch from latest `main` before new work. Never reuse a merged PR.
