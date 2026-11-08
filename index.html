@@ -1852,8 +1852,7 @@ function histTrends(){
 }
 
 function itemRow(i,groupId,catName){
-  const tag=(!i.library_item_id&&!adminHere())?'<span class="custom-tag">Yours</span>'
-           :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
+  const tag='';
   const need=groupId.indexOf('tod:')===0?S.sortMode:'manual';
   return '<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
     +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
