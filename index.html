@@ -117,6 +117,9 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .sk{font-weight:600;font-size:calc(16px*var(--z))}
 .sv2{display:flex;justify-content:flex-end;flex-wrap:wrap;gap:6px;min-width:0}
 .nameline{gap:14px}
+.isub{display:block;font-size:calc(13px*var(--z));color:var(--muted);font-weight:400;margin-top:3px}
+.ilabel{cursor:pointer}
+.addplus{flex:none;width:44px;height:44px;border-radius:50%;background:var(--accent);color:var(--ink);font-size:30px;font-weight:600;line-height:1;display:grid;place-items:center}
 .iconbtn2{flex:none;width:64px;height:64px;border-radius:16px;border:1.5px dashed var(--gold);font-size:34px;display:grid;place-items:center;background:transparent}
 .sheetname{flex:1;min-width:0;background:transparent;border:0;border-bottom:1px solid var(--line);color:var(--bone);font:inherit;font-size:calc(18px*var(--z));font-weight:600;padding:8px 0}
 .swrow2{display:flex;flex-wrap:wrap;gap:8px;justify-content:flex-end;max-width:230px}
@@ -248,7 +251,7 @@ table.grid{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums
 .tog::after{content:'';position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--muted);transition:.18s}
 .selrow.on .tog{background:rgba(72,160,206,.3)}
 .selrow.on .tog::after{transform:translateX(20px);background:var(--accent)}
-.grip{flex:none;width:30px;padding:8px 0;text-align:center;color:var(--muted);font-size:calc(18px*var(--z));line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
+.grip{flex:none;width:34px;padding:8px 0;text-align:center;color:var(--muted);font-size:calc(18px*var(--z));line-height:1;cursor:grab;touch-action:none;user-select:none;-webkit-user-select:none}
 .mv{flex:none;display:flex;flex-direction:column;gap:2px}
 .mv button{width:34px;height:20px;border:1px solid var(--line);border-radius:4px;color:var(--muted);font-size:calc(12px*var(--z));line-height:1;display:grid;place-items:center;padding:0}
 .mv button:disabled{opacity:.3}
@@ -327,7 +330,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
 <!-- ================= LOGIN GATE ================= -->
 <div class="login" id="loginGate">
   <div class="box">
-    <div class="brand"><img class="logo" src="/ce-mark-gold.png" alt="Chasing Excellence"><h1>Scorecards</h1></div>
+    <div class="brand"><img class="logo" src="/ce-mark-blue.png" alt="Chasing Excellence"><h1>Scorecards</h1></div>
     <p id="authSub">Sign in to track your scorecards across every device.</p>
     <div id="emailWrap"><label>Email</label>
       <input id="loginEmail" type="email" autocomplete="username" placeholder="you@example.com"></div>
@@ -350,7 +353,7 @@ label{display:block;font-size:calc(13.5px*var(--z));color:var(--muted);margin:0 
 <!-- ================= APP ================= -->
 <div id="appRoot" style="display:none">
   <div class="top"><div class="top-in">
-    <a href="/" id="homeLink" title="All scorecards"><img src="/ce-mark-gold.png" alt="Chasing Excellence" width="40" height="40"></a>
+    <a href="/" id="homeLink" title="All scorecards"><img src="/ce-mark-blue.png" alt="Chasing Excellence" width="40" height="40"></a>
     <div class="hdrtitle" id="hdrTitle">Scorecards</div>
   </div></div>
   <div class="wrap" id="app"></div>
@@ -536,6 +539,8 @@ function catItems(catId){
   const az=(a,b)=>label(a).localeCompare(label(b));
   if(S.sortMode==='az')     return list.slice().sort(az);
   if(S.sortMode==='manual') return list.slice().sort((a,b)=>a.sort_order-b.sort_order||az(a,b));
+  if(S.sortMode==='active') return list.slice().sort((a,b)=>(b.is_selected?1:0)-(a.is_selected?1:0)||a.sort_order-b.sort_order||az(a,b));
+  if(S.sortMode==='tod'){ const t=i=>{ const k=TODS.findIndex(x=>x[0]===todOf(i)); return k<0?9:k; }; return list.slice().sort((a,b)=>t(a)-t(b)||a.sort_order-b.sort_order||az(a,b)); }
   return list.slice().sort((a,b)=>FO[a.freq]-FO[b.freq]||az(a,b));
 }
 /* An entry is true (yes), false/missing (no) or 'na' (not applicable).
@@ -604,7 +609,7 @@ function todColors(){
   return S.todColors;
 }
 const todBg=t=>todColors()[t]+'2B';
-const ICONS=['🙏','💧','🛏️','😴','🧘','🚶','🏃','🚴','💪','🏋️','🥗','🍳','🍎','☕','💊','🚿','⚖️','📖','✍️','📝','🧠','🎧','📞','💬','📧','✉️','📣','🎥','📅','🎯','📈','💰','❤️','💑','👪','🤝','⛪','🌱','☀️','🌙','⭐','🏠','🧹','🛒','🎁','📱','✅','🏆'];
+const ICONS=['🙏','💧','🛏️','😴','🧘','🚶','🏃','🚴','💪','🏋️','🥗','🍳','🍎','☕','💊','🚿','⚖️','📖','✍️','📝','🧠','🎧','📞','💬','📧','✉️','📣','🎥','📅','🎯','📈','💰','❤️','💑','👪','🤝','⛪','🌱','☀️','🌙','⭐','🏠','🧹','🛒','🎁','📱','✅','🏆','🥤','🍽️','🥦','🍌','🥑','🍇','🛌','⏰','⌚','🧴','🪥','🦷','🩺','🧘‍♀️','🤸','⚽','🏀','🏊','⛰️','🧗','🥾','🎾','⛳','🎨','🎸','🎹','🎤','📚','🎓','🔬','💡','💻','🖥️','⌨️','📊','🗂️','📁','🧾','💵','🏦','💳','📈','🔑','🏡','🛠️','🔧','🚗','✈️','🧺','🪴','🐕','🐈','👶','👫','🎉','🤗','🙌','👍','🔥','🚀','🌟','💎','🎖️','🥇','📍','🗓️','🔔','📌','🧭','🕊️','✝️','📿','🌅','🌳','🌊','🌈'];
 
 /* ---- Due and late ------------------------------------------------------------------
    Each answer belongs to a period (a week, month, quarter...). Defaults: it is due on the first day
@@ -616,9 +621,16 @@ const MONFULL=['January','February','March','April','May','June','July','August'
 const ORD=['1st','2nd','3rd','4th','5th','6th','7th','8th','9th','10th','11th','12th'];
 /* due_at / late_at: weekly 1-7 (Mon-Sun, due 6 = the weekend); monthly = day 1-31 (31 = last day);
    quarterly / 6-month / yearly = month*100 + day (month counted from 0 within the period). */
-const defaultLate=f=>f==='w'?7:(f==='m'?31:((CYC[f]||1)-1)*100+31);
+const defaultLate=(f,due)=>{
+  if(f==='w') return 7; if(f==='m') return 31;
+  const p=CYC[f]||1, last=(p-1)*100+31;
+  if(due==null) return last;
+  const d=new Date(2023,Math.floor(due/100),due%100||1); d.setDate(d.getDate()+90);
+  const m=(d.getFullYear()-2023)*12+d.getMonth();
+  return m>=p?last:m*100+d.getDate();
+};
 const dueAt=it=>it.due_at!=null?it.due_at:1;
-const lateAt=it=>it.late_at!=null?it.late_at:defaultLate(it.freq);
+const lateAt=it=>it.late_at!=null?it.late_at:defaultLate(it.freq,dueAt(it));
 function monthDay(st,m,d){
   const y=st.getFullYear(), mo=st.getMonth()+m, dim=new Date(y,mo+1,0).getDate();
   return new Date(y,mo,Math.min(d,dim));
@@ -1025,18 +1037,17 @@ function toggleDay(id,n){
   patchItem(id,{days:v},{days:v});
 }
 function setDays(id,v){ patchItem(id,{days:v},{days:v}); }
-const DAYLET=['M','T','W','T','F','S','S'];
+const DAYLET=['M','T','W','T','F','S','S'], DAYORDER=[7,1,2,3,4,5,6];
 function daysRow(i){
   const cur=i.days||'1234567';
-  const b=DAYLET.map((l,n)=>'<button class="dayb'+(cur.indexOf(String(n+1))>=0?' on':'')+'" onclick="toggleDay(\''+i.id+'\','+(n+1)+')" aria-label="'+DOWLATE[n+1]+'">'+l+'</button>').join('');
-  const pre=(v,t)=>'<button class="pick" style="padding:6px 10px;font-size:calc(13px*var(--z))" onclick="setDays(\''+i.id+'\',\''+v+'\')">'+t+'</button>';
-  return '<div class="srow" style="display:block"><span class="sk">Days</span><div class="dayrow">'+b+'</div><div style="display:flex;gap:6px;margin-top:8px">'+pre('1234567','Every day')+pre('12345','Mon–Fri')+pre('135','Mon Wed Fri')+pre('67','Weekends')+'</div></div>';
+  const b=DAYORDER.map(n=>'<button class="dayb'+(cur.indexOf(String(n))>=0?' on':'')+'" onclick="toggleDay(\''+i.id+'\','+n+')" aria-label="'+DOWLATE[n]+'">'+DAYLET[n-1]+'</button>').join('');
+  return '<div class="srow" style="display:block"><div class="dayrow">'+b+'</div></div>';
 }
 function daysText(i){
   if(!hasDays(i)) return '';
   if(i.days==='12345') return 'Mon–Fri';
-  if(i.days==='67') return 'Sat, Sun';
-  return i.days.split('').map(n=>DOWSHORT[+n]==='the weekend'?'Sat':DOWSHORT[+n]).join(' ');
+  if(i.days==='67') return 'Sun, Sat';
+  return DAYORDER.filter(n=>i.days.indexOf(String(n))>=0).map(n=>DOWSHORT[n]==='the weekend'?'Sat':DOWSHORT[n]).join(' ');
 }
 function toggleIconPick(id){ S.iconPick=(S.iconPick===id)?null:id; render(); }
 async function setGlobalFields(id){
@@ -1053,8 +1064,26 @@ function toggleSched(id){ openEdit(id); }
 /* ---- Edit screen: tap an item's pencil (or its schedule line) on the Items tab ---- */
 function openEdit(id){ S.editItem=id; S.iconPick=null; render(); }
 function closeEdit(){ S.editItem=null; S.iconPick=null; render(); }
+function openNew(){ S.newItem={cat:S.cats[0]&&S.cats[0].id}; S.editItem=null; render(); }
+function closeNew(){ S.newItem=null; render(); }
+function newItemSheet(el){
+  const cats=S.cats.map(c=>'<option value="'+c.id+'" '+(S.newItem.cat===c.id?'selected':'')+'>'+esc(catTitle(c))+'</option>').join('');
+  el.innerHTML='<div class="sheethead"><button class="sheetx" onclick="closeNew()" aria-label="Close">&#10005;</button><div class="sheettitle">New item</div></div>'
+    +'<div class="sheetbody"><div class="sheetcard"><div class="srow nameline"><input class="sheetname" id="newName" placeholder="Name" onkeydown="if(event.key===\'Enter\')createNew()"></div>'
+    +'<div class="srow"><span class="sk">Section</span><span class="sv2"><select class="fsel" id="newCat" style="width:auto;max-width:210px" onchange="S.newItem.cat=this.value">'+cats+'</select></span></div></div></div>'
+    +'<div class="sheetfoot"><button onclick="createNew()">Add</button></div>';
+  el.style.display='flex';
+  try{ document.body.style.overflow='hidden'; setTimeout(()=>{ const n=document.getElementById('newName'); if(n) n.focus(); },50); }catch(e){}
+}
+function createNew(){
+  const n=document.getElementById('newName'), c=document.getElementById('newCat');
+  const text=((n&&n.value)||'').trim(); if(!text) return;
+  const catId=c.value; S.newItem=null;
+  return addItem(catId,text);
+}
 function renderSheet(){
   let el=null; try{ el=document.getElementById('sheet'); }catch(e){} if(!el) return;
+  if(S.newItem){ if(!document.getElementById('newName')) newItemSheet(el); return; }
   const i=S.editItem?S.items.find(x=>x.id===S.editItem):null;
   if(!i){ el.style.display='none'; el.innerHTML=''; try{ document.body.style.overflow=''; }catch(e){} return; }
   const prev=el.querySelector('.sheetbody'), keep=prev?prev.scrollTop:0;
@@ -1103,7 +1132,7 @@ function schedParts(i){
 /* Due / late only matter where an answer belongs to a longer period than the card's own. */
 const schedApplies=i=>isWeekly()&&i.freq!=='d'&&!(i.freq==='w'&&!isDaily());
 function schedSummary(i){
-  return 'Repeats '+FREQ[i.freq]+(daysText(i)?' &middot; '+daysText(i):'')+(schedApplies(i)?' &middot; Due '+whenText(i,dueAt(i),false)+' &middot; Late after '+whenText(i,lateAt(i),true):'');
+  return FREQ[i.freq]+(daysText(i)?' &middot; '+daysText(i):'')+(schedApplies(i)&&i.due_at!=null?' &middot; due '+whenText(i,dueAt(i),false):'');
 }
 function toggleSel(id){
   const it=S.items.find(i=>i.id===id);
@@ -1188,12 +1217,9 @@ async function pickAll(catId,on){
   try{ await run(SB.from("sc_user_scorecard_items").update({is_selected:on}).in("id",ids)); }
   catch(e){ before.forEach(b=>{ S.items.find(i=>i.id===b.id).is_selected=b.v; }); render(); }
 }
-async function addItem(catId){
-  const inp=$("ci-"+catId), sel=$("cf-"+catId);
-  const text=(inp.value||'').trim(); if(!text) return;
-  const f=sel.value;
+async function addItem(catId,text){
+  const f=isDaily()?'d':(isWeekly()?'w':'m');
   const tm=PERIOD[f]?spreadTargetMonth(f,liveItems().filter(x=>x.freq===f).length):null;
-  inp.value='';
   try{
     const row=await run(SB.from("sc_user_scorecard_items").insert({
       user_scorecard_id:S.card.id, category_id:catId, custom_label:text,
@@ -1203,7 +1229,7 @@ async function addItem(catId){
     S.items.push({id:row.id,category_id:catId,library_item_id:null,custom_label:text,
       renamed_label:null,lib_label:null,lib_short:null,lib_code:null,freq:f,target_month:tm,is_selected:true,
       sort_order:row.sort_order,removed_at:null,days:null});
-    if(isDaily()&&f==='d') openEdit(row.id); else render();   /* daily items: open the edit screen so days can be picked */
+    openEdit(row.id);   /* open the edit screen so repeats, days and icon can be picked */
   }catch(e){}
 }
 async function resetCard(){
@@ -1748,11 +1774,12 @@ function histTrends(){
 }
 
 function itemsScreen(){
-  let h='<div class="note">These are suggestions, not requirements. Keep what applies, rename anything with <b>&#9998;</b>, change the frequency, and add your own.'
-    +(adminHere()?'<br><br><b style="color:var(--gold)">Admin:</b> a gold toggle at the end of each row shows where a question lives. <b>On</b> = it is part of the global template that every user gets. <b>Off</b> = it is only on your scorecard; turn it on to share it. When you edit wording with &#9998;, <b>Everyone</b> changes it for all users and <b>Just me</b> changes only your own copy (tagged <i>Edited</i>).':'')+'</div>';
-  h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg">';
-  [['freq','Frequency'],['az','A – Z'],['manual','My order']].forEach(function(p){
-    h+='<button class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
+  let h='<div class="note" style="display:flex;align-items:center;gap:12px"><div style="flex:1">Turn on what applies. Tap a name to edit it. Drag &#8801; to reorder.'
+    +(adminHere()?'<br><br><b style="color:var(--gold)">Admin:</b> the gold toggle at the end of each row is on when the question is part of the global template every user gets.':'')
+    +'</div><button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>';
+  h+='<div class="seglbl" style="margin-top:0">Sort within each category</div><div class="seg" style="flex-wrap:wrap">';
+  [['manual','My order'],['active','Active first'],['freq','Frequency'],['tod','Time of day'],['az','A – Z']].forEach(function(p){
+    h+='<button style="flex:1 1 30%" class="'+(S.sortMode===p[0]?'on':'')+'" onclick="setSort(\''+p[0]+'\')">'+p[1]+'</button>';});
   h+='</div>';
   h+='<div class="selrow '+(S.onlyUsing?'on':'')+'" style="margin-top:14px;cursor:pointer" onclick="setOnlyUsing()">'
     +'<span class="tog"></span><span class="ilabel">Show only what I&rsquo;m using</span></div>';
@@ -1766,7 +1793,6 @@ function itemsScreen(){
     if(col){ h+='</div>'; return; }
     h+='<div class="pickrow">'
       +(S.onlyUsing?'':'<button class="pick" '+(nOn===all.length?'disabled':'')+' onclick="pickAll(\''+c.id+'\',true)">Select all</button>')
-      +'<button class="pick" '+(nOn===0?'disabled':'')+' onclick="pickAll(\''+c.id+'\',false)">Clear all</button>'
       +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
     mine.forEach(i=>{
@@ -1785,23 +1811,18 @@ function itemsScreen(){
                :(i.renamed_label?'<span class="custom-tag">Edited</span>':'');
       const canMove=S.sortMode==='manual'&&!S.editing, pos=mine.indexOf(i);
       h+='<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
-        +(canMove?'<span class="grip" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
-        +(canMove?'<span class="mv"><button title="Move up" '+(pos===0?'disabled':'')+' onclick="moveItem(\''+i.id+'\',-1)">&#9650;</button>'
-          +'<button title="Move down" '+(pos===mine.length-1?'disabled':'')+' onclick="moveItem(\''+i.id+'\',1)">&#9660;</button></span>':'')
         +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
-        +(i.icon?'<span class="ico" onclick="toggleSel(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
-        +'<span class="ilabel" onclick="toggleSel(\''+i.id+'\')">'+esc(label(i))+tag
-        +(fullQ(i)?'<span style="display:block;font-size:calc(13px*var(--z));color:var(--muted);font-weight:400;margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
-        +'<button class="trkbtn" title="Edit" onclick="openEdit(\''+i.id+'\')">&#9998;</button>'
+        +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
+        +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+tag
+        +'<span class="isub">'+schedSummary(i)+'</span>'
+        +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
         +(!i.library_item_id?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
         +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
-        +'<button class="schedsum" onclick="openEdit(\''+i.id+'\')">'+schedSummary(i)+' <span>&#8250;</span></button>'
+        +(canMove?'<span class="grip" title="Drag to reorder" onpointerdown="dragStart(event,\''+c.id+'\')">&#8801;</span>':'')
         +'</div>';
     });
     if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing selected here. Turn off &ldquo;Show only what I\'m using&rdquo; above to pick items.</div>';
-    h+='</div><div class="addwrap"><input id="ci-'+c.id+'" placeholder="Add your own..." onkeydown="if(event.key===\'Enter\')addItem(\''+c.id+'\')">'
-      +'<select id="cf-'+c.id+'">'+freqKeys().map(f=>'<option value="'+f+'" '+(f===(isDaily()?'d':(isWeekly()?'w':'m'))?'selected':'')+'>'+FREQ[f]+'</option>').join('')+'</select>'
-      +'<button onclick="addItem(\''+c.id+'\')">Add</button></div></div>';
+    h+='</div></div>';
   });
   if(S.template.owner){
     h+='<div class="seglbl">Add a section</div><div class="addwrap"><input id="newSec" placeholder="e.g. Prospecting" onkeydown="if(event.key===\'Enter\')addSection()"><button onclick="addSection()">Add</button></div>';
