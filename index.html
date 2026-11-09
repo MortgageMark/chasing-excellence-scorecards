@@ -1783,7 +1783,51 @@ function historyScreen(){
   const v=S.histView||'trends';
   const tabs=[['trends','Trends'],['grid','Grid'],['cal','Calendar']];
   let h='<div class="hseg noprint">'+tabs.map(t=>'<button class="'+(v===t[0]?'on':'')+'" onclick="setHist(\''+t[0]+'\')">'+t[1]+'</button>').join('')+'</div>';
-  return h+(v==='grid'?gridTracker():(v==='cal'?monthCalendar():histTrends()));
+  return h+(v==='grid'?gridTracker():(v==='cal'?monthCalendar():histTrends()))+fixTools();
+}
+/* Bottom of History: reset or exclude a day / a range of days, and refresh the app. */
+function fixTools(){
+  const t=ymd(today0()), f=S.fixFrom||t, e=S.fixTo||f;
+  return '<div class="histcard noprint" style="margin-top:22px"><div class="eyebrow" style="margin-bottom:6px">Fix days</div>'
+    +'<div style="font-size:calc(13.5px*var(--z));color:var(--muted);line-height:1.45;margin-bottom:10px">Pick one day (leave both dates the same) or a range.</div>'
+    +'<div style="display:flex;gap:8px"><div style="flex:1"><div class="seglbl" style="margin-top:0">From</div><input class="formfld" type="date" value="'+f+'" onchange="S.fixFrom=this.value;if(!S.fixTo||S.fixTo<this.value){S.fixTo=this.value;var q=document.getElementById(\'fixTo\');if(q)q.value=this.value;}"></div>'
+    +'<div style="flex:1"><div class="seglbl" style="margin-top:0">To</div><input class="formfld" id="fixTo" type="date" value="'+e+'" onchange="S.fixTo=this.value"></div></div>'
+    +'<div class="cardact" style="flex-wrap:wrap;gap:8px"><button class="pick" style="color:var(--alert)" onclick="resetRange()">Reset these days</button>'
+    +(isDaily()?'<button class="pick" onclick="excludeRange()">Exclude from score (N/A)</button>':'')+'</div>'
+    +'<div style="font-size:calc(13px*var(--z));color:var(--muted);margin-top:8px;line-height:1.45">Reset clears every check mark and N/A in those days. Exclude marks everything N/A so the days are left out of your score.</div>'
+    +'<div class="cardact" style="margin-top:14px"><button class="pick" onclick="location.reload()">Refresh the whole app</button></div></div>';
+}
+function fixRange(){
+  const t=ymd(today0()), f=S.fixFrom||t, e=S.fixTo||f;
+  if(!f||!e||e<f){ alert('Pick a valid date range.'); return null; }
+  return {f:f,e:e};
+}
+async function resetRange(){
+  const r=fixRange(); if(!r) return;
+  if(!confirm('Reset '+(r.f===r.e?r.f:r.f+' to '+r.e)+'? This clears every check mark and N/A in those days and cannot be undone.')) return;
+  try{
+    saving('on','Resetting...');
+    await run(SB.from("sc_entries").delete().eq("user_scorecard_id",S.card.id).gte("period_start",r.f).lte("period_start",r.e));
+    await loadCard(); saving('on','Reset');
+  }catch(e){ console.error(e); saving('err','Could not reset'); }
+  render();
+}
+async function excludeRange(){
+  const r=fixRange(); if(!r) return;
+  const a=new Date(r.f+'T00:00:00'), b=new Date(r.e+'T00:00:00');
+  if((b-a)/864e5>62){ alert('Pick 62 days or fewer.'); return; }
+  if(!confirm('Mark everything N/A for '+(r.f===r.e?r.f:r.f+' to '+r.e)+'? Those days will be left out of your score.')) return;
+  const rows=[];
+  for(let d=a; ymd(d)<=r.e; d=addDays(d,1)){
+    const P=mkPDay(d);
+    liveItems().filter(i=>i.is_selected&&isShortCycle(i)&&onDay(i,P)).forEach(i=>rows.push({user_scorecard_id:S.card.id,user_scorecard_item_id:i.id,period_start:ymd(d),value_bool:null,credit_week:null}));
+  }
+  try{
+    saving('on','Saving...');
+    for(let k=0;k<rows.length;k+=200) await run(SB.from("sc_entries").upsert(rows.slice(k,k+200),{onConflict:"user_scorecard_item_id,period_start"}));
+    await loadCard(); saving('on','Saved');
+  }catch(e){ console.error(e); saving('err','Could not save'); }
+  render();
 }
 
 /* (named historyScreen so it does not shadow window.history, which the address-bar updates use) */
