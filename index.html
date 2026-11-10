@@ -100,7 +100,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .item{display:flex;align-items:center;gap:12px;padding:16px 14px;border-radius:14px;width:100%;text-align:left;background:var(--slate)}
 .swrow{position:relative;border-radius:14px;overflow:hidden;margin-bottom:8px}
 .swbg{position:absolute;inset:0;display:flex;align-items:center;opacity:0;font-weight:600;font-size:calc(15px*var(--z));color:#fff}
-.swbg.r{background:var(--track);justify-content:flex-start;padding-left:20px}
+.swbg.r{background:var(--alert);justify-content:flex-start;padding-left:20px}
 .swbg.l{background:#5E7482;justify-content:flex-end;padding-right:20px}
 .swrow.dr .swbg.r,.swrow.dl .swbg.l{opacity:1}
 .swrow .item{position:relative;z-index:1;touch-action:pan-y;user-select:none;-webkit-user-select:none;transition:transform .18s ease}
@@ -109,6 +109,7 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .st{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:calc(16px*var(--z));font-weight:700}
 .st.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
 .item.ms{opacity:.6}
+.st.ms{border-color:var(--alert);color:var(--alert)}
 .swrow.hasx .item{padding-right:62px}
 .missbtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);color:var(--muted);font-size:calc(14px*var(--z));font-weight:700;background:var(--slate);display:grid;place-items:center}
 .missbtn.on{border-color:var(--alert);color:var(--alert)}
@@ -1365,15 +1366,14 @@ function stepPeriod(d){
   S.view={y:y,m:m}; render();
 }
 
-/* One row. Swipe right = done, swipe left = not applicable, tap = done / undo. */
+/* One row. Swipe right = missed, swipe left = not applicable, tap = done / undo. */
 let SWIPED=0;
 function itemBtn(i,key,due,right,credit){
   const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na', ms=v==='miss';
   const t=todOf(i), tc=i.color||null, tint=tc?' style="background:linear-gradient('+tc+'2B,'+tc+'2B),var(--slate)"':'';
-  const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':'<span class="st"></span>');
+  const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':(ms?'<span class="st ms">&#10005;</span>':'<span class="st"></span>'));
   const fut=isFutureDay(), act=(due&&!fut)?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
-  const xb=(due&&!fut&&!on&&!nap)?'<button class="missbtn'+(ms?' on':'')+'" aria-label="'+(ms?'Undo missed':'Missed it')+'" title="'+(ms?'Undo missed':'Missed it')+'" onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\',\'miss\')">&#10005;</button>':'';
-  return '<div class="swrow'+((due&&!fut)?' swp':'')+(xb?' hasx':'')+'">'+xb+'<div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
+  return '<div class="swrow'+((due&&!fut)?' swp':'')+'"><div class="swbg r"><span>&#10005; Missed</span></div><div class="swbg l"><span>Not applicable</span></div>'
     +'<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+(ms?' ms':'')+'"'+tint+act+'>'
     +(i.icon?'<span class="ico">'+esc(i.icon)+'</span>':'')+'<span class="ilabel">'+esc(label(i))+(right?'<span class="sub">'+right+'</span>':'')+'</span>'
     +state+'</button></div>';
@@ -1404,7 +1404,7 @@ try{
     if(!s0.on) return;
     SWIPED=Date.now();
     s0.el.classList.remove('dragging'); s0.el.style.transform=''; s0.wrap.classList.remove('dr','dl');
-    if(s0.dx>70) tick(s0.el.dataset.id,s0.el.dataset.key,s0.el.dataset.cr,'done');
+    if(s0.dx>70) tick(s0.el.dataset.id,s0.el.dataset.key,s0.el.dataset.cr,'miss');
     else if(s0.dx<-70) tick(s0.el.dataset.id,s0.el.dataset.key,s0.el.dataset.cr,'na');
   };
   window.addEventListener('pointerup',endSwipe); window.addEventListener('pointercancel',endSwipe);
