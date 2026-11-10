@@ -108,6 +108,10 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .item .ilabel .sub{display:block;font-size:calc(13px*var(--z));color:var(--muted);margin-top:3px;text-decoration:none}
 .st{flex:none;width:32px;height:32px;border-radius:50%;border:2px solid var(--line);display:grid;place-items:center;font-size:calc(16px*var(--z));font-weight:700}
 .st.on{background:var(--accent);border-color:var(--accent);color:var(--ink)}
+.item.ms{opacity:.6}
+.swrow.hasx .item{padding-right:62px}
+.missbtn{position:absolute;right:12px;top:50%;transform:translateY(-50%);z-index:2;width:34px;height:34px;border-radius:50%;border:1.5px solid var(--line);color:var(--muted);font-size:calc(14px*var(--z));font-weight:700;background:var(--slate);display:grid;place-items:center}
+.missbtn.on{border-color:var(--alert);color:var(--alert)}
 .st.nap{border-style:dashed;font-size:calc(10.5px*var(--z));font-weight:600;color:var(--muted)}
 .sheet{position:fixed;inset:0;z-index:70;background:var(--ink);flex-direction:column}
 .sheethead{display:flex;align-items:center;gap:12px;padding:calc(12px + env(safe-area-inset-top)) 16px 12px;flex:none}
@@ -708,6 +712,7 @@ function rowState(it,key,ref){
   const v=S.entries[it.id+'|'+key];
   if(v===true) return 'done';
   if(v==='na') return 'na';
+  if(v==='miss') return 'miss';
   const d=instanceDates(it,key), r=ymd(ref);
   return r<ymd(d.due)?'notdue':(r>ymd(d.late)?'late':'due');
 }
@@ -726,7 +731,7 @@ function lateRows(P,catId){
     if(!i.is_selected||isShortCycle(i)||CYC[i.freq]===undefined) return;
     if(cycleStart(i.freq,P.fri,1)<cycleStart(i.freq,startD,0)) return;
     const k=cycleKey(i.freq,P.fri,1), v=S.entries[i.id+'|'+k];
-    if(v!==true&&v!=='na') out.push({it:i,key:k});
+    if(v!==true&&v!=='na'&&v!=='miss') out.push({it:i,key:k});
   });
   return out;
 }
@@ -949,7 +954,7 @@ function goHome(){ S.template=null; S.card=null; S.tab='home'; setUrl(null); ren
 async function loadCard(synced){
   const r=await Promise.all([
     SB.from("sc_user_scorecard_items").select("*").eq("user_scorecard_id",S.card.id),
-    SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool,credit_week").eq("user_scorecard_id",S.card.id)
+    SB.from("sc_entries").select("user_scorecard_item_id,period_start,value_bool,credit_week,missed").eq("user_scorecard_id",S.card.id)
   ]);
   r.forEach(x=>{ if(x.error) throw x.error; });
   const libById={}; S.library.forEach(l=>libById[l.id]=l);
@@ -998,7 +1003,7 @@ async function loadCard(synced){
   S.entries={}; S.credit={};
   (r[1].data||[]).forEach(e=>{
     const k=e.user_scorecard_item_id+'|'+e.period_start;
-    S.entries[k]=(e.value_bool===null?'na':!!e.value_bool);
+    S.entries[k]=(e.missed?'miss':(e.value_bool===null?'na':!!e.value_bool));
     if(e.credit_week) S.credit[k]=e.credit_week;
   });
 }
@@ -1045,7 +1050,7 @@ async function tick(itemId,period,creditWeek,force){
   const k=itemId+'|'+period;
   const prev=S.entries[k], prevCredit=S.credit[k];
   /* Tap or swipe right: done (again = undo). Swipe left: not applicable (again = undo). */
-  const next=force==='na'?(prev==='na'?false:'na'):(prev===true?false:true);
+  const next=force==='na'?(prev==='na'?false:'na'):(force==='miss'?(prev==='miss'?false:'miss'):(prev===true?false:true));
   /* A monthly/quarterly/yearly "yes" is credited to the week it was ticked in. */
   const credit=(next===true&&creditWeek)?creditWeek:null;
   S.entries[k]=next;
@@ -1054,7 +1059,7 @@ async function tick(itemId,period,creditWeek,force){
   try{
     await run(SB.from("sc_entries").upsert({
       user_scorecard_id:S.card.id, user_scorecard_item_id:itemId,
-      period_start:period, value_bool:(next==='na'?null:next), credit_week:credit
+      period_start:period, value_bool:(next==='na'?null:(next==='miss'?false:next)), missed:next==='miss', credit_week:credit
     },{onConflict:"user_scorecard_item_id,period_start"}));
   }catch(e){
     S.entries[k]=prev;
@@ -1363,12 +1368,13 @@ function stepPeriod(d){
 /* One row. Swipe right = done, swipe left = not applicable, tap = done / undo. */
 let SWIPED=0;
 function itemBtn(i,key,due,right,credit){
-  const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na';
+  const v=S.entries[i.id+'|'+key], on=v===true, nap=due&&v==='na', ms=v==='miss';
   const t=todOf(i), tc=i.color||null, tint=tc?' style="background:linear-gradient('+tc+'2B,'+tc+'2B),var(--slate)"':'';
   const state=on?'<span class="st on">&#10003;</span>':(nap?'<span class="st nap">N/A</span>':'<span class="st"></span>');
   const fut=isFutureDay(), act=(due&&!fut)?' data-id="'+i.id+'" data-key="'+key+'" data-cr="'+(credit||'')+'" onclick="rowTap(this)"':'';
-  return '<div class="swrow'+((due&&!fut)?' swp':'')+'"><div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
-    +'<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+'"'+tint+act+'>'
+  const xb=(due&&!fut&&!on&&!nap)?'<button class="missbtn'+(ms?' on':'')+'" aria-label="'+(ms?'Undo missed':'Missed it')+'" title="'+(ms?'Undo missed':'Missed it')+'" onclick="tick(\''+i.id+'\',\''+key+'\',\''+(credit||'')+'\',\'miss\')">&#10005;</button>':'';
+  return '<div class="swrow'+((due&&!fut)?' swp':'')+(xb?' hasx':'')+'">'+xb+'<div class="swbg r"><span>&#10003; Done</span></div><div class="swbg l"><span>Not applicable</span></div>'
+    +'<button class="item '+(on?'on':'')+' '+((due&&!nap)?'':'na')+(ms?' ms':'')+'"'+tint+act+'>'
     +(i.icon?'<span class="ico">'+esc(i.icon)+'</span>':'')+'<span class="ilabel">'+esc(label(i))+(right?'<span class="sub">'+right+'</span>':'')+'</span>'
     +state+'</button></div>';
 }
@@ -1472,7 +1478,7 @@ function longerToday(it,d){
   return (dow===6&&dom<=7)||(dow===0&&dom<=8);
 }
 const rowVal=r=>S.entries[r.it.id+'|'+r.key];
-const isResolved=r=>{ const v=rowVal(r); return v===true||v==='na'; };
+const isResolved=r=>{ const v=rowVal(r); return v===true||v==='na'||v==='miss'; };
 /* Every row for the day, in section order: the day's own items plus any longer-cycle rows. */
 function dayRowsData(P,counted){
   const rows=[];
@@ -1820,7 +1826,7 @@ async function excludeRange(){
   const rows=[];
   for(let d=a; ymd(d)<=r.e; d=addDays(d,1)){
     const P=mkPDay(d);
-    liveItems().filter(i=>i.is_selected&&isShortCycle(i)&&onDay(i,P)).forEach(i=>rows.push({user_scorecard_id:S.card.id,user_scorecard_item_id:i.id,period_start:ymd(d),value_bool:null,credit_week:null}));
+    liveItems().filter(i=>i.is_selected&&isShortCycle(i)&&onDay(i,P)).forEach(i=>rows.push({user_scorecard_id:S.card.id,user_scorecard_item_id:i.id,period_start:ymd(d),value_bool:null,missed:false,credit_week:null}));
   }
   try{
     saving('on','Saving...');

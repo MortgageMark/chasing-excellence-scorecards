@@ -23,6 +23,7 @@ idempotent — safe to re-run.
 | `16-item-color.sql` | optional `color` per item; carried by copy / promote and by the admin default |
 | `17-days-of-week.sql` | optional `days` per item (e.g. `12345` = Mon-Fri); carried by copy / promote and by the admin default |
 | `18-day-order.sql` | `day_order` per item: its place inside Morning / Afternoon / Evening / Anytime (Time of day sort + Today) |
+| `19-missed.sql` | `missed` flag on `sc_entries`: acknowledged as not done (clears from Today, still counts against the score) |
 | `99-rls-tests.sql` | 17-check regression suite. Rollback-only, safe against live data |
 
 Run `99-rls-tests.sql` after any change to a policy or helper. Every row must
