@@ -48,6 +48,9 @@ Navy `#102937` base (`--ink`), `--slate #163347`, `--raise #1C4259`, `--line #2A
 ### Built: one check-in style for every card
 Weekly and monthly cards use the same check-in screen as the daily tracker: Clean / Sections / Time of day looks, Hide done, icons/colors, wide single-column desktop layout. Each card keeps its own period and scoring (the Score: off/count/% button is daily-only). Desktop (>=900px) makes the page only as wide as the longest item needs (min 520px, max 1080px), one column of rows.
 
+### Built: delete any item
+Ideas screen (unused items) has Delete next to Add; the item edit screen has Delete for every item (template items too). It is a per-user soft delete (`removed_at`); Reset this scorecard brings template items back.
+
 ### Built: days of the week
 Daily items on daily scorecards can be limited to chosen days (`days` column, e.g. `12345` = Mon-Fri, 1=Mon..7=Sun, blank = every day). Edit screen has M T W T F S S bubbles plus presets. Off days are hidden on Today, left out of the score, and show "–" in the Grid. New daily items open the edit screen so days can be picked. SQL 17.
 

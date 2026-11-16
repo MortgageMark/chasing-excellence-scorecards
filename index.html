@@ -1184,7 +1184,7 @@ function renderSheet(){
     +'<div class="sheetcard"><div class="srow" style="border:0;padding-bottom:6px"><span class="sk">Time of day</span></div><div class="tpills">'
     +TODS.map(o=>'<button class="tp'+(t===o[0]?' on':'')+'" onclick="setField(\''+i.id+'\',\'tod\',\''+o[0]+'\')">'+o[1]+'</button>').join('')+'</div></div>'
     +(adminHere()&&i.library_item_id?'<button class="pick" style="width:100%;color:var(--gold);margin-bottom:12px" onclick="setGlobalFields(\''+i.id+'\')">Make these settings the default for everyone</button>':'')
-    +(!i.library_item_id?'<button class="pick" style="width:100%;color:var(--alert)" onclick="deleteItem(\''+i.id+'\');closeEdit()">Delete this item</button>':'')
+    +'<button class="pick" style="width:100%;color:var(--alert)" onclick="deleteItem(\''+i.id+'\');closeEdit()">Delete this item</button>'
     +'</div><div class="sheetfoot"><button onclick="closeEdit()">Done</button></div>';
   el.innerHTML=h; el.style.display='flex';
   try{ document.body.style.overflow='hidden'; const b=el.querySelector('.sheetbody'); if(b) b.scrollTop=keep; }catch(e){}
@@ -1269,8 +1269,8 @@ const shownItems=catId=>{
 function setTodFilter(v){ S.todFilter=v||''; render(); }
 /* Delete one of the user's own added items. It is soft-deleted (entries are kept). */
 async function deleteItem(id){
-  const it=S.items.find(i=>i.id===id); if(!it||it.library_item_id) return;
-  if(!confirm('Delete "'+label(it)+'" from your scorecard? It will no longer count toward your score.')) return;
+  const it=S.items.find(i=>i.id===id); if(!it) return;
+  if(!confirm('Delete "'+label(it)+'" from your scorecard? It will no longer count toward your score.'+(it.library_item_id?' (Reset this scorecard brings it back.)':''))) return;
   const before={removed_at:it.removed_at,is_selected:it.is_selected};
   it.removed_at=new Date().toISOString(); it.is_selected=false; render();
   try{
@@ -1329,9 +1329,9 @@ async function resetCard(){
       if(error) throw error;
     }
     for(const l of S.library){
-      const it=S.items.find(i=>i.library_item_id===l.id&&!i.removed_at); if(!it) continue;
+      const it=S.items.find(i=>i.library_item_id===l.id); if(!it) continue;
       const {error}=await SB.from("sc_user_scorecard_items").update({
-        is_selected:!!l.is_default_on, renamed_label:null,
+        removed_at:null, is_selected:!!l.is_default_on, renamed_label:null,
         frequency:l.default_frequency, sort_order:l.sort_order
       }).eq("id",it.id);
       if(error) throw error;
@@ -1951,6 +1951,7 @@ function ideasScreen(){
         +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
         +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+'<span class="isub">'+schedSummary(i)+'</span>'
         +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
+        +'<button class="chip" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">Delete</button>'
         +'<button class="chip on" onclick="addFromIdeas(\''+i.id+'\')">Add</button></div>').join('')+'</div>';
   });
   if(!n) h+='<div class="allclear" style="text-align:center;padding:30px 0">No more ideas &mdash; everything is already in your Items.</div>';
