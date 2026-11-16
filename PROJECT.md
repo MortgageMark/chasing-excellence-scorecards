@@ -48,6 +48,9 @@ Navy `#102937` base (`--ink`), `--slate #163347`, `--raise #1C4259`, `--line #2A
 ### Built: one check-in style for every card
 Weekly and monthly cards use the same check-in screen as the daily tracker: Clean / Sections / Time of day looks, Hide done, icons/colors, wide single-column desktop layout. Each card keeps its own period and scoring (the Score: off/count/% button is daily-only). Desktop (>=900px) makes the page only as wide as the longest item needs (min 520px, max 1080px), one column of rows.
 
+### Built: simple Items on your own scorecards
+On scorecards the user owns (`S.template.owner`), Items has no on/off switch and no Ideas: reorder handle on the left, red X (delete) on the right for every item. Shared templates (Life Balance, Sales & Marketing) keep the switch + Ideas.
+
 ### Built: delete any item
 Ideas screen (unused items) has Delete next to Add; the item edit screen has Delete for every item (template items too). It is a per-user soft delete (`removed_at`); Reset this scorecard brings template items back.
 

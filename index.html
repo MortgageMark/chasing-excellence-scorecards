@@ -1261,10 +1261,12 @@ function setOnlyUsing(){
   try{ localStorage.setItem('ces-only-using',S.onlyUsing?'1':'0'); }catch(e){}
   render();
 }
+/* Your own scorecards: an item is either on the list or deleted (no on/off switch, no Ideas). Shared templates keep the switch. */
+const simpleItems=()=>!!(S.template&&S.template.owner);
 const shownItems=catId=>{
   let all=catItems(catId);
   if(S.todFilter) all=all.filter(i=>todOf(i)===S.todFilter);
-  return all.filter(i=>i.is_selected||S.keepShown[i.id]);
+  return simpleItems()?all:all.filter(i=>i.is_selected||S.keepShown[i.id]);
 };
 function setTodFilter(v){ S.todFilter=v||''; render(); }
 /* Delete one of the user's own added items. It is soft-deleted (entries are kept). */
@@ -1924,15 +1926,17 @@ function histTrends(){
 function itemRow(i,groupId,catName){
   const tag='';
   const need=groupId.indexOf('tod:')===0?S.sortMode:'manual';
+  const simple=simpleItems();
+  const gripH='<span class="grip'+(S.sortMode===need?'':' dim')+'" title="Drag to reorder" onpointerdown="dragStart(event,\''+groupId+'\')">&#8801;</span>';
   return '<div class="selrow '+(i.is_selected?'on':'')+'" data-row="'+i.id+'">'
-    +'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>'
+    +(simple?gripH:'<span class="tog" onclick="toggleSel(\''+i.id+'\')"></span>')
     +(i.icon?'<span class="ico" onclick="openEdit(\''+i.id+'\')">'+esc(i.icon)+'</span>':'')
     +'<span class="ilabel" onclick="openEdit(\''+i.id+'\')">'+esc(label(i))+tag
     +'<span class="isub">'+schedSummary(i)+(catName?' &middot; '+esc(catName):'')+'</span>'
     +(fullQ(i)?'<span class="isub" style="margin-top:2px">'+esc(fullQ(i))+'</span>':'')+'</span>'
-    +((!i.library_item_id&&!adminHere())?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
+    +(((simple||!i.library_item_id)&&!adminHere())?'<button class="trkbtn" title="Delete this item" style="color:var(--alert)" onclick="deleteItem(\''+i.id+'\')">&#10005;</button>':'')
     +(canGlobal(i)?'<span class="gtog '+(isGlobal(i)?'on':'')+'" title="'+(isGlobal(i)?'Global template question - tap to remove it for everyone':'Only on your scorecard - tap to add it to the global template')+'" onclick="toggleGlobal(\''+i.id+'\')"></span>':'')
-    +'<span class="grip'+(S.sortMode===need?'':' dim')+'" title="Drag to reorder" onpointerdown="dragStart(event,\''+groupId+'\')">&#8801;</span>'
+    +(simple?'':gripH)
     +'</div>';
 }
 const ideaItems=()=>liveItems().filter(i=>!i.is_selected&&!S.keepShown[i.id]);
@@ -1958,7 +1962,7 @@ function ideasScreen(){
   return h;
 }
 function itemsScreen(){
-  if(S.ideas) return ideasScreen();
+  if(S.ideas&&!simpleItems()) return ideasScreen();
   const sorts=[['tod','Time of day (no sections)'],['manual','My order'],['freq','Frequency'],['az','A – Z']];
   const allCol=S.cats.length>1&&S.cats.every(c=>S.collapsed[c.id]);
   let h='<div class="itop"><select class="fsel" aria-label="Sort within each category" onchange="setSort(this.value)">'
@@ -1966,20 +1970,20 @@ function itemsScreen(){
     +'<button class="addplus" title="Add your own" aria-label="Add your own" onclick="openNew()">+</button></div>'
     +'<div class="itop2"><select class="chip" aria-label="Filter by time of day" onchange="setTodFilter(this.value)"><option value="">All times</option>'
     +TODS.map(t=>'<option value="'+t[0]+'" '+(S.todFilter===t[0]?'selected':'')+'>'+t[1]+' only</option>').join('')+'</select>'
-    +'<button class="chip on" onclick="openIdeas()">Ideas ('+ideaItems().length+')</button>'
+    +(simpleItems()?'':'<button class="chip on" onclick="openIdeas()">Ideas ('+ideaItems().length+')</button>')
     +(S.cats.length>1?'<button class="chip" onclick="foldAll('+(!allCol)+')">'+(allCol?'Expand all':'Collapse all')+'</button>':'')+'</div>';
   if(S.sortMode==='tod'||S.sortMode==='active'){
     const only=S.sortMode==='active', catOf={}; S.cats.forEach(c=>{ catOf[c.id]=c.name; });
     TODS.forEach(t=>{
       if(S.todFilter&&S.todFilter!==t[0]) return;
-      const all=todList(t[0]), mine=all.filter(i=>i.is_selected||S.keepShown[i.id]);
+      const all=todList(t[0]), mine=simpleItems()?all:all.filter(i=>i.is_selected||S.keepShown[i.id]);
       if(!mine.length) return;
       h+='<div class="todhead" style="margin-top:20px"><span>'+t[1]+'</span><b>'+all.filter(i=>i.is_selected).length+' of '+all.length+'</b></div>'
         +'<div style="display:flex;flex-direction:column;gap:2px">'+mine.map(i=>itemRow(i,'tod:'+t[0],catOf[i.category_id])).join('')+'</div>';
     });
   } else
   S.cats.forEach(c=>{
-    const all=catItems(c.id), mine=shownItems(c.id), nOn=all.filter(i=>i.is_selected).length;
+    const all=catItems(c.id), mine=shownItems(c.id), nOn=simpleItems()?all.length:all.filter(i=>i.is_selected).length;
     const col=!!S.collapsed[c.id];
     h+='<div class="catblock" style="margin-top:16px"><button class="cathead catfold" onclick="toggleCat(\''+c.id+'\')" aria-expanded="'+(!col)+'">'
       +'<span class="chev">'+(col?'&#9656;':'&#9662;')+'</span><div class="catname">'+esc(catTitle(c))+'</div>'
@@ -1989,7 +1993,7 @@ function itemsScreen(){
       +(adminHere()&&S.sortMode==='manual'?'<button class="pick" style="color:var(--gold)" onclick="saveDefaultOrder(\''+c.id+'\')">Save as default order</button>':'')
       +'</div><div style="display:flex;flex-direction:column;gap:2px">';
     mine.forEach(i=>{ h+=itemRow(i,c.id); });
-    if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing active here. Add some from Ideas.</div>';
+    if(!mine.length) h+='<div style="font-size:calc(13.5px*var(--z));color:var(--muted);padding:6px 10px">Nothing here yet. Use + to add one.</div>';
     h+='</div></div>';
   });
   if(S.template.owner){
