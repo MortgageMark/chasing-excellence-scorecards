@@ -181,19 +181,17 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 /* ---- History: grid tracker + month calendar ---- */
 .wrap.wide{max-width:1100px}
-/* ---- Desktop: wider page, still one column, so long item text does not wrap. Phones are untouched. ---- */
+/* ---- Desktop: the page is only as wide as the longest item needs (one column), within limits. Phones are untouched. ---- */
 @media (min-width:900px){
-  .wrap,.top-in{max-width:960px}
-  .wrap.wide{max-width:1080px}
+  .wrap{width:fit-content;min-width:520px;max-width:min(1080px,100%)}
+  .wrap.wide{width:min(100%,1080px)}
   .wrap.narrow{max-width:720px}
+  .top-in{max-width:var(--appw,520px)}
+  .daystrip,.pills,.monthbar{contain:inline-size}
   .bottomnav{width:min(560px,calc(100% - 20px))}
   .statgrid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
   .mgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
   .gridscroll{max-width:100%}
-}
-@media (min-width:1400px){
-  .wrap,.top-in{max-width:1080px}
-  .wrap.narrow{max-width:720px}
 }
 .hseg{display:flex;gap:6px;margin-bottom:14px}
 .hseg button{flex:1;padding:11px 4px;border-radius:9px;font-size:calc(14.5px*var(--z));font-weight:600;color:var(--muted);background:var(--well);border:1px solid var(--line)}
@@ -2305,6 +2303,9 @@ function renderNav(tabs){
     +'<span>'+esc(t[1])+'</span></button>').join('');
   n.style.display="flex";
 }
+/* Header content lines up with the page body, which is only as wide as it needs to be on desktop. */
+function syncWidth(){ try{ const a=$('app'); document.documentElement.style.setProperty('--appw',(a?a.offsetWidth:520)+'px'); }catch(e){} }
+try{ new ResizeObserver(syncWidth).observe($('app')); }catch(e){}
 function render(){
   const app=$("app");
   app.classList.toggle('narrow',S.tab==='settings'||S.tab==='items'||S.tab==='score'||!(S.template&&S.card)&&S.template);
