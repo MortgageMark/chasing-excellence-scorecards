@@ -181,6 +181,25 @@ button{font:inherit;color:inherit;background:none;border:none;cursor:pointer}
 .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 /* ---- History: grid tracker + month calendar ---- */
 .wrap.wide{max-width:1100px}
+/* ---- Desktop: use the screen. Phones are untouched (everything below needs a wide window). ---- */
+@media (min-width:900px){
+  .wrap,.top-in{max-width:1080px}
+  .wrap.wide{max-width:1080px}
+  .wrap.narrow{max-width:720px}
+  .bottomnav{width:min(560px,calc(100% - 20px))}
+  .rowgrid,.catblock{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:14px;align-items:start}
+  .rowgrid>:not(.swrow),.catblock>:not(.swrow){grid-column:1/-1}
+  .statgrid{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+  .mgrid{grid-template-columns:repeat(auto-fill,minmax(210px,1fr))}
+  .cardgrid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:0 14px;align-items:start}
+  .cardgrid>:not(.card){grid-column:1/-1}
+  .gridscroll{max-width:100%}
+}
+@media (min-width:1400px){
+  .wrap,.top-in,.wrap.wide{max-width:1280px}
+  .wrap.narrow{max-width:720px}
+  .rowgrid,.catblock{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
 .hseg{display:flex;gap:6px;margin-bottom:14px}
 .hseg button{flex:1;padding:11px 4px;border-radius:9px;font-size:calc(14.5px*var(--z));font-weight:600;color:var(--muted);background:var(--well);border:1px solid var(--line)}
 .hseg button.on{background:rgba(72,160,206,.16);border-color:var(--accent);color:var(--accent)}
@@ -1497,7 +1516,7 @@ function todList(slot){ return liveItems().filter(i=>todOf(i)===slot).sort((a,b)
 function rowsView(P,counted,headers){
   const all=dayRowsData(P,counted), rows=S.hideDone?all.filter(r=>!isResolved(r)):all, hid=all.length-rows.length;
   const slot=(list,t)=>{ const l=list.filter(r=>todOf(r.it)===t); return (S.sortMode==='tod'||S.sortMode==='active')?l.slice().sort((a,b)=>todKey(a.it)-todKey(b.it)):l; };
-  let h='';
+  let h='<div class="rowgrid">';
   TODS.forEach(t=>{
     const inSlot=slot(all,t[0]), shown=slot(rows,t[0]);
     if(!inSlot.length) return;
@@ -1510,7 +1529,7 @@ function rowsView(P,counted,headers){
   });
   if(S.hideDone&&hid>0) h+='<button class="hidenote" onclick="toggleHideDone()">&#10003; '+hid+' done &middot; show</button>';
   if(S.hideDone&&all.length&&!rows.length) h='<div class="allclear" style="text-align:center;padding:30px 0 6px;font-size:calc(17px*var(--z))">Everything is done for this day &#127881;</div>'+h;
-  return h;
+  return h+'</div>';
 }
 
 function checkin(s){
@@ -2285,6 +2304,7 @@ function renderNav(tabs){
 }
 function render(){
   const app=$("app");
+  app.classList.toggle('narrow',S.tab==='settings'||S.tab==='items'||S.tab==='score'||!(S.template&&S.card)&&S.template);
   app.classList.toggle('wide',!!(S.template&&S.card&&S.tab==='history'&&S.histView==='grid'));
   if(S.tab!=='items'){ S.keepShown={}; S.editItem=null; }
   renderSheet();
@@ -2298,6 +2318,7 @@ function render(){
     renderNav(homeTabs());
     let h='<div class="h1">Scorecards</div><div class="sub">Choose a scorecard &middot; signed in as '+esc(S.profile.email||'')+'</div>';
     if(S.form) h+=homeForm();
+    h+='<div class="cardgrid">';
     S.templates.forEach(t=>{
       const started=S.cards.some(c=>c.template_id===t.id);
       h+='<div class="card"><div style="cursor:pointer" onclick="goTemplate(\''+t.id+'\')">'
@@ -2308,6 +2329,7 @@ function render(){
         +(t.owner?'<button class="pick" onclick="renameScorecard(\''+t.id+'\')">Rename</button><button class="pick" style="color:var(--alert)" onclick="deleteScorecard(\''+t.id+'\')">Delete</button>':'')
         +'</div></div>';
     });
+    h+='</div>';
     if(!S.form) h+='<button class="bigbtn" onclick="startNew()">+ New scorecard</button>';
     app.innerHTML=h+footerHtml();
     return;
