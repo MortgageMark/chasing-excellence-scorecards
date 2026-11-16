@@ -1485,10 +1485,11 @@ function restoreStrip(){
 }
 function lookBar(){
   const sc={count:'Score: 3/9',pct:'Score: %',off:'Score: off'}[S.score];
+  const scoreBtn=isDaily()?'<button class="pl" onclick="cycleScore()">'+sc+'</button>':'';
   return '<div class="pills">'+LOOKS.map(l=>'<button class="pl'+(S.look===l[0]?' on':'')+'" onclick="setLook(\''+l[0]+'\')">'+l[1]+'</button>').join('')
     +'<span class="plsep"></span>'
     +'<button class="pl'+(S.hideDone?' on':'')+'" onclick="toggleHideDone()">'+(S.hideDone?'&#10003; Done hidden':'Hide done')+'</button>'
-    +'<button class="pl" onclick="cycleScore()">'+sc+'</button></div>';
+    +scoreBtn+'</div>';
 }
 function longerToday(it,d){
   if(it.freq==='w'||it.freq==='d') return true;
@@ -1502,6 +1503,13 @@ const isResolved=r=>{ const v=rowVal(r); return v===true||v==='na'||v==='miss'; 
 function dayRowsData(P,counted){
   const rows=[];
   S.cats.forEach(c=>{
+    if(!P.weekly){   /* monthly cards: every selected item, dimmed when not due this month */
+      catItems(c.id).filter(i=>i.is_selected).forEach(i=>{
+        const due=isDue(i.freq,P.m,i.target_month);
+        rows.push({it:i,key:ekey(i,P),due:due,right:due?FREQ[i.freq]:(i.target_month?MON[i.target_month-1]:'Not due'),credit:''});
+      });
+      return;
+    }
     catItems(c.id).filter(i=>i.is_selected&&isShortCycle(i)&&onDay(i,P)).forEach(i=>rows.push({it:i,key:ekey(i,P),right:'',credit:''}));
     extraRows(c,P,counted).forEach(x=>{
       const prior=x.key!==cycleKey(x.it.freq,P.fri,0);
@@ -1525,7 +1533,7 @@ function rowsView(P,counted,headers){
       h+='<div class="todhead"><span>'+t[1]+'</span><b>'+fmtScore(done,tot)+'</b></div>';
       if(!shown.length) h+='<div class="allclear">All done &#10003;</div>';
     }
-    shown.forEach(r=>{ h+=itemBtn(r.it,r.key,true,r.right,r.credit); });
+    shown.forEach(r=>{ h+=itemBtn(r.it,r.key,r.due!==false,r.right,r.credit); });
   });
   if(S.hideDone&&hid>0) h+='<button class="hidenote" onclick="toggleHideDone()">&#10003; '+hid+' done &middot; show</button>';
   if(S.hideDone&&all.length&&!rows.length) h='<div class="allclear" style="text-align:center;padding:30px 0 6px;font-size:calc(17px*var(--z))">Everything is done for this day &#127881;</div>'+h;
@@ -1534,10 +1542,10 @@ function rowsView(P,counted,headers){
 
 function checkin(s){
   const P=viewP(), W=P.weekly, daily=isDaily();
-  let h=daily?dayStrip(s)+lookBar():periodBar();
+  let h=daily?dayStrip(s)+lookBar():periodBar()+lookBar();   /* every card gets the same Clean / Sections / Time of day / Hide done bar */
   const any=liveItems().some(i=>i.is_selected);
   const counted=W?longCounted(P):{};
-  if(daily&&S.look!=='sections') h+=rowsView(P,counted,S.look==='time');
+  if(S.look!=='sections') h+=rowsView(P,counted,S.look==='time');
   else{
     let hidTotal=0;
     S.cats.forEach(c=>{
@@ -1545,7 +1553,7 @@ function checkin(s){
       let extra=extraRows(c,P,counted);
       const nAll=mine.length+extra.length;
       if(!nAll) return;
-      if(daily&&S.hideDone){
+      if(S.hideDone){
         const m0=mine.length+extra.length;
         mine=mine.filter(i=>!isResolved({it:i,key:ekey(i,P)}));
         extra=extra.filter(x=>!isResolved(x));
@@ -1569,10 +1577,10 @@ function checkin(s){
           h+=itemBtn(x.it,x.key,true,rowTag(x.it,x.key,P.fri,prior),P.key);
         });
       }
-      if(daily&&S.hideDone&&!mine.length&&!extra.length) h+='<div class="allclear">All done &#10003;</div>';
+      if(S.hideDone&&!mine.length&&!extra.length) h+='<div class="allclear">All done &#10003;</div>';
       h+='</div>';
     });
-    if(daily&&S.hideDone&&hidTotal>0) h+='<button class="hidenote" onclick="toggleHideDone()">&#10003; '+hidTotal+' done &middot; show</button>';
+    if(S.hideDone&&hidTotal>0) h+='<button class="hidenote" onclick="toggleHideDone()">&#10003; '+hidTotal+' done &middot; show</button>';
   }
   if(W) h+=longCycle(P,counted);
   if(!any) h+='<div class="empty">Nothing selected yet. Open <b>Items</b> and pick what applies to you.</div>';
