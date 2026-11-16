@@ -46,7 +46,7 @@ Navy `#102937` base (`--ink`), `--slate #163347`, `--raise #1C4259`, `--line #2A
 - Deep link `?s=<templateId>`; preferences in localStorage (`ces-*` keys).
 
 ### Built: one check-in style for every card
-Weekly and monthly cards use the same check-in screen as the daily tracker: Clean / Sections / Time of day looks, Hide done, icons/colors, desktop multi-column layout. Each card keeps its own period and scoring (the Score: off/count/% button is daily-only). Desktop (>=900px) widens the page and flows rows into 2-3 columns.
+Weekly and monthly cards use the same check-in screen as the daily tracker: Clean / Sections / Time of day looks, Hide done, icons/colors, wide single-column desktop layout. Each card keeps its own period and scoring (the Score: off/count/% button is daily-only). Desktop (>=900px) widens the page (960px, 1080px very wide) but keeps one column of rows.
 
 ### Built: days of the week
 Daily items on daily scorecards can be limited to chosen days (`days` column, e.g. `12345` = Mon-Fri, 1=Mon..7=Sun, blank = every day). Edit screen has M T W T F S S bubbles plus presets. Off days are hidden on Today, left out of the score, and show "–" in the Grid. New daily items open the edit screen so days can be picked. SQL 17.
